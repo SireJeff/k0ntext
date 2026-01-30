@@ -146,17 +146,17 @@ describe('Claude Adapter', () => {
       // Create existing .claude/ with custom content
       const existingClaudeDir = path.join(testDir, '.claude');
       fs.mkdirSync(existingClaudeDir, { recursive: true });
-      const existingFile = path.join(existingClaudeDir, 'existing.txt');
-      fs.writeFileSync(existingFile, 'existing content');
+      const existingFile = path.join(existingClaudeDir, 'custom-agent.md');
+      fs.writeFileSync(existingFile, '# Custom Agent\n\nThis is a custom agent.');
 
       const result = await claudeAdapter.generate(mockAnalysis, mockConfig, testDir);
 
-      // Should have warning about existing directory
+      // Should have warning about existing directory with custom files
       expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.errors[0].code).toBe('EXISTS');
+      expect(result.errors[0].code).toBe('EXISTS_CUSTOM');
       // Existing file should still be there
       expect(fs.existsSync(existingFile)).toBe(true);
-      expect(fs.readFileSync(existingFile, 'utf-8')).toBe('existing content');
+      expect(fs.readFileSync(existingFile, 'utf-8')).toContain('Custom Agent');
     });
 
     it('should still generate AI_CONTEXT.md even when .claude/ exists', async () => {

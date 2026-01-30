@@ -8,6 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 const { renderTemplateByName, buildContext } = require('../template-renderer');
+const { isManagedFile } = require('../template-coordination');
 
 /**
  * Adapter metadata
@@ -56,19 +57,44 @@ async function generate(analysis, config, projectRoot) {
   };
 
   try {
-    // 1. Generate AI_CONTEXT.md at project root (existing behavior)
-    const context = buildContext(analysis, config);
-    const content = renderTemplateByName('claude', context);
+    // 1. Generate AI_CONTEXT.md at project root
     const outputPath = getOutputPath(projectRoot);
-    fs.writeFileSync(outputPath, content, 'utf-8');
-    result.files.push({
-      path: outputPath,
-      relativePath: 'AI_CONTEXT.md',
-      size: content.length
-    });
 
-    // 2. Generate .claude/ directory structure (NEW)
-    const claudeDirResult = await generateClaudeDirectory(projectRoot, context, result);
+    // Check if file exists and is custom (not managed by us)
+    if (fs.existsSync(outputPath) && !config.force) {
+      if (!isManagedFile(outputPath)) {
+        result.errors.push({
+          message: 'AI_CONTEXT.md exists and appears to be custom. Use --force to overwrite.',
+          code: 'EXISTS_CUSTOM',
+          severity: 'error'
+        });
+        // Don't return early - still try to generate .claude/ directory
+      } else {
+        // File is managed by us, safe to overwrite
+        const context = buildContext(analysis, config, 'claude');
+        const content = renderTemplateByName('claude', context);
+        fs.writeFileSync(outputPath, content, 'utf-8');
+        result.files.push({
+          path: outputPath,
+          relativePath: 'AI_CONTEXT.md',
+          size: content.length
+        });
+      }
+    } else {
+      // File doesn't exist or force is enabled
+      const context = buildContext(analysis, config, 'claude');
+      const content = renderTemplateByName('claude', context);
+      fs.writeFileSync(outputPath, content, 'utf-8');
+      result.files.push({
+        path: outputPath,
+        relativePath: 'AI_CONTEXT.md',
+        size: content.length
+      });
+    }
+
+    // 2. Generate .claude/ directory structure
+    const context = buildContext(analysis, config, 'claude');
+    const claudeDirResult = await generateClaudeDirectory(projectRoot, context, config, result);
     if (claudeDirResult) {
       result.files.push(...claudeDirResult);
     }
@@ -90,28 +116,34 @@ async function generate(analysis, config, projectRoot) {
  * Generate .claude/ directory with symlinks to .ai-context/
  * @param {string} projectRoot - Project root directory
  * @param {object} context - Template context
+ * @param {object} config - Configuration from CLI
  * @param {object} result - Result object to track files/errors
  * @returns {Array} List of generated files
  */
-async function generateClaudeDirectory(projectRoot, context, result) {
+async function generateClaudeDirectory(projectRoot, context, config, result) {
   const { copyDirectory } = require('../installer');
   const templatesDir = path.join(__dirname, '..', '..', 'templates', 'base');
   const aiContextDir = path.join(projectRoot, '.ai-context');
   const claudeDir = path.join(projectRoot, '.claude');
 
-  // Don't overwrite existing .claude/ directory
-  if (fs.existsSync(claudeDir)) {
-    result.errors.push({
-      message: '.claude/ directory already exists, skipping structure generation',
-      code: 'EXISTS',
-      severity: 'warning'
-    });
-    return [{
-      path: claudeDir,
-      relativePath: '.claude/',
-      size: 0,
-      skipped: true
-    }];
+  // Check for existing .claude/ directory
+  if (fs.existsSync(claudeDir) && !config.force) {
+    // Check if it has custom files
+    const hasCustomFiles = checkForCustomFiles(claudeDir);
+    if (hasCustomFiles) {
+      result.errors.push({
+        message: '.claude/ directory exists and contains custom files. Use --force to overwrite. Skipping directory generation.',
+        code: 'EXISTS_CUSTOM',
+        severity: 'warning'
+      });
+      return [{
+        path: claudeDir,
+        relativePath: '.claude/',
+        size: 0,
+        skipped: true
+      }];
+    }
+    // Directory exists but only has managed files, we can regenerate
   }
 
   try {
@@ -256,6 +288,36 @@ See \`AI_CONTEXT.md\` at project root for universal AI context (works with all t
     });
     return null;
   }
+}
+
+/**
+ * Check if directory contains custom (non-managed) files
+ * @param {string} dir - Directory to check
+ * @returns {boolean} True if custom files found
+ */
+function checkForCustomFiles(dir) {
+  const walkDir = (currentDir, depth = 0) => {
+    if (depth > 10) return false;
+
+    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        if (entry.name !== 'node_modules' && entry.name !== '.git') {
+          if (walkDir(path.join(currentDir, entry.name), depth + 1)) {
+            return true;
+          }
+        }
+      } else if (entry.name.endsWith('.md')) {
+        const filePath = path.join(currentDir, entry.name);
+        if (!isManagedFile(filePath)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  return walkDir(dir);
 }
 
 /**

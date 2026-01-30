@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const { renderTemplateByName, buildContext } = require('../template-renderer');
+const { isManagedFile } = require('../template-coordination');
 
 /**
  * Adapter metadata
@@ -53,14 +54,27 @@ async function generate(analysis, config, projectRoot) {
   };
 
   try {
+    const outputPath = getOutputPath(projectRoot);
+
+    // Check if file exists and is custom (not managed by us)
+    if (fs.existsSync(outputPath) && !config.force) {
+      if (!isManagedFile(outputPath)) {
+        result.errors.push({
+          message: '.clinerules exists and appears to be custom. Use --force to overwrite.',
+          code: 'EXISTS_CUSTOM',
+          severity: 'error'
+        });
+        return result;
+      }
+    }
+
     // Build context from analysis
-    const context = buildContext(analysis, config);
+    const context = buildContext(analysis, config, 'cline');
 
     // Render template
     const content = renderTemplateByName('cline', context);
 
     // Write output file
-    const outputPath = getOutputPath(projectRoot);
     fs.writeFileSync(outputPath, content, 'utf-8');
 
     result.success = true;

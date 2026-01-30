@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const { renderMultiFileTemplate, buildContext } = require('../template-renderer');
+const { isManagedFile } = require('../template-coordination');
 
 /**
  * Adapter metadata
@@ -53,8 +54,23 @@ async function generate(analysis, config, projectRoot) {
   };
 
   try {
+    const outputDir = getOutputPath(projectRoot);
+
+    // Check if .agent/ directory exists and contains custom files
+    if (fs.existsSync(outputDir) && !config.force) {
+      const hasCustomFiles = checkForCustomFiles(outputDir);
+      if (hasCustomFiles) {
+        result.errors.push({
+          message: '.agent/ directory exists and contains custom files. Use --force to overwrite.',
+          code: 'EXISTS_CUSTOM',
+          severity: 'error'
+        });
+        return result;
+      }
+    }
+
     // Build context from analysis
-    const context = buildContext(analysis, config);
+    const context = buildContext(analysis, config, 'antigravity');
 
     // Get template path
     const templatePath = path.join(__dirname, '..', '..', 'templates', 'handlebars', 'antigravity.hbs');
@@ -63,7 +79,6 @@ async function generate(analysis, config, projectRoot) {
     const files = renderMultiFileTemplate(templatePath, context);
 
     // Create output directory
-    const outputDir = getOutputPath(projectRoot);
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
@@ -97,6 +112,36 @@ async function generate(analysis, config, projectRoot) {
   }
 
   return result;
+}
+
+/**
+ * Check if directory contains custom (non-managed) files
+ * @param {string} dir - Directory to check
+ * @returns {boolean} True if custom files found
+ */
+function checkForCustomFiles(dir) {
+  const walkDir = (currentDir, depth = 0) => {
+    if (depth > 10) return false;
+
+    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        if (entry.name !== 'node_modules' && entry.name !== '.git') {
+          if (walkDir(path.join(currentDir, entry.name), depth + 1)) {
+            return true;
+          }
+        }
+      } else if (entry.name.endsWith('.md')) {
+        const filePath = path.join(currentDir, entry.name);
+        if (!isManagedFile(filePath)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  return walkDir(dir);
 }
 
 /**
