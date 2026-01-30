@@ -60,6 +60,10 @@
 {{/each}}
 {{/if}}
 {{/if}}
+
+---
+
+{{{coordination.footer}}}
 {{{fileEnd}}}
 
 {{!-- ============================================================ --}}
@@ -102,6 +106,10 @@
 - `{{this}}`
 {{/each}}
 {{/if}}
+
+---
+
+{{{coordination.footer}}}
 {{{fileEnd}}}
 
 {{!-- ============================================================ --}}
@@ -133,6 +141,10 @@ These are known issues and pitfalls. Review before making changes.
 {{else}}
 *No gotchas documented yet. Add as discovered.*
 {{/if}}
+
+---
+
+{{{coordination.footer}}}
 {{{fileEnd}}}
 
 {{!-- ============================================================ --}}
@@ -158,6 +170,10 @@ These rules MUST be followed. Violations may cause production issues.
 - Total Constraints: {{length critical_constraints}}
 - Gotchas: {{length gotchas}}
 - Workflows: {{length workflows}}
+
+---
+
+{{{coordination.footer}}}
 {{{fileEnd}}}
 
 {{!-- ============================================================ --}}
@@ -189,6 +205,10 @@ These rules MUST be followed. Violations may cause production issues.
 {{else}}
 *No workflows discovered. Run AI analysis to populate.*
 {{/if}}
+
+---
+
+{{{coordination.footer}}}
 {{{fileEnd}}}
 
 {{!-- ============================================================ --}}
@@ -214,6 +234,10 @@ Starts the {{project.name}} development server.
 
 ## Related
 - See `rules/identity.md` for full command list
+
+---
+
+{{{coordination.footer}}}
 {{{fileEnd}}}
 
 {{{fileStart "workflows/test.md"}}}
@@ -232,6 +256,10 @@ Runs the test suite for {{project.name}}.
 ## Tips
 - Run before committing changes
 - Check test coverage reports
+
+---
+
+{{{coordination.footer}}}
 {{{fileEnd}}}
 
 {{{fileStart "workflows/build.md"}}}
@@ -246,6 +274,10 @@ Runs the test suite for {{project.name}}.
 
 ## Description
 Builds {{project.name}} for production.
+
+---
+
+{{{coordination.footer}}}
 {{{fileEnd}}}
 
 {{!-- ============================================================ --}}
@@ -293,6 +325,10 @@ Activate this skill when debugging issues in {{project.name}}.
 - Check application logs for errors
 - Review stack traces carefully
 - Verify environment configuration
+
+---
+
+{{{coordination.footer}}}
 {{{fileEnd}}}
 
 {{{fileStart "skills/implementation.md"}}}
@@ -334,4 +370,8 @@ Activate this skill when implementing new features in {{project.name}}.
 - {{this}}
 {{/each}}
 {{/if}}
+
+---
+
+{{{coordination.footer}}}
 {{{fileEnd}}}
