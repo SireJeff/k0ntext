@@ -89,6 +89,7 @@ program
   .option('--preserve-custom', 'Keep user customizations when merging (default: true)', true)
   .option('--update-refs', 'Auto-fix drifted line references')
   .option('--backup', 'Create backup before modifying existing files')
+  .option('-f, --force', 'Force overwrite of existing custom files (use with caution)')
   .action(async (projectName, options) => {
     console.log(banner);
 
@@ -118,7 +119,8 @@ program
         mode: options.mode,
         preserveCustom: options.preserveCustom,
         updateRefs: options.updateRefs,
-        backup: options.backup
+        backup: options.backup,
+        force: options.force || false
       });
     } catch (error) {
       console.error(chalk.red('\n✖ Error:'), error.message);
@@ -137,6 +139,7 @@ program
   .option('-d, --dryRun', 'Show what would be done without making changes')
   .option('-v, --verbose', 'Show detailed output')
   .option('-p, --path <dir>', 'Project directory (defaults to current)', '.')
+  .option('-f, --force', 'Force overwrite of existing custom files (use with caution)')
   .action(async (options) => {
     console.log(banner);
 
@@ -169,7 +172,8 @@ program
       const config = {
         projectName: path.basename(projectRoot),
         aiTools,
-        verbose: options.verbose
+        verbose: options.verbose,
+        force: options.force || false
       };
 
       if (options.dryRun) {

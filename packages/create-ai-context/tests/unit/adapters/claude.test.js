@@ -151,9 +151,12 @@ describe('Claude Adapter', () => {
 
       const result = await claudeAdapter.generate(mockAnalysis, mockConfig, testDir);
 
-      // Should have warning about existing directory with custom files
+      // Should have info about migration and warning about existing directory with custom files
       expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.errors[0].code).toBe('EXISTS_CUSTOM');
+      // First error should be MIGRATED_CUSTOM (if .ai-context exists), otherwise EXISTS_CUSTOM
+      const hasMigratedInfo = result.errors.some(e => e.code === 'MIGRATED_CUSTOM');
+      const hasExistsWarning = result.errors.some(e => e.code === 'EXISTS_CUSTOM');
+      expect(hasExistsWarning).toBe(true);
       // Existing file should still be there
       expect(fs.existsSync(existingFile)).toBe(true);
       expect(fs.readFileSync(existingFile, 'utf-8')).toContain('Custom Agent');

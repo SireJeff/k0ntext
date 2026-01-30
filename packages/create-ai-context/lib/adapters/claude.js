@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { renderTemplateByName, buildContext } = require('../template-renderer');
 const { isManagedFile } = require('../template-coordination');
+const { findCustomContentInClaude, migrateCustomContent } = require('../content-preservation');
 
 /**
  * Adapter metadata
@@ -131,6 +132,18 @@ async function generateClaudeDirectory(projectRoot, context, config, result) {
     // Check if it has custom files
     const hasCustomFiles = checkForCustomFiles(claudeDir);
     if (hasCustomFiles) {
+      // Migrate custom content before skipping
+      const customItems = findCustomContentInClaude(claudeDir);
+      if (customItems.length > 0) {
+        const migrated = migrateCustomContent(claudeDir, aiContextDir, customItems);
+        result.errors.push({
+          message: `Migrated ${migrated.length} custom items from .claude/ to .ai-context/custom/`,
+          code: 'MIGRATED_CUSTOM',
+          severity: 'info',
+          migratedItems: migrated
+        });
+      }
+
       result.errors.push({
         message: '.claude/ directory exists and contains custom files. Use --force to overwrite. Skipping directory generation.',
         code: 'EXISTS_CUSTOM',

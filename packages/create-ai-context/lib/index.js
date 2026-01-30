@@ -77,7 +77,9 @@ async function run(options = {}) {
     mode = 'merge',  // 'merge' | 'overwrite' | 'interactive'
     preserveCustom = true,
     updateRefs = false,
-    backup = false
+    backup = false,
+    // Force flag
+    force = false
   } = options;
 
   // Determine target directory
@@ -289,7 +291,8 @@ async function run(options = {}) {
   try {
     generationResults = await generateAllContexts(analysis, config, targetDir, {
       aiTools: config.aiTools,
-      verbose: config.verbose
+      verbose: config.verbose,
+      force: config.force || false
     });
     const toolsGenerated = generationResults.generated.map(g => g.adapter).join(', ');
     if (generationResults.success) {
