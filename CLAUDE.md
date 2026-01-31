@@ -9,7 +9,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 **Platform:** Universal AI Context Engineering - CLI tools and templates for Claude Code, GitHub Copilot, Cline, and Antigravity
 **Domain:** https://github.com/SireJeff/claude-context-engineering-template
 **Tech Stack:** Node.js, JavaScript, Jest, npm
-**Status:** Active (v2.3.0)
+**Status:** Active (v2.4.0)
 
 **Quick Reference:**
 - **API:** N/A (CLI tool)
@@ -187,7 +187,7 @@ packages/
 - GitHub: `SireJeff/claude-context-engineering-template`
 
 ### Business Constants
-- Supported AI tools: Claude Code, GitHub Copilot, Cline, Antigravity
+- Supported AI tools: Claude Code, GitHub Copilot, Cline, Antigravity, Windsurf, Aider, Continue
 - Node.js minimum: 18.0.0
 - Sync state stored in: `.ai-context/sync-state.json`
 - Git hooks location: `.claude/automation/hooks/`
@@ -270,5 +270,5 @@ packages/
 
 ---
 
-**Version:** 2.3.0 | **Last Updated:** 2026-01-30 | **Context Target:** 200k
+**Version:** 2.4.0 | **Last Updated:** 2026-01-31 | **Context Target:** 200k
 **Architecture:** 3-Level Chain-of-Index | **Index Files:** 20

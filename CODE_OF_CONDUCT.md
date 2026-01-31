@@ -78,4 +78,4 @@ For answers to common questions regarding this code of conduct, see the FAQs at 
 
 ---
 
-**Version:** 2.3.0 | **Universal AI Context Engineering Template**
+**Version:** 2.4.0 | **Universal AI Context Engineering Template**

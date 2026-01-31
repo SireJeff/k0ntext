@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.4.0] - 2026-01-31
+
+### Added
+- **New AI Tool Adapters** - Windsurf IDE, Aider, Continue
+  - Windsurf: Generates `.windsurf/rules.md` with XML-tagged sections
+  - Aider: Generates `.aider.conf.yml` configuration
+  - Continue: Generates `.continue/config.json` configuration
+
+### Improved
+- **Error Handling** - Added fs-wrapper for non-fatal filesystem errors
+  - WARNING-level handling for permission issues
+  - EEXIST handling for existing directories
+- **Placeholder Validation** - New `--fail-on-unreplaced` CLI flag
+  - Tracks unreplaced placeholders with file locations
+  - Throws error if placeholders remain and flag is set
+
+### Test Coverage
+- 591 tests passing (up from 506)
+- All new adapters have full unit test coverage
+
+---
+
 ## [2.3.0] - 2026-01-30
 
 ### Added - Symlink Architecture for `.claude/`

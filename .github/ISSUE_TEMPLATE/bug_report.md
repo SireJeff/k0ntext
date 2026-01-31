@@ -78,4 +78,4 @@ assignees: ''
 
 ---
 
-**Version:** 2.3.0 | **Universal AI Context Engineering Template**
+**Version:** 2.4.0 | **Universal AI Context Engineering Template**

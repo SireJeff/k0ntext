@@ -139,4 +139,4 @@ For questions or discussions, please open an issue or reach out to the maintaine
 
 ---
 
-**Version:** 2.3.0 | **Last Updated:** 2026-01-30
+**Version:** 2.4.0 | **Last Updated:** 2026-01-31
