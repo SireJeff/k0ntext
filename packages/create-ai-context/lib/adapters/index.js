@@ -8,6 +8,9 @@ const claude = require('./claude');
 const copilot = require('./copilot');
 const cline = require('./cline');
 const antigravity = require('./antigravity');
+const windsurf = require('./windsurf');
+const aider = require('./aider');
+const continueAdapter = require('./continue');
 
 /**
  * All available adapters
@@ -16,7 +19,10 @@ const adapters = {
   claude,
   copilot,
   cline,
-  antigravity
+  antigravity,
+  windsurf,
+  aider,
+  continue: continueAdapter
 };
 
 /**
@@ -65,5 +71,8 @@ module.exports = {
   claude,
   copilot,
   cline,
-  antigravity
+  antigravity,
+  windsurf,
+  aider,
+  continue: continueAdapter
 };
