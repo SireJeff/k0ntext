@@ -303,7 +303,8 @@ function getPackageVersion() {
     const pkgPath = path.join(__dirname, '..', 'package.json');
     const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
     return pkg.version || '1.0.0';
-  } catch {
+  } catch (error) {
+    // Silently fall back to default version
     return '1.0.0';
   }
 }

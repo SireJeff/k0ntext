@@ -206,6 +206,7 @@ function backupFile(filePath) {
     fs.copyFileSync(filePath, backupPath);
     return backupPath;
   } catch (err) {
+    console.warn(`Failed to create backup of ${filePath}: ${err.message}`);
     return null;
   }
 }
@@ -226,6 +227,7 @@ function restoreFromBackup(backupPath) {
     fs.unlinkSync(backupPath);
     return true;
   } catch (err) {
+    console.warn(`Failed to restore from backup ${backupPath}: ${err.message}`);
     return false;
   }
 }
