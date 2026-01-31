@@ -9,7 +9,7 @@
 ![GitHub Stars](https://img.shields.io/github/stars/SireJeff/claude-context-engineering-template?style=social)
 ![GitHub License](https://img.shields.io/github/license/SireJeff/claude-context-engineering-template)
 
-**One command to set up AI-friendly documentation for your codebase.**
+**One command to supercharge your AI coding assistant with intelligent context.**
 
 Supports: **Claude Code**, **GitHub Copilot**, **Cline**, **Antigravity**, **Windsurf**, **Aider**, **Continue**
 
@@ -21,166 +21,256 @@ Supports: **Claude Code**, **GitHub Copilot**, **Cline**, **Antigravity**, **Win
 npx create-universal-ai-context
 ```
 
-That's it. The CLI will:
-1. Analyze your codebase (languages, frameworks, entry points)
-2. Generate optimized context files for your chosen AI tools
-3. Set up persistent documentation that stays in sync with your code
+---
 
-### Options
+## Complete CLI Reference
+
+### Initialization Commands
+
+| Command | One-Line Explanation |
+|---------|----------------------|
+| `npx create-universal-ai-context` | Initialize AI context for your codebase (interactive mode) |
+| `npx create-universal-ai-context --yes` | Initialize with defaults, skip all prompts |
+| `npx create-universal-ai-context --ai <tools>` | Generate for specific AI tools only (e.g., `--ai claude,copilot`) |
+| `npx create-universal-ai-context --static` | Force standalone mode - static analysis only, no AI setup |
+| `npx create-universal-ai-context --analyze-only` | Run codebase analysis without installation |
+| `npx create-universal-ai-context --stack <preset>` | Use tech stack preset (python-fastapi, node-express, etc.) |
+| `npx create-universal-ai-context --mode <mode>` | Handle existing docs: `merge`, `overwrite`, or `interactive` |
+| `npx create-universal-ai-context --backup` | Create backup before modifying existing files |
+| `npx create-ai-context --fail-on-unreplaced` | Error if any placeholder values remain unreplaced |
+| `npx create-universal-ai-context --force` | Force overwrite of existing files (use with caution) |
+
+### Regeneration Commands
+
+| Command | One-Line Explanation |
+|---------|----------------------|
+| `npx create-universal-ai-context generate` | Regenerate AI context files for existing project |
+| `npx create-universal-ai-context generate --ai <tools>` | Regenerate for specific AI tools only |
+| `npx create-universal-ai-context generate --dryRun` | Show what would be regenerated without making changes |
+
+### Status & Validation Commands
+
+| Command | One-Line Explanation |
+|---------|----------------------|
+| `npx create-universal-ai-context status` | Show current AI context installation status |
+| `npx create-universal-ai-context drift` | Check if documentation is out of sync with codebase |
+| `npx create-universal-ai-context drift --all` | Check drift for all documents with detailed report |
+| `npx create-universal-ai-context validate-all` | Run full validation suite on documentation |
+
+### Synchronization Commands
+
+| Command | One-Line Explanation |
+|---------|----------------------|
+| `npx create-universal-ai-context sync:check` | Check if AI tool contexts are synchronized |
+| `npx create-universal-ai-context sync:all` | Synchronize all AI tool contexts from codebase |
+| `npx create-universal-ai-context sync:from <tool>` | Propagate context from specific tool to all others |
+| `npx create-universal-ai-context sync:resolve --strategy <strategy>` | Resolve conflicts between AI tool contexts |
+| `npx create-universal-ai-context sync:history` | Show synchronization history |
+
+### Migration Commands
+
+| Command | One-Line Explanation |
+|---------|----------------------|
+| `npx create-universal-ai-context migrate` | Migrate from v1.x (.claude/) to v2.0 (.ai-context/) |
+| `npx create-universal-ai-context migrate --dryRun` | Show migration plan without making changes |
+| `npx create-universal-ai-context migrate --backup` | Create backup before migrating |
+
+### Git Integration
+
+| Command | One-Line Explanation |
+|---------|----------------------|
+| `npx create-universal-ai-context hooks:install` | Install git hooks for automatic sync (pre-commit, post-commit) |
+
+### Helper Flags
 
 | Flag | Purpose |
 |------|---------|
-| `--ai <tool>` | Generate for specific tool (claude, copilot, cline, antigravity, windsurf, aider, continue, all) |
-| `--yes` | Skip all prompts |
-| `--static` | Force static analysis (no AI) |
+| `-v, --verbose` | Show detailed output |
+| `-n, --dry-run` | Show what would be done without making changes |
+| `-f, --force` | Force overwrite of existing files (use with caution) |
+| `-p, --path <dir>` | Specify project directory (defaults to current) |
+| `--no-git` | Skip git initialization |
+| `--no-plugin` | Skip plugin installation |
 
 ---
 
-## What Gets Generated
+## AI Tools Generated
 
-| AI Tool | Output File | What It Contains |
-|---------|-------------|------------------|
-| **Claude Code** | `AI_CONTEXT.md` + `.ai-context/` | Project nav, workflows, commands, agents |
-| **GitHub Copilot** | `.github/copilot-instructions.md` | Tech stack, patterns, conventions |
-| **Cline** | `.clinerules` | Architecture, commands, gotchas |
-| **Antigravity** | `.agent/` (10 files) | Identity, workflows, skills |
-| **Windsurf** | `.windsurf/rules.md` | XML-tagged rules for Cascade AI |
-| **Aider** | `.aider.conf.yml` | YAML configuration |
-| **Continue** | `.continue/config.json` | JSON configuration with slash commands |
-
-### Analysis Includes
-
-- **Entry points** - API routes, CLI handlers, event listeners
-- **Workflows** - Auth, payments, data processing patterns
-- **Tech stack** - Languages, frameworks, dependencies
-- **Architecture** - Directory structure, layers, patterns
-
-Supports: Express, FastAPI, Next.js, Django, Rails, NestJS
+| Tool | Output File | One-Line Explanation |
+|------|-------------|----------------------|
+| **Claude Code** | `AI_CONTEXT.md` + `.ai-context/` | Project navigation, workflows, commands, agents |
+| **GitHub Copilot** | `.github/copilot-instructions.md` | Tech stack, patterns, conventions for Copilot suggestions |
+| **Cline** | `.clinerules` | Architecture, commands, gotchas for Cline autopilot |
+| **Antigravity** | `.agent/` (10 files) | Identity, workflows, skills for Cascade AI |
+| **Windsurf** | `.windsurf/rules.md` | XML-tagged rules for Windsurf Cascade AI |
+| **Aider** | `.aider.conf.yml` | Configuration for terminal-based pair programming |
+| **Continue** | `.continue/config.json` | Configuration with slash commands for VS Code autopilot |
 
 ---
 
-## Common Commands
+## AI Agents & Commands (Claude Code)
 
-```bash
-# Regenerate context files
-npx create-universal-ai-context generate
+### Available Agents
 
-# Check installation status
-npx create-universal-ai-context status
+| Agent | Capacity | When to Use |
+|-------|----------|-------------|
+| `@context-engineer` | Initialize system, setup project structure | First-time setup, major reconfiguration |
+| `@core-architect` | Design system architecture, plan structure | New features, refactoring, tech decisions |
+| `@api-developer` | Design and implement API endpoints | REST/GraphQL APIs, route handlers |
+| `@database-ops` | Design database schemas, migrations | Database changes, data modeling |
+| `@deployment-ops` | Plan deployments, CI/CD pipelines | Infrastructure, deployment strategies |
+| `@integration-hub` | Design external service integrations | Third-party APIs, webhooks |
 
-# Sync contexts across AI tools
-npx create-universal-ai-context sync:all
+### Available Commands
 
-# Install git hooks for auto-sync
-npx create-universal-ai-context hooks:install
+| Command | Capacity | One-Line Explanation |
+|---------|----------|----------------------|
+| `/rpi-research` | Explore codebase, create research document | Deep dive into unknown code, investigate features |
+| `/rpi-plan` | Create implementation plan from research | Design step-by-step implementation strategy |
+| `/rpi-implement` | Execute plan with atomic commits | Build feature with validation between steps |
+| `/validate-all` | Run validation suite on documentation | Check completeness, consistency, accuracy |
+| `/auto-sync` | Synchronize docs with codebase | Update docs after code changes |
+| `/session-save` | Save current Claude Code session state | Preserve work across restarts |
+| `/session-resume` | Restore previously saved session | Continue where you left off |
+| `/collab` | Handoff context to team members | Transfer knowledge, coordinate work |
+| `/analytics` | View context metrics and statistics | Understand usage patterns |
+| `/help` | Display all available commands | Discover available tools |
+
+---
+
+## Repository Structure: With vs Without Context Engineering
+
+### ❌ Without Context Engineering
+
+```
+my-project/
+├── src/
+├── package.json
+├── README.md
+└── .git/
+
+❌ AI has no context about:
+   - Project purpose and domain
+   - Architecture and patterns
+   - Entry points and workflows
+   - Team conventions
+   - Database schema
+   - API routes
+   - Testing strategy
+
+→ AI: "Guesses intent, reads everything, asks generic questions"
+```
+
+### ✅ With Context Engineering
+
+```
+my-project/
+├── AI_CONTEXT.md                    ← Universal entry point for AI
+├── .ai-context/                     ← Single source of truth
+│   ├── agents/                       ← 6 specialized agents
+│   │   ├── context-engineer.md
+│   │   ├── core-architect.md
+│   │   ├── api-developer.md
+│   │   ├── database-ops.md
+│   │   ├── deployment-ops.md
+│   │   └── integration-hub.md
+│   ├── commands/                     ← 11 slash commands
+│   │   ├── rpi-research.md
+│   │   ├── rpi-plan.md
+│   │   ├── rpi-implement.md
+│   │   ├── validate-all.md
+│   │   ├── auto-sync.md
+│   │   ├── session-save.md
+│   │   ├── session-resume.md
+│   │   ├── collab.md
+│   │   ├── analytics.md
+│   │   └── help.md
+│   ├── context/workflows/            ← Auto-generated workflow docs
+│   │   ├── analytics.md
+│   │   ├── api-endpoints.md
+│   │   ├── configuration.md
+│   │   ├── data-processing.md
+│   │   ├── database-operations.md
+│   │   ├── search.md
+│   │   ├── testing.md
+│   │   └── user-authentication.md
+│   ├── context/                        ← Core context files
+│   │   ├── ARCHITECTURE_SNAPSHOT.md   ← System map
+│   │   ├── CODE_TO_WORKFLOW_MAP.md    ← Navigation guide
+│   │   ├── KNOWN_GOTCHAS.md           → Common pitfalls
+│   │   ├── INTEGRATION_POINTS.md     → External deps
+│   │   └── TESTING_MAP.md             → Test strategy
+│   └── indexes/                       ← 3-level navigation chain
+├── .claude/                          ← Claude Code symlinks to .ai-context/
+├── .github/copilot-instructions.md  ← Copilot context
+├── .clinerules                       ← Cline context
+├── .windsurf/rules.md                ← Windsurf context
+├── .aider.conf.yml                  ← Aider context
+└── .continue/config.json            ← Continue context
+
+✅ AI has complete context:
+   → Knows project purpose, domain, and architecture
+   → Understands workflows and entry points
+   → Aware of team conventions and gotchas
+   → Can ask specific questions using /commands
+   → Can delegate work to specialized /agents
 ```
 
 ---
 
-## Why Use This?
+## Tech Stack Presets
 
-| Problem | Solution |
-|---------|----------|
-| AI reads entire files | Pre-built indexes point to relevant code |
-| Context fills with irrelevant content | Progressive loading: index → workflow → code |
-| Knowledge lost between sessions | Session persistence across Claude Code restarts |
-| Docs drift out of sync | Automatic drift detection and sync |
-
----
-
-## Project Structure
-
-```
-your-project/
-├── AI_CONTEXT.md                # Universal entry point
-├── .ai-context/                 # Single source of truth
-│   ├── agents/                  # 6 specialized agents
-│   ├── commands/                # 11 slash commands
-│   ├── context/workflows/       # Auto-generated docs
-│   └── indexes/                 # Navigation hierarchy
-├── .claude/                     # Claude Code (symlinks to .ai-context/)
-├── .github/copilot-instructions.md
-├── .clinerules
-├── .windsurf/rules.md
-├── .aider.conf.yml
-└── .continue/config.json
-```
+| Preset | Framework | Use When |
+|--------|-----------|----------|
+| `python` | Python (generic) | Pure Python projects |
+| `python-django` | Django | Django web applications |
+| `python-fastapi` | FastAPI | FastAPI applications |
+| `node` | Node.js (generic) | Pure Node projects |
+| `node-nestjs` | NestJS | NestJS applications |
+| `typescript-remix` | Remix | Remix applications |
+| `go` | Go | Go applications |
+| `rust` | Rust | Rust applications |
+| `ruby` | Ruby (generic) | Pure Ruby projects |
+| `java-spring` | Spring Boot | Spring applications |
+| `csharp-dotnet` | .NET/C# | .NET applications |
+| `php-laravel` | Laravel | Laravel applications |
 
 ---
 
 ## Advanced Features
 
-### Cross-Tool Sync
-When you edit `AI_CONTEXT.md`, changes propagate to other tools automatically.
+### 🔀 Automatic Codebase Analysis
+Detects languages, frameworks, entry points, workflows, and architecture automatically.
 
-```bash
-npx create-universal-ai-context sync:from claude --strategy source_wins
-```
+### 🔄 Cross-Tool Synchronization
+Edit once, sync everywhere. Changes to `.ai-context/` propagate to all AI tools automatically.
 
-### Drift Detection
-Check if docs are out of sync with code.
+### 📊 Drift Detection
+Automatically detects when documentation falls out of sync with codebase.
 
-```bash
-npx create-universal-ai-context drift --all
-```
+### 💾 Session Persistence
+Save and restore Claude Code sessions across restarts.
 
-### Session Persistence
-Save and resume Claude Code sessions.
-
-```bash
-/session-save    # In Claude Code
-/session-resume  # Restore previous session
-```
-
-### Git Hooks
-Auto-sync on commits.
-
-```bash
-npx create-universal-ai-context hooks:install
-```
+### 🪝 Git Hooks
+Auto-sync on commits ensures docs stay up-to-date.
 
 ---
 
-## CLI Reference (Inside Claude Code)
-
-Once installed, use these slash commands:
-
-| Command | Purpose |
-|---------|---------|
-| `/rpi-research` | Explore codebase, create research doc |
-| `/rpi-plan` | Create implementation plan |
-| `/rpi-implement` | Execute with atomic commits |
-| `/validate-all` | Run full validation suite |
-| `/auto-sync` | Sync docs with code |
-| `/session-save` | Save session state |
-
----
-
-## Configuration
-
-Tech stack presets available:
-
-`python`, `python-django`, `node`, `node-nestjs`, `typescript-remix`, `go`, `rust`, `ruby`, `java-spring`, `csharp-dotnet`, `php-laravel`
+## Installation
 
 ```bash
+# For new projects
+npx create-universal-ai-context
+
+# For existing projects
+npx create-universal-ai-context --yes
+
+# For specific AI tools only
+npx create-universal-ai-context --ai claude,copilot
+
+# With tech stack preset
 npx create-universal-ai-context --stack python-django
 ```
-
----
-
-## FAQ
-
-**Q: Does this modify my code?**
-A: No. Only generates documentation files.
-
-**Q: Can I customize the generated docs?**
-A: Yes. Edit `.ai-context/` files directly. Your changes persist (except on `--force` regenerate).
-
-**Q: What if I only use one AI tool?**
-A: Use `--ai <tool>` to generate only what you need.
-
-**Q: How do I update the docs after code changes?**
-A: Run `npx create-universal-ai-context generate` or use `/auto-sync` in Claude Code.
 
 ---
 
@@ -190,4 +280,4 @@ MIT
 
 ---
 
-**Version:** 2.4.0 | **Updated:** 2026-01-31
+**Version:** 2.5.0 | **Updated:** 2026-01-31
