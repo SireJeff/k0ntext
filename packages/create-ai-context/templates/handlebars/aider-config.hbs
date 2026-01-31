@@ -1,0 +1,80 @@
+{{!-- Aider Configuration Template --}}
+# {{project.name}} - Aider Configuration
+# Generated: {{metadata.timestamp}}
+
+# Model selection (uncomment and configure as needed)
+# model: gpt-4
+# model: claude-3-opus-20240229
+# model: deepseek-coder
+
+# Auto-commit settings
+auto-commits: true
+auto-commit: false
+commit_prompt: "docs: update {path} per AI pair-programming session"
+
+# File handling
+{{#if key_files.entry_points}}
+# Add only these files to context
+add: {{join key_files.entry_points ","}}
+{{/if}}
+
+# Exclude patterns
+exclude:
+  - node_modules/
+  - build/
+  - dist/
+  - .git/
+  - coverage/
+  - "*.min.js"
+  - "*.min.css"
+
+# Git settings
+gitignore: true
+git-detect: true
+
+# Editor settings
+editor: vscode
+# editor-model: gpt-4
+
+# Language detection
+{{#if project.primary_language}}
+language: {{project.primary_language}}
+{{/if}}
+
+# Testing
+test-cmd: {{commands.test}}
+
+# Linting (configure as needed)
+# lint-cmd: npm run lint
+# lint-cmd: python -m flake8 .
+
+# Security
+# unsafe-install: false  # Set to true to allow pip installs without confirmation
+
+# Shell commands
+# shell-commands: true  # Allow aider to run shell commands
+
+# Voice input (experimental)
+# voice-input: false
+
+# Chat history
+# chat-history: .aider.chat.history
+# chat-history-file: .aider.chat.history
+
+# Display settings
+# color: true
+# progress-spinner: true
+
+# Map tokens (for context optimization)
+# map-tokens: 2048
+
+# Message formatting
+# stream: true
+# dark-mode: false
+
+# Advanced settings
+# attribute-author: true
+# attribute-committer: true
+
+---
+{{{coordination.footer}}}
