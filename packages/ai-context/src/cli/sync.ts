@@ -134,8 +134,13 @@ export class SyncManager {
       try {
         const content = await fs.readFile(toolPaths[tool], 'utf-8');
         hashes[tool] = crypto.createHash('sha256').update(content).digest('hex');
-      } catch {
-        // File doesn't exist, skip
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(
+          chalk.yellow(
+            `Warning: Failed to read tool file for "${tool}" at "${toolPaths[tool]}": ${message}`
+          )
+        );
         hashes[tool] = '';
       }
     }
