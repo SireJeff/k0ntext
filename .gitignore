@@ -48,7 +48,6 @@ coverage/
 .continue/
 .windsurf/
 AI_CONTEXT.md
-.github/copilot-instructions.md
 
 # Local Claude data
 .claude/sessions/
