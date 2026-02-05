@@ -85,8 +85,8 @@ export class SyncManager {
   }
 
   async syncFrom(tool: string): Promise<void> {
-    const config = await this.db.getToolConfig(tool);
-    if (!config) {
+    const configs = await this.db.getToolConfigs(tool);
+    if (!configs || configs.length === 0) {
       throw new Error(`Tool ${tool} not found in database`);
     }
 
