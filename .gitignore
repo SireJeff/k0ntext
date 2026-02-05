@@ -30,13 +30,12 @@ social-post.md
 # Uncomment if you want to keep handoffs private
 # .claude/knowledge/sessions/*.md
 
-# Node modules (for CLI tools)
+# Node modules
 node_modules/
-.claude/tools/node_modules/
-packages/*/node_modules/
 
 # Build artifacts
-packages/*/dist/
+dist/
+coverage/
 
 # Generated files
 .ai-context/
