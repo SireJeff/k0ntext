@@ -56,8 +56,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SireJeff/claude-context-engineering-template.git",
-    "directory": "packages/ai-context"
+    "url": "git+https://github.com/SireJeff/claude-context-engineering-template.git"
   },
   "bugs": {
     "url": "https://github.com/SireJeff/claude-context-engineering-template/issues"
