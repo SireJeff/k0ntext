@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This research investigates how the `create-ai-context` package handles repositories with pre-existing AI tool contexts (`.claude/`, `.github/`, `.agent/`, `.clinerules`, etc.) and identifies potential issues with the current implementation.
+This research investigates how the `ai-context` package handles repositories with pre-existing AI tool contexts (`.claude/`, `.github/`, `.agent/`, `.clinerules`, etc.) and identifies potential issues with the current implementation.
 
 **Key Findings:**
 1. **Documentation discovery exists** but has limited awareness of custom content in existing contexts
@@ -21,7 +21,7 @@ This research investigates how the `create-ai-context` package handles repositor
 
 ## Research Objective
 
-Investigate discrepancies in how `create-ai-context` processes packages installed on repos with pre-existing contexts (`.claude`, `.github`, `.agent`, etc.) and identify:
+Investigate discrepancies in how `ai-context` processes packages installed on repos with pre-existing contexts (`.claude`, `.github`, `.agent`, etc.) and identify:
 1. Whether existing contexts are being processed to their best possibility
 2. Potential issues caused by current processing
 3. Whether tools' contexts/agents/commands are aware of the universal context engineering template
@@ -34,15 +34,15 @@ Investigate discrepancies in how `create-ai-context` processes packages installe
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `packages/create-ai-context/lib/index.js` | 58-334 | Main orchestrator with discovery phase |
-| `packages/create-ai-context/lib/doc-discovery.js` | 93-180 | Pre-existing docs detection |
-| `packages/create-ai-context/lib/installer.js` | 113-130 | Template copying (creates .ai-context) |
-| `packages/create-ai-context/lib/adapters/*.js` | Various | Tool-specific generation |
+| `packages/ai-context/lib/index.js` | 58-334 | Main orchestrator with discovery phase |
+| `packages/ai-context/lib/doc-discovery.js` | 93-180 | Pre-existing docs detection |
+| `packages/ai-context/lib/installer.js` | 113-130 | Template copying (creates .ai-context) |
+| `packages/ai-context/lib/adapters/*.js` | Various | Tool-specific generation |
 
 ### Key Call Chain
 
 ```
-npx create-ai-context
+npx ai-context
   └─> lib/index.js:run()
       ├─> Phase 0: discoverExistingDocs() [Line 102]
       ├─> Phase 3: createDirectoryStructure() [Line 207]
@@ -67,7 +67,7 @@ doc-discovery.js
 installer.js
   ├── Uses: AI_CONTEXT_DIR = '.ai-context'
   ├── Creates: Directory structure via createDirectoryStructure()
-  └─> Copies: Templates from packages/create-ai-context/templates/base/
+  └─> Copies: Templates from packages/ai-context/templates/base/
 
 template-populator.js
   ├── Uses: AI_CONTEXT_DIR, AI_CONTEXT_FILE
@@ -204,17 +204,17 @@ fs.writeFileSync(outputPath, content, 'utf-8');
 
 ### Discrepancy 5: Tools Not Aware of Universal Template
 
-**Location:** Generated templates in `packages/create-ai-context/templates/`
+**Location:** Generated templates in `packages/ai-context/templates/`
 
 **What's missing:**
-1. No "I am managed by create-ai-context" header in tool files
+1. No "I am managed by ai-context" header in tool files
 2. No warning to tools about `.ai-context/` presence
 3. No coordination between tool contexts
 
 **Example - `.github/copilot-instructions.md` should have:**
 ```markdown
 ---
-⚠️ This file is managed by create-ai-context v2.3.0
+⚠️ This file is managed by ai-context v2.3.0
 Universal context is in .ai-context/ directory
 Edit .ai-context/ source files, not this file
 Last updated: 2026-01-30

@@ -25,7 +25,7 @@ Successfully implemented automatic cross-tool context synchronization for the Un
   - Debounced sync to avoid excessive regenerations
   - Configurable strategies and intervals
 
-### 2. CLI Commands (`bin/create-ai-context.js`)
+### 2. CLI Commands (`bin/ai-context.js`)
 
 - `sync:check` - Check if contexts are synchronized
 - `sync:all` - Sync all tools from codebase
@@ -86,22 +86,22 @@ User edits AI_CONTEXT.md
 
 ### Check Sync Status
 ```bash
-npx create-ai-context sync:check
+npx ai-context sync:check
 ```
 
 ### Sync All Tools
 ```bash
-npx create-ai-context sync:all
+npx ai-context sync:all
 ```
 
 ### Sync From Specific Tool
 ```bash
-npx create-ai-context sync:from claude --strategy source_wins
+npx ai-context sync:from claude --strategy source_wins
 ```
 
 ### Install Git Hooks
 ```bash
-npx create-ai-context hooks:install
+npx ai-context hooks:install
 ```
 
 ## Files Created/Modified
@@ -119,7 +119,7 @@ npx create-ai-context hooks:install
 - `.claude/context/CROSS_TOOL_SYNC.md`
 
 ### Modified Files (2)
-- `bin/create-ai-context.js` - Added sync commands
+- `bin/ai-context.js` - Added sync commands
 - `CLAUDE.md` - Updated documentation
 
 ## Test Results

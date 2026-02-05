@@ -30,7 +30,7 @@
 
 ## Executive Summary
 
-This plan addresses 5 critical discrepancies in how `create-ai-context` handles repositories with pre-existing AI tool contexts. The fixes ensure:
+This plan addresses 5 critical discrepancies in how `ai-context` handles repositories with pre-existing AI tool contexts. The fixes ensure:
 1. Custom content in existing tool contexts is preserved
 2. Adapters check before overwriting
 3. Tools are aware of the universal `.ai-context/` directory
@@ -269,7 +269,7 @@ This project uses AI Context Engineering for coordinated documentation across al
 All content is managed in `.ai-context/`. Tool-specific files are auto-generated.
 To modify documentation, edit files in `.ai-context/context/` and regenerate with:
 ```bash
-npx create-ai-context generate --ai <tool-name>
+npx ai-context generate --ai <tool-name>
 ```
 
 ### Cross-Tool Coordination
@@ -300,7 +300,7 @@ This file is generated from `.ai-context/` universal context directory.
 - Cline: See `.clinerules`
 - Antigravity: See `.agent/` directory
 
-*Regenerate with: `npx create-ai-context generate --ai copilot`*
+*Regenerate with: `npx ai-context generate --ai copilot`*
 ```
 
 ---
@@ -324,7 +324,7 @@ copilot=.github/copilot-instructions.md
 antigravity=.agent/
 
 # Modify docs in .ai-context/context/ then regenerate
-# Regenerate: npx create-ai-context generate --ai cline
+# Regenerate: npx ai-context generate --ai cline
 ```
 
 ---
@@ -593,25 +593,25 @@ function getToolCoordinationHeader(toolName, version) {
   const headers = {
     claude: `<!-- ========================================= -->
 <!-- ⚠️  CLAUDE CODE CONTEXT                    -->
-<!-- Managed by create-ai-context v${version}    -->
+<!-- Managed by ai-context v${version}    -->
 <!-- Source: .ai-context/ directory             -->
 <!-- ========================================= -->`,
 
     copilot: `<!-- ========================================= -->
 <!-- ⚠️  GITHUB COPILOT INSTRUCTIONS           -->
-<!-- Managed by create-ai-context v${version}    -->
+<!-- Managed by ai-context v${version}    -->
 <!-- Source: .ai-context/ directory             -->
 <!-- ========================================= -->`,
 
     cline: `# ==========================================
 # ⚠️  CLINE RULES
-# Managed by create-ai-context v${version}
+# Managed by ai-context v${version}
 # Source: .ai-context/ directory
 # ==========================================`,
 
     antigravity: `<!-- ========================================= -->
 <!-- ⚠️  ANTIGRAVITY CONTEXT                    -->
-<!-- Managed by create-ai-context v${version}    -->
+<!-- Managed by ai-context v${version}    -->
 <!-- Source: .ai-context/ directory             -->
 <!-- ========================================= -->`
   };
@@ -638,18 +638,18 @@ This project uses AI Context Engineering for coordinated documentation.
 
 **Regeneration Command:**
 \`\`\`bash
-npx create-ai-context generate --ai ${toolName}
+npx ai-context generate --ai ${toolName}
 \`\`\`
 `;
 }
 
 /**
- * Check if file is managed by create-ai-context
+ * Check if file is managed by ai-context
  */
 function isManagedFile(filePath) {
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
-    return content.includes('Managed by create-ai-context') ||
+    return content.includes('Managed by ai-context') ||
            content.includes('CREATE-AI-CONTEXT');
   } catch {
     return false;
@@ -713,7 +713,7 @@ module.exports = {
 3. ✅ `lib/adapters/antigravity.js` - Import `isManagedFile`, `checkForCustomFiles()`
 4. ✅ `lib/adapters/claude.js` - Import `isManagedFile`, `checkForCustomFiles()`
 5. ✅ `tests/unit/adapters/claude.test.js` - Updated for custom file detection
-6. ✅ `tests/e2e/create-ai-context.test.js` - Simplified regeneration test
+6. ✅ `tests/e2e/ai-context.test.js` - Simplified regeneration test
 
 **Commit:** `feat: add exists checks and custom file detection to adapters` (52311c0)
 
@@ -765,7 +765,7 @@ npm test -- doc-discovery.test.js
 **Tests:**
 ```bash
 npm test -- index.test.js
-# CLI test: npx create-ai-context --force
+# CLI test: npx ai-context --force
 ```
 
 **Commit Message:** `feat: add --force flag support to orchestrator`
@@ -775,7 +775,7 @@ npm test -- index.test.js
 ### ⏳ Step 7: Add CLI --force Flag (PENDING)
 
 **Files to Modify:**
-1. `bin/create-ai-context.js` - Add `--force` / `-f` flag to main and generate commands
+1. `bin/ai-context.js` - Add `--force` / `-f` flag to main and generate commands
 
 **Change:**
 ```javascript
@@ -784,8 +784,8 @@ npm test -- index.test.js
 
 **Tests:**
 ```bash
-# Manual test: npx create-ai-context --force
-# Manual test: npx create-ai-context generate --force
+# Manual test: npx ai-context --force
+# Manual test: npx ai-context generate --force
 ```
 
 ---
@@ -805,7 +805,7 @@ npm test -- index.test.js
 
 ```bash
 # Continue from where we left off
-cd packages/create-ai-context
+cd packages/ai-context
 git log --oneline -5  # See recent commits
 
 # Run current test suite
@@ -852,7 +852,7 @@ npm test
 | Template Headers/Footers | ✅ Done | All 5 templates updated with coordination data |
 | Adapter Exists Checks | ✅ Done | All 4 adapters check `isManagedFile()` before overwriting |
 | Custom Content Migration | ⏳ TODO | Claude adapter needs to call `migrateCustomContent()` |
-| CLI --force Flag | ⏳ TODO | Add to bin/create-ai-context.js |
+| CLI --force Flag | ⏳ TODO | Add to bin/ai-context.js |
 | Doc Discovery Enhancement | ⏳ TODO | If needed for better extraction |
 | Integration Tests | ⏳ TODO | Create tests for full existing-context workflow |
 
@@ -882,19 +882,19 @@ npm test
 ### E2E Test Scenarios
 
 1. **Scenario 1:** Repo with existing `.github/copilot-instructions.md`
-   - Run: `npx create-ai-context`
+   - Run: `npx ai-context`
    - Expect: Warning, file preserved
 
 2. **Scenario 2:** Repo with existing `.claude/custom/my-agent.md`
-   - Run: `npx create-ai-context`
+   - Run: `npx ai-context`
    - Expect: Custom agent migrated to `.ai-context/custom/`
 
 3. **Scenario 3:** Repo with all tool contexts
-   - Run: `npx create-ai-context`
+   - Run: `npx ai-context`
    - Expect: All preserved, warnings for each
 
 4. **Scenario 4:** Force overwrite
-   - Run: `npx create-ai-context --force`
+   - Run: `npx ai-context --force`
    - Expect: All regenerated without warnings
 
 ---
@@ -915,7 +915,7 @@ git revert <commit-range>
 git reset --hard HEAD~<number-of-commits>
 
 # Specific file revert
-git checkout HEAD~1 -- packages/create-ai-context/lib/adapters/copilot.js
+git checkout HEAD~1 -- packages/ai-context/lib/adapters/copilot.js
 ```
 
 ### Recovery Steps

@@ -193,7 +193,7 @@ try {
 
 ### 3.1 Empty Project Edge Case
 
-**Scenario:** User runs `create-ai-context` in empty directory
+**Scenario:** User runs `ai-context` in empty directory
 **Current behavior:** Creates default structure with generic placeholders
 **Potential issue:** Generated documentation has many "Not detected" values
 **Recommendation:** Add warning when analysis returns minimal results
@@ -206,7 +206,7 @@ try {
 
 ### 3.3 Concurrent Execution Edge Case
 
-**Scenario:** User runs `create-ai-context` twice simultaneously
+**Scenario:** User runs `ai-context` twice simultaneously
 **Current behavior:** Both processes write to same files, potential corruption
 **Recommendation:** Add `.ai-context/.lock` file with process ID
 
@@ -383,7 +383,7 @@ try {
 - **Question:** What specific use cases require separate plugins?
 - **Recommendation:** Document use cases before implementing
 
-#### Issue #13: Rename npm package to create-ai-context
+#### Issue #13: Rename npm package to ai-context
 - **Status:** CLOSED (resolved)
 - **Labels:** `breaking-change`
 - **Relevance:** Not relevant (completed)

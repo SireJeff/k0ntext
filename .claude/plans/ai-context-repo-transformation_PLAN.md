@@ -18,7 +18,7 @@ Transform the `feature/v3.0.0-publish-ready` branch into a minimal, focused repo
 ## Scope
 
 ### In Scope ✅
-- Remove all legacy packages (`create-ai-context`, `ai-context-mcp-server`, `claude-context-plugin`)
+- Remove all legacy packages (`ai-context`, `ai-context-mcp-server`, `claude-context-plugin`)
 - Flatten repository structure (move `ai-context` from `packages/` to root)
 - Update `.github/` configuration for single package
 - Update `.claude/` development context for single package
@@ -57,31 +57,31 @@ Transform the `feature/v3.0.0-publish-ready` branch into a minimal, focused repo
 
 | # | Action | File | Lines | Risk | Test | Status |
 |---|--------|------|-------|------|------|--------|
-| 1 | Extract templates from legacy package | `packages/create-ai-context/templates/` | All | LOW | Verify extracted | ⏳ |
-| 2 | Remove create-ai-context package | `packages/create-ai-context/` | All | MEDIUM | Verify removed | ⏳ |
+| 1 | Extract templates from legacy package | `packages/ai-context/templates/` | All | LOW | Verify extracted | ⏳ |
+| 2 | Remove ai-context package | `packages/ai-context/` | All | MEDIUM | Verify removed | ⏳ |
 | 3 | Remove ai-context-mcp-server package | `packages/ai-context-mcp-server/` | All | MEDIUM | Verify removed | ⏳ |
 | 4 | Remove claude-context-plugin package | `packages/claude-context-plugin/` | All | MEDIUM | Verify removed | ⏳ |
 
 ### Todo 1: Extract templates from legacy package
-**File:** `packages/create-ai-context/templates/`
+**File:** `packages/ai-context/templates/`
 **Action:** Copy all template files to temporary location before deletion
 **Command:**
 ```bash
 mkdir -p /tmp/ai-context-templates
-cp -r packages/create-ai-context/templates/* /tmp/ai-context-templates/
+cp -r packages/ai-context/templates/* /tmp/ai-context-templates/
 ```
 **Test After:** Verify templates exist in temp location
 **Rollback:** N/A (preparation step)
 
-### Todo 2: Remove create-ai-context package
-**File:** `packages/create-ai-context/`
+### Todo 2: Remove ai-context package
+**File:** `packages/ai-context/`
 **Current Code:** Entire directory exists
 **Proposed Change:** Remove directory
 **Command:**
 ```bash
-git rm -r packages/create-ai-context/
+git rm -r packages/ai-context/
 ```
-**Test After:** `ls packages/` should not show create-ai-context
+**Test After:** `ls packages/` should not show ai-context
 **Rollback:** `git reset --hard HEAD~1`
 
 ### Todo 3: Remove ai-context-mcp-server package
@@ -386,11 +386,11 @@ git rm -r .github/PENDING_ISSUES/
 
 ### Todo 1: Update CLAUDE.md paths
 **Files:** `.claude/context/*.md`, `CLAUDE.md` (root)
-**Current Code:** References to `` and `packages/create-ai-context/`
+**Current Code:** References to `` and `packages/ai-context/`
 **Proposed Change:** Update all paths to root level
 **Search/Replace:**
 - `` → `` (empty, since at root)
-- `packages/create-ai-context/` → Remove references
+- `packages/ai-context/` → Remove references
 **Command:**
 ```bash
 find .claude -type f -name "*.md" -exec sed -i 's|||g' {} \;
@@ -624,8 +624,8 @@ fi
 **Action:** Find and replace any remaining old path references
 **Search Patterns:**
 - `` → `` (empty)
-- `packages/create-ai-context/` → Remove or update
-- `create-ai-context` → `ai-context` (command name)
+- `packages/ai-context/` → Remove or update
+- `ai-context` → `ai-context` (command name)
 **Command:**
 ```bash
 find . -name "*.md" -type f -exec sed -i 's|||g' {} \;
@@ -730,7 +730,7 @@ The `ai-context` project has moved to a new, focused repository:
 
 The `claude-context-engineering-template` repository was originally a monorepo containing:
 - `ai-context` (the main package)
-- `create-ai-context` (deprecated)
+- `ai-context` (deprecated)
 - `ai-context-mcp-server` (deprecated)
 - `claude-context-plugin` (deprecated)
 
@@ -904,7 +904,7 @@ Update any GitHub Actions or CI/CD pipelines:
 |-----|-----|
 | Repository | `claude-context-engineering-template` | `ai-context` |
 | Package | `create-universal-ai-context` | `ai-context` |
-| Command | `create-ai-context` | `ai-context` |
+| Command | `ai-context` | `ai-context` |
 | Structure | Monorepo (4 packages) | Single package |
 
 ## Questions?

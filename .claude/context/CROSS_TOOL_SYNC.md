@@ -139,7 +139,7 @@ Don't auto-resolve. Require user intervention.
 
 ### Check Sync Status
 ```bash
-npx create-ai-context sync:check
+npx ai-context sync:check
 ```
 
 **Output:**
@@ -161,27 +161,27 @@ Tools:
 
 ### Sync All Tools
 ```bash
-npx create-ai-context sync:all
+npx ai-context sync:all
 ```
 
 Regenerates all tool contexts from the codebase.
 
 ### Sync From Specific Tool
 ```bash
-npx create-ai-context sync:from claude --strategy source_wins
+npx ai-context sync:from claude --strategy source_wins
 ```
 
 Propagates changes from Claude Code context to all other tools.
 
 ### Resolve Conflicts
 ```bash
-npx create-ai-context sync:resolve --strategy regenerate_all
-npx create-ai-context sync:resolve --strategy source_wins --tool claude
+npx ai-context sync:resolve --strategy regenerate_all
+npx ai-context sync:resolve --strategy source_wins --tool claude
 ```
 
 ### View Sync History
 ```bash
-npx create-ai-context sync:history --limit 20
+npx ai-context sync:history --limit 20
 ```
 
 Shows recent sync operations with timestamps and results.
@@ -192,7 +192,7 @@ Shows recent sync operations with timestamps and results.
 
 ### Installation
 ```bash
-npx create-ai-context hooks:install
+npx ai-context hooks:install
 ```
 
 This installs:
@@ -202,14 +202,14 @@ This installs:
 ### How It Works
 
 **Pre-commit Hook:**
-1. Runs `create-ai-context sync:check`
+1. Runs `ai-context sync:check`
 2. If contexts are out of sync, blocks the commit
 3. Shows which tools need syncing
-4. User can sync with `create-ai-context sync:all`
+4. User can sync with `ai-context sync:all`
 5. Or skip with `git commit --no-verify`
 
 **Post-commit Hook:**
-1. Runs `create-ai-context sync:all` in background
+1. Runs `ai-context sync:all` in background
 2. Doesn't block the commit process
 3. Ensures contexts stay synced after commits
 
@@ -226,11 +226,11 @@ git commit -m "Update project info"
 # Pre-commit hook blocks commit:
 #   AI contexts are out of sync!
 #   Claude Code context has changed
-#   Run: create-ai-context sync:all
+#   Run: ai-context sync:all
 #   Or skip: git commit --no-verify
 
 # User syncs
-create-ai-context sync:all
+ai-context sync:all
 
 # Commit succeeds
 git commit -m "Update project info"
@@ -332,7 +332,7 @@ npm test -- tests/unit/cross-tool-sync.test.js
 
 3. **Run sync check manually:**
    ```bash
-   npx create-ai-context sync:check --json
+   npx ai-context sync:check --json
    ```
 
 ### Git Hooks Not Running
@@ -350,7 +350,7 @@ npm test -- tests/unit/cross-tool-sync.test.js
 
 3. **Reinstall hooks:**
    ```bash
-   npx create-ai-context hooks:install
+   npx ai-context hooks:install
    ```
 
 ### Excessive Syncing
@@ -453,7 +453,7 @@ for (const file of getAllFiles(dir).sort()) {
 | `lib/cross-tool-sync/file-watcher.js` | Change detection |
 | `lib/cross-tool-sync/sync-service.js` | Background service |
 | `lib/cross-tool-sync/index.js` | Module exports |
-| `bin/create-ai-context.js` | CLI commands (sync:*) |
+| `bin/ai-context.js` | CLI commands (sync:*) |
 | `.claude/automation/hooks/` | Git hook templates |
 | `tests/unit/cross-tool-sync.test.js` | Test suite |
 

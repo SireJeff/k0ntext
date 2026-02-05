@@ -63,7 +63,7 @@ Total estimated time: 10-13 hours for all phases.
 | `lib/template-populator.js` | 61, 98 | Wrap fs operations with error context (WARNING) | MEDIUM |
 | `lib/placeholder.js` | 200 | Add failOnUnreplaced flag support | LOW |
 | `lib/index.js` | existing | Pass failOnUnreplaced through config | LOW |
-| `bin/create-ai-context.js` | existing | Add --fail-on-unreplaced CLI flag | LOW |
+| `bin/ai-context.js` | existing | Add --fail-on-unreplaced CLI flag | LOW |
 | `tests/unit/utils/path-utils.test.js` | NEW | Test path normalization | LOW |
 | `tests/unit/content-preservation.test.js` | existing | Add error logging tests | LOW |
 
@@ -437,7 +437,7 @@ async function replacePlaceholders(targetDir, options = {}) {
 
 #### 1.4b: Add CLI flag
 
-**File:** `bin/create-ai-context.js`
+**File:** `bin/ai-context.js`
 **Line:** ~91 (main command options)
 
 **Add option:**

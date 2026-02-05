@@ -147,7 +147,7 @@ npm test -- tests/e2e/                                 # All ✅
 | tests/unit/content-preservation.test.js | +258 | ✅ New |
 | tests/unit/template-coordination.test.js | +170 | ✅ New |
 | tests/unit/adapters/claude.test.js | ±3 | ✅ Modified |
-| tests/e2e/create-ai-context.test.js | ±7 | ✅ Modified |
+| tests/e2e/ai-context.test.js | ±7 | ✅ Modified |
 
 ---
 

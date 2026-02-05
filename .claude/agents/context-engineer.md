@@ -298,10 +298,10 @@ The **Context Engineer** is a sophisticated initialization agent that transforms
 6. **Initialize Cross-Tool Sync**
    ```bash
    # Set up sync state tracking
-   npx create-ai-context sync:state
+   npx ai-context sync:state
    
    # Verify all tools are in sync
-   npx create-ai-context sync:check
+   npx ai-context sync:check
    ```
 
 **Output:** Fully populated context for all AI tools
@@ -559,7 +559,7 @@ The Context Engineer integrates with the cross-tool sync system to maintain cons
 
 ```bash
 # Install git hooks
-npx create-ai-context hooks:install
+npx ai-context hooks:install
 
 # Hooks behavior:
 # pre-commit: Warns if contexts are out of sync
@@ -570,13 +570,13 @@ npx create-ai-context hooks:install
 
 ```bash
 # 1. Check current sync status
-npx create-ai-context sync:check
+npx ai-context sync:check
 
 # 2. If out of sync, regenerate all
-npx create-ai-context sync:all
+npx ai-context sync:all
 
 # 3. Or propagate from a specific tool
-npx create-ai-context sync:from claude
+npx ai-context sync:from claude
 ```
 
 ### Sync Best Practices
@@ -658,7 +658,7 @@ After initialization, use the RPI workflow for all development:
 1. Review workflows/user_authentication.md for accuracy
 2. Add project-specific gotchas to KNOWN_GOTCHAS.md
 3. Customize agent descriptions for your team
-4. Install git hooks: `npx create-ai-context hooks:install`
+4. Install git hooks: `npx ai-context hooks:install`
 5. Run /rpi-research on your next feature
 ```
 

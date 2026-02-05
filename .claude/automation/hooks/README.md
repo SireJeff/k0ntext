@@ -7,14 +7,14 @@ This directory contains git hooks that enable automatic cross-tool context synch
 ### pre-commit
 Checks if AI tool contexts are out of sync before allowing a commit.
 
-- **What it does**: Runs `create-ai-context sync:check` before each commit
+- **What it does**: Runs `ai-context sync:check` before each commit
 - **On failure**: Blocks commit and shows sync status
 - **Skip it**: Use `git commit --no-verify`
 
 ### post-commit
 Updates sync state after successful commits.
 
-- **What it does**: Runs `create-ai-context sync:state` in the background
+- **What it does**: Runs `ai-context sync:state` in the background
 - **Non-blocking**: Runs async, doesn't interfere with commit
 - **Note**: Only updates state tracking, does NOT regenerate files to avoid creating uncommitted changes
 
@@ -67,12 +67,12 @@ git commit -m "my changes"
 #   Copilot context is stale
 #
 # To sync all contexts, run:
-#   create-ai-context sync:all
+#   ai-context sync:all
 #
 # To skip this check, use: git commit --no-verify
 
 # Fix it:
-create-ai-context sync:all
+ai-context sync:all
 
 # Now commit works:
 git commit -m "my changes"

@@ -22,7 +22,7 @@ claude-context-engineering-template/
 ├── .claude/                    # Development context
 ├── packages/
 │   ├── ai-context/            # ✅ Target package (KEEP)
-│   ├── create-ai-context/     # ❌ Legacy (REMOVE)
+│   ├── ai-context/     # ❌ Legacy (REMOVE)
 │   ├── ai-context-mcp-server/ # ❌ Legacy (REMOVE)
 │   └── claude-context-plugin/ # ❌ Legacy (REMOVE)
 ├── docs/                       # Root docs
@@ -69,7 +69,7 @@ ai-context/                     # NEW repository name
 ## CHUNK-R1: Legacy Package Removal
 
 **Files Analyzed:**
-- `packages/create-ai-context/` (v2.5.0 legacy)
+- `packages/ai-context/` (v2.5.0 legacy)
 - `packages/ai-context-mcp-server/` (v1.0.0 legacy)
 - `packages/claude-context-plugin/` (v2.1.4 legacy)
 
@@ -77,12 +77,12 @@ ai-context/                     # NEW repository name
 These packages are deprecated as of v3.0.0. All functionality has been consolidated into `ai-context`.
 
 **Key Findings:**
-- `create-ai-context/` has templates that should be preserved in `ai-context/templates/`
+- `ai-context/` has templates that should be preserved in `ai-context/templates/`
 - `ai-context-mcp-server/` MCP server is now built into `ai-context/src/mcp.ts`
 - `claude-context-plugin/` skills are now in `ai-context/skills/`
 
 **Dependencies:**
-- Must preserve templates from `create-ai-context/templates/`
+- Must preserve templates from `ai-context/templates/`
 - Must verify MCP functionality migrated
 - Must verify skills migrated
 
