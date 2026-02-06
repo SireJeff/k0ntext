@@ -13,7 +13,7 @@ describe('IntelligentAnalyzer', () => {
 
   beforeEach(() => {
     // Create temp directory for testing
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-context-test-'));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'k0ntext-test-'));
   });
 
   afterEach(() => {

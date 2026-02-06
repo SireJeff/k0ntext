@@ -52,11 +52,11 @@ This file provides guidance to AI coding assistants when working with code in th
 **Example:** "{{EXAMPLE_REFACTOR_TASK}}"
 
 **Chain:**
-1. Start: [.ai-context/indexes/workflows/CATEGORY_INDEX.md](./.ai-context/indexes/workflows/CATEGORY_INDEX.md)
+1. Start: [.k0ntext/indexes/workflows/CATEGORY_INDEX.md](./.k0ntext/indexes/workflows/CATEGORY_INDEX.md)
 2. Find: Relevant category
 3. Load: Domain index
 4. Detail: Workflow file
-5. Code: [.ai-context/indexes/code/DOMAIN_LAYER_INDEX.md](./.ai-context/indexes/code/DOMAIN_LAYER_INDEX.md)
+5. Code: [.k0ntext/indexes/code/DOMAIN_LAYER_INDEX.md](./.k0ntext/indexes/code/DOMAIN_LAYER_INDEX.md)
 6. Implement: Use appropriate specialized agent
 
 **Context Budget:** ~40k tokens (20% of 200k window)
@@ -69,7 +69,7 @@ This file provides guidance to AI coding assistants when working with code in th
 **Chain:**
 1. Start: Search Patterns section below
 2. Pattern: Use grep/find
-3. Verify: [.ai-context/indexes/code/REVERSE_INDEXES.md](./.ai-context/indexes/code/REVERSE_INDEXES.md)
+3. Verify: [.k0ntext/indexes/code/REVERSE_INDEXES.md](./.k0ntext/indexes/code/REVERSE_INDEXES.md)
 4. Fix: Direct file edits
 5. Validate: Run tests
 
@@ -81,8 +81,8 @@ This file provides guidance to AI coding assistants when working with code in th
 **Example:** "{{EXAMPLE_FEATURE_TASK}}"
 
 **Chain:**
-1. Start: [.ai-context/indexes/routing/CATEGORY_INDEX.md](./.ai-context/indexes/routing/CATEGORY_INDEX.md)
-2. Route: [.ai-context/indexes/routing/HIGH_LEVEL_ROUTER.md](./.ai-context/indexes/routing/HIGH_LEVEL_ROUTER.md)
+1. Start: [.k0ntext/indexes/routing/CATEGORY_INDEX.md](./.k0ntext/indexes/routing/CATEGORY_INDEX.md)
+2. Route: [.k0ntext/indexes/routing/HIGH_LEVEL_ROUTER.md](./.k0ntext/indexes/routing/HIGH_LEVEL_ROUTER.md)
 3. Research: /rpi-research
 4. Plan: /rpi-plan
 5. Implement: /rpi-implement
@@ -137,13 +137,13 @@ This file provides guidance to AI coding assistants when working with code in th
 
 **3-Level Chain:** AI_CONTEXT.md → Category (5) → Domain (15) → Detail (53)
 
-**Level 1 - Categories:** [.ai-context/indexes/*/CATEGORY_INDEX.md](./.ai-context/indexes/)
+**Level 1 - Categories:** [.k0ntext/indexes/*/CATEGORY_INDEX.md](./.k0ntext/indexes/)
 - Workflows, Code, Search, Agents, Routing
 
-**Level 2 - Domains:** [.ai-context/indexes/workflows/*.md](./.ai-context/indexes/workflows/)
+**Level 2 - Domains:** [.k0ntext/indexes/workflows/*.md](./.k0ntext/indexes/workflows/)
 - {{WORKFLOW_DOMAINS_COUNT}} workflow domains, {{CODE_DOMAINS_COUNT}} code domains
 
-**Level 3 - Details:** [.ai-context/context/workflows/](./.ai-context/context/workflows/), [.ai-context/agents/](./.ai-context/agents/), [.ai-context/commands/](./.ai-context/commands/)
+**Level 3 - Details:** [.k0ntext/context/workflows/](./.k0ntext/context/workflows/), [.k0ntext/agents/](./.k0ntext/agents/), [.k0ntext/commands/](./.k0ntext/commands/)
 - {{WORKFLOWS_COUNT}} workflows, {{AGENTS_COUNT}} agents, {{COMMANDS_COUNT}} commands
 
 ---
@@ -160,9 +160,9 @@ This file provides guidance to AI coding assistants when working with code in th
 
 ## Quick Reference
 
-**Understanding:** [ARCHITECTURE_SNAPSHOT.md](./.ai-context/context/ARCHITECTURE_SNAPSHOT.md), [workflows/CATEGORY_INDEX.md](./.ai-context/indexes/workflows/CATEGORY_INDEX.md), [KNOWN_GOTCHAS.md](./.ai-context/context/KNOWN_GOTCHAS.md)
+**Understanding:** [ARCHITECTURE_SNAPSHOT.md](./.k0ntext/context/ARCHITECTURE_SNAPSHOT.md), [workflows/CATEGORY_INDEX.md](./.k0ntext/indexes/workflows/CATEGORY_INDEX.md), [KNOWN_GOTCHAS.md](./.k0ntext/context/KNOWN_GOTCHAS.md)
 
-**Implementing:** [workflows/*.md](./.ai-context/context/workflows/), [CODE_TO_WORKFLOW_MAP.md](./.ai-context/context/CODE_TO_WORKFLOW_MAP.md)
+**Implementing:** [workflows/*.md](./.k0ntext/context/workflows/), [CODE_TO_WORKFLOW_MAP.md](./.k0ntext/context/CODE_TO_WORKFLOW_MAP.md)
 
 **Debugging:** {{DEBUGGING_QUICK_REFS}}
 
@@ -171,10 +171,10 @@ This file provides guidance to AI coding assistants when working with code in th
 ## Agent & Command Routing
 
 **Agents:** {{AGENT_ROUTING_TABLE}}
-**Full matrix:** [.ai-context/indexes/agents/router.md](./.ai-context/indexes/agents/router.md)
+**Full matrix:** [.k0ntext/indexes/agents/router.md](./.k0ntext/indexes/agents/router.md)
 
 **Commands:** /rpi-research, /rpi-plan, /rpi-implement, /verify-docs-current, /validate-all, /help, /collab, /analytics
-**All commands:** [.ai-context/commands/](./.ai-context/commands/)
+**All commands:** [.k0ntext/commands/](./.k0ntext/commands/)
 
 ---
 
@@ -186,7 +186,7 @@ This file provides guidance to AI coding assistants when working with code in th
 ### {{GOTCHA_CATEGORY_2}}
 {{GOTCHA_2_ITEMS}}
 
-**Full gotchas:** [.ai-context/context/KNOWN_GOTCHAS.md](./.ai-context/context/KNOWN_GOTCHAS.md)
+**Full gotchas:** [.k0ntext/context/KNOWN_GOTCHAS.md](./.k0ntext/context/KNOWN_GOTCHAS.md)
 
 ---
 
@@ -197,7 +197,7 @@ This file provides guidance to AI coding assistants when working with code in th
 **Validation:** Run /verify-docs-current [file_path] after modifications
 **RPI Workflow:** /rpi-research → /rpi-plan → /rpi-implement
 
-**See:** [.ai-context/RPI_WORKFLOW_PLAN.md](./.ai-context/RPI_WORKFLOW_PLAN.md), [.ai-context/README.md](./.ai-context/README.md)
+**See:** [.k0ntext/RPI_WORKFLOW_PLAN.md](./.k0ntext/RPI_WORKFLOW_PLAN.md), [.k0ntext/README.md](./.k0ntext/README.md)
 
 ---
 
@@ -220,8 +220,8 @@ This file provides guidance to AI coding assistants when working with code in th
 ## Maintenance
 
 **After changes:** Check CODE_TO_WORKFLOW_MAP.md → Update workflows → Run /verify-docs-current
-**Docs hub:** [.ai-context/README.md](./.ai-context/README.md)
-**RPI:** [.ai-context/RPI_WORKFLOW_PLAN.md](./.ai-context/RPI_WORKFLOW_PLAN.md)
+**Docs hub:** [.k0ntext/README.md](./.k0ntext/README.md)
+**RPI:** [.k0ntext/RPI_WORKFLOW_PLAN.md](./.k0ntext/RPI_WORKFLOW_PLAN.md)
 
 ---
 

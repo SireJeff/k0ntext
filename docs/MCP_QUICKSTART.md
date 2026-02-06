@@ -1,10 +1,10 @@
-# AI Context - MCP Server Quick Start
+# K0ntext - MCP Server Quick Start
 
-Connect the AI Context MCP server to Claude Desktop (or other MCP-compatible AI assistants) to give your AI intelligent access to your codebase.
+Connect the K0ntext MCP server to Claude Desktop (or other MCP-compatible AI assistants) to give your AI intelligent access to your codebase.
 
 ## What is MCP?
 
-The Model Context Protocol (MCP) is a standard for AI assistants to access external tools and data. With AI Context's MCP server, your AI can:
+The Model Context Protocol (MCP) is a standard for AI assistants to access external tools and data. With K0ntext's MCP server, your AI can:
 
 - Search your codebase semantically
 - Retrieve specific files and context
@@ -14,17 +14,17 @@ The Model Context Protocol (MCP) is a standard for AI assistants to access exter
 
 ## Prerequisites
 
-1. **AI Context installed:**
+1. **K0ntext installed:**
    ```bash
-   npm install -g ai-context
+   npm install -g k0ntext
    ```
 
 2. **Claude Desktop** (or another MCP-compatible client)
 
-3. **A project initialized with AI Context:**
+3. **A project initialized with K0ntext:**
    ```bash
    cd your-project
-   ai-context init
+   k0ntext init
    ```
 
 ## Setup with Claude Desktop
@@ -39,18 +39,18 @@ The config location depends on your OS:
 | Windows  | `%APPDATA%\Claude\claude_desktop_config.json` |
 | Linux    | `~/.config/Claude/claude_desktop_config.json` |
 
-### Step 2: Add AI Context MCP Server
+### Step 2: Add K0ntext MCP Server
 
 Edit your `claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
-    "ai-context": {
+    "k0ntext": {
       "command": "npx",
       "args": [
         "-y",
-        "ai-context",
+        "k0ntext",
         "mcp"
       ],
       "cwd": "/path/to/your/project"
@@ -68,14 +68,14 @@ For multiple projects, use different server names:
 ```json
 {
   "mcpServers": {
-    "ai-context-project-a": {
+    "k0ntext-project-a": {
       "command": "npx",
-      "args": ["-y", "ai-context", "mcp"],
+      "args": ["-y", "k0ntext", "mcp"],
       "cwd": "/path/to/project-a"
     },
-    "ai-context-project-b": {
+    "k0ntext-project-b": {
       "command": "npx",
-      "args": ["-y", "ai-context", "mcp"],
+      "args": ["-y", "k0ntext", "mcp"],
       "cwd": "/path/to/project-b"
     }
   }
@@ -88,11 +88,11 @@ Completely quit and restart Claude Desktop.
 
 ### Step 4: Verify Connection
 
-In a new Claude conversation, you should see **ai-context** listed in the available MCP tools.
+In a new Claude conversation, you should see **k0ntext** listed in the available MCP tools.
 
 ## Available MCP Tools
 
-The AI Context MCP server provides these tools:
+The K0ntext MCP server provides these tools:
 
 | Tool | Description |
 |------|-------------|
@@ -137,16 +137,16 @@ Ask Claude:
 
 1. **Check config path:** Ensure you're editing the correct config file
 2. **Restart Claude:** Completely quit and restart Claude Desktop
-3. **Check project path:** Verify `cwd` points to a valid project with `.ai-context.db`
+3. **Check project path:** Verify `cwd` points to a valid project with `.k0ntext.db`
 4. **Check logs:** Look for MCP errors in Claude's developer console
 
 ### Database Not Found
 
 ```
-Error: Database file not found: .ai-context.db
+Error: Database file not found: .k0ntext.db
 ```
 
-**Solution:** Run `ai-context init` in your project directory first.
+**Solution:** Run `k0ntext init` in your project directory first.
 
 ### OpenRouter API Key Missing
 
@@ -183,18 +183,18 @@ Available environment variables for the MCP server:
 
 ```bash
 # Database location
-export AI_CONTEXT_DB_PATH="/custom/path/.ai-context.db"
+export K0NTEXT_DB_PATH="/custom/path/.k0ntext.db"
 
 # OpenRouter API key (for intelligent analysis)
 export OPENROUTER_API_KEY="your-key-here"
 
 # Log level
-export AI_CONTEXT_LOG_LEVEL="debug"  # debug, info, warn, error
+export K0NTEXT_LOG_LEVEL="debug"  # debug, info, warn, error
 ```
 
 ## MCP Prompts
 
-AI Context also provides **6 prompts** for Claude:
+K0ntext also provides **6 prompts** for Claude:
 
 | Prompt | Description |
 |--------|-------------|
@@ -209,11 +209,11 @@ These prompts can be invoked directly from Claude Desktop.
 
 ## Next Steps
 
-- **Full Documentation:** https://github.com/SireJeff/ai-context
+- **Full Documentation:** https://github.com/SireJeff/k0ntext
 - **Troubleshooting:** [Troubleshooting Guide](TROUBLESHOOTING.md)
 - **MCP Specification:** https://modelcontextprotocol.io
 
 ## Support
 
-- **Issues:** https://github.com/SireJeff/ai-context/issues
-- **Discussions:** https://github.com/SireJeff/ai-context/discussions
+- **Issues:** https://github.com/SireJeff/k0ntext/issues
+- **Discussions:** https://github.com/SireJeff/k0ntext/discussions

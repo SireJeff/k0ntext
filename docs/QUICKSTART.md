@@ -1,11 +1,11 @@
-# AI Context - Quick Start Guide
+# K0ntext - Quick Start Guide
 
-Get up and running with AI Context in 5 minutes.
+Get up and running with K0ntext in 5 minutes.
 
 ## Installation
 
 ```bash
-npm install -g ai-context
+npm install -g k0ntext
 ```
 
 **Requirements:** Node.js 18 or higher
@@ -16,12 +16,12 @@ Navigate to your project directory and run:
 
 ```bash
 cd your-project
-ai-context init
+k0ntext init
 ```
 
 This will:
 1. Analyze your codebase (intelligent analysis powered by OpenRouter)
-2. Create a SQLite database at `.ai-context.db`
+2. Create a SQLite database at `.k0ntext.db`
 3. Index your source code with semantic embeddings
 4. Generate optimized context files for your AI tools
 
@@ -30,7 +30,7 @@ This will:
 If you want to skip the OpenRouter-powered intelligent analysis:
 
 ```bash
-ai-context init --no-intelligent
+k0ntext init --no-intelligent
 ```
 
 This will use a faster static analysis instead.
@@ -40,7 +40,7 @@ This will use a faster static analysis instead.
 To regenerate context files for all AI tools:
 
 ```bash
-ai-context generate
+k0ntext generate
 ```
 
 ## Start MCP Server
@@ -48,7 +48,7 @@ ai-context generate
 The MCP (Model Context Protocol) server provides AI assistants with tools to query your codebase:
 
 ```bash
-ai-context mcp
+k0ntext mcp
 ```
 
 See [MCP Quick Start](MCP_QUICKSTART.md) for setup instructions.
@@ -56,10 +56,10 @@ See [MCP Quick Start](MCP_QUICKSTART.md) for setup instructions.
 ## Other Commands
 
 ```bash
-ai-context index          # Index codebase into database
-ai-context search <query> # Semantic search across code
-ai-context sync           # Sync context across AI tools
-ai-context stats          # Database statistics
+k0ntext index          # Index codebase into database
+k0ntext search <query> # Semantic search across code
+k0ntext sync           # Sync context across AI tools
+k0ntext stats          # Database statistics
 ```
 
 ## What Gets Created
@@ -68,8 +68,8 @@ After initialization, you'll find:
 
 ```
 your-project/
-├── .ai-context.db          # SQLite database (embeddings + metadata)
-├── .ai-context/            # Generated contexts
+├── .k0ntext.db          # SQLite database (embeddings + metadata)
+├── .k0ntext/            # Generated contexts
 │   ├── AI_CONTEXT.md       # For Claude/Cursor/etc
 │   └── sync-state.json     # Cross-tool sync state
 ├── .github/copilot-instructions.md  # For GitHub Copilot
@@ -86,7 +86,7 @@ your-project/
 
 ## How It Works
 
-AI Context uses a three-phase process:
+K0ntext uses a three-phase process:
 
 1. **Analysis Phase** (optional):
    - OpenRouter API analyzes your entire codebase
@@ -115,5 +115,5 @@ export AI_CONTEXT_TOOLS="claude,copilot,cline"
 
 ## Support
 
-- **Issues:** https://github.com/SireJeff/ai-context/issues
-- **Docs:** https://github.com/SireJeff/ai-context
+- **Issues:** https://github.com/SireJeff/k0ntext/issues
+- **Docs:** https://github.com/SireJeff/k0ntext
