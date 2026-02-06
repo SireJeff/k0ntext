@@ -14,6 +14,15 @@ npm install -g k0ntext
 k0ntext init
 ```
 
+## 🖥️ Windows Support
+
+K0ntext uses native SQLite extensions for high-performance vector search.
+
+**For Windows Users:**
+- We recommend using **Node.js LTS (v18, v20, v22)**.
+- These versions have pre-built binaries and will install instantly without extra tools.
+- If you use a non-LTS version (like v23/v24), you may need [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) to compile the database driver.
+
 ## ✨ Features
 
 - 🧠 **Intelligent Analysis** - OpenRouter-powered codebase analysis with embeddings
@@ -50,6 +59,16 @@ Search your indexed code.
 Sync context across AI tools.
 
 ## 🔧 Configuration
+
+### Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `OPENROUTER_API_KEY` | API key for intelligent analysis via OpenRouter | For `--intelligent` flag |
+
+### Database Location
+
+By default, k0ntext stores its SQLite database at `.k0ntext.db` in the project root. This file is automatically added to `.gitignore`.
 
 ## 📦 Database & Migration
 
