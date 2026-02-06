@@ -171,6 +171,10 @@ function createProgram(): Command {
   // ==================== Sync Command ====================
   program.addCommand(syncCommand);
 
+  // ==================== Cleanup Command ====================
+  import { cleanupCommand } from './commands/cleanup.js';
+  program.addCommand(cleanupCommand);
+
   // ==================== Index Command ====================
   program
     .command('index')
