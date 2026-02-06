@@ -158,6 +158,40 @@ export class DatabaseClient {
   }
 
   /**
+   * Execute callback within a transaction
+   */
+  transaction<T>(callback: () => T): T {
+    const txn = this.db.transaction(callback);
+    return txn();
+  }
+
+  /**
+   * Begin a manual transaction (returns rollback/commit functions)
+   */
+  beginTransaction(): { rollback: () => void; commit: () => void } {
+    this.db.exec('BEGIN TRANSACTION');
+    return {
+      rollback: () => this.db.exec('ROLLBACK'),
+      commit: () => this.db.exec('COMMIT')
+    };
+  }
+
+  /**
+   * Check database connection health
+   */
+  healthCheck(): { healthy: boolean; error?: string } {
+    try {
+      this.db.prepare('SELECT 1').get();
+      return { healthy: true };
+    } catch (error) {
+      return {
+        healthy: false,
+        error: error instanceof Error ? error.message : String(error)
+      };
+    }
+  }
+
+  /**
    * Generate content hash for deduplication
    */
   private hashContent(content: string): string {
@@ -239,6 +273,19 @@ export class DatabaseClient {
     const stmt = this.db.prepare('DELETE FROM context_items WHERE id = ?');
     const result = stmt.run(id);
     return result.changes > 0;
+  }
+
+  /**
+   * Delete items older than specified days
+   */
+  deleteStaleItems(daysOld: number, type?: ContextType): number {
+    const stmt = this.db.prepare(`
+      DELETE FROM context_items
+      WHERE datetime(updated_at) < datetime('now', '-' || ? || ' days')
+      ${type ? 'AND type = ?' : ''}
+    `);
+    const result = stmt.run(...(type ? [daysOld, type] : [daysOld]));
+    return result.changes;
   }
 
   /**
@@ -713,6 +760,53 @@ export class DatabaseClient {
    */
   getRawDb(): Database.Database {
     return this.db;
+  }
+
+  /**
+   * Vacuum database to reclaim space
+   */
+  vacuum(): void {
+    this.db.exec('VACUUM');
+  }
+
+  /**
+   * Reindex database for optimization
+   */
+  reindex(): void {
+    this.db.exec('REINDEX');
+  }
+
+  /**
+   * Backup database to specified path
+   */
+  backup(backupPath: string): void {
+    try {
+      // Ensure backup directory exists
+      const backupDir = path.dirname(backupPath);
+      if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir, { recursive: true });
+      }
+
+      // Close the database before copying to ensure consistency
+      this.db.close();
+      fs.copyFileSync(this.dbPath, backupPath);
+      // Reopen the database
+      this.db = new Database(this.dbPath);
+      this.db.pragma('foreign_keys = ON');
+      sqliteVec.load(this.db);
+
+      console.log(`Database backed up to: ${backupPath}`);
+    } catch (error) {
+      // Try to reopen database if copy failed
+      try {
+        this.db = new Database(this.dbPath);
+        this.db.pragma('foreign_keys = ON');
+        sqliteVec.load(this.db);
+      } catch {
+        // Ignore reopen errors
+      }
+      throw new Error(`Failed to backup database: ${error instanceof Error ? error.message : error}`);
+    }
   }
 
   /**
