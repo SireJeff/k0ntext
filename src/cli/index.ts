@@ -18,6 +18,7 @@ import { createIntelligentAnalyzer } from '../analyzer/intelligent-analyzer.js';
 import { hasOpenRouterKey } from '../embeddings/openrouter.js';
 import { generateCommand } from './generate.js';
 import { syncCommand } from './sync.js';
+import { cleanupCommand } from './commands/cleanup.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -172,7 +173,6 @@ function createProgram(): Command {
   program.addCommand(syncCommand);
 
   // ==================== Cleanup Command ====================
-  import { cleanupCommand } from './commands/cleanup.js';
   program.addCommand(cleanupCommand);
 
   // ==================== Index Command ====================
