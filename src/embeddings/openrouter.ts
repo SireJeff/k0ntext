@@ -72,6 +72,7 @@ export interface OpenRouterConfig {
   chatModel?: string;
   siteUrl?: string;
   siteName?: string;
+  minRequestInterval?: number; // ms between requests for rate limiting
 }
 
 /**
@@ -92,22 +93,45 @@ export class OpenRouterClient {
   private baseRetryDelay = 1000; // ms
 
   /**
+   * Rate limiting configuration
+   */
+  private minRequestInterval: number;
+  private lastRequestTime = 0;
+
+  /**
    * Sleep for specified milliseconds
    */
   private sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  /**
+   * Apply rate limiting before API requests
+   */
+  private async applyRateLimit(): Promise<void> {
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+
+    if (timeSinceLastRequest < this.minRequestInterval) {
+      const waitTime = this.minRequestInterval - timeSinceLastRequest;
+      await this.sleep(waitTime);
+    }
+
+    this.lastRequestTime = Date.now();
+  }
+
   constructor(config: OpenRouterConfig) {
     if (!config.apiKey) {
       throw new Error('OPENROUTER_API_KEY is required');
     }
-    
+
     this.apiKey = config.apiKey;
     this.embeddingModel = config.embeddingModel || DEFAULT_EMBEDDING_MODEL;
     this.chatModel = config.chatModel || DEFAULT_CHAT_MODEL;
     this.siteUrl = config.siteUrl || 'https://github.com/SireJeff/claude-context-engineering-template';
     this.siteName = config.siteName || 'AI Context';
+    this.minRequestInterval = config.minRequestInterval || 100; // ms between requests
+    this.lastRequestTime = 0;
   }
 
   /**
@@ -123,6 +147,9 @@ export class OpenRouterClient {
     let lastError: Error | null = null;
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
       try {
+        // Apply rate limiting before each attempt
+        await this.applyRateLimit();
+
         const response = await fetch(OPENROUTER_EMBEDDINGS_URL, {
           method: 'POST',
           headers: {
@@ -209,6 +236,9 @@ export class OpenRouterClient {
 
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
       try {
+        // Apply rate limiting before each attempt
+        await this.applyRateLimit();
+
         const response = await fetch(OPENROUTER_EMBEDDINGS_URL, {
           method: 'POST',
           headers: {
@@ -276,6 +306,9 @@ export class OpenRouterClient {
 
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
       try {
+        // Apply rate limiting before each attempt
+        await this.applyRateLimit();
+
         const response = await fetch(OPENROUTER_CHAT_URL, {
           method: 'POST',
           headers: {
