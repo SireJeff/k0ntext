@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the `ai-context` package will be documented in this file.
+All notable changes to the `k0ntext` package will be documented in this file.
 
 ## [3.0.0] - 2026-02-05
 
@@ -8,8 +8,8 @@ All notable changes to the `ai-context` package will be documented in this file.
 
 ### Breaking Changes
 
-- **Package consolidation**: `create-universal-ai-context`, `@ai-context/mcp-server`, and `claude-context-plugin` are now consolidated into the unified `ai-context` package
-- **New primary package**: `ai-context` (v3.0.0) is now the main package
+- **Package consolidation**: `create-universal-ai-context`, `@ai-context/mcp-server`, and `claude-context-plugin` are now consolidated into the unified `k0ntext` package
+- **New primary package**: `k0ntext` (v3.0.0) is now the main package
 - **Legacy deprecation**: Previous packages marked as deprecated (see [Migration Guide](./docs/MIGRATE_TO_UNIFIED.md))
 
 ### Added
@@ -41,8 +41,8 @@ All notable changes to the `ai-context` package will be documented in this file.
 ### Deprecated
 
 - `create-universal-ai-context` (v2.5.0) - Security updates only until 2026-06-01
-- `@ai-context/mcp-server` (v1.0.0) - Functionality included in `ai-context`
-- `claude-context-plugin` (v2.1.4) - Use `ai-context` skills instead
+- `@ai-context/mcp-server` (v1.0.0) - Functionality included in `k0ntext`
+- `claude-context-plugin` (v2.1.4) - Use `k0ntext` skills instead
 
 ### Migration
 
@@ -435,7 +435,7 @@ See [Migration Guide](./docs/MIGRATE_TO_UNIFIED.md) for detailed instructions.
 - Tests for environment detector, static analyzer, AI orchestrator
 - Tests for template populator and call tracer
 - Integration tests with Express app fixture
-- Jest test framework with coverage reporting
+- Vitest test framework with coverage reporting
 - Test fixtures for Python, Node.js, Go, and Express projects
 
 #### Enhanced Detector (`lib/detector.js`)

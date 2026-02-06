@@ -70,7 +70,7 @@ assignees: ''
 - [ ] Searched existing issues for duplicates
 - [ ] Included version information
 - [ ] Provided steps to reproduce
-- [ ] Checked troubleshooting guide (https://github.com/SireJeff/ai-context/blob/main/docs/TROUBLESHOOTING.md)
+- [ ] Checked troubleshooting guide (https://github.com/SireJeff/k0ntext/blob/main/docs/TROUBLESHOOTING.md)
 
 ---
 

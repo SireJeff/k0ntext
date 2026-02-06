@@ -37,7 +37,7 @@ For changes to `.ai-context/tools/`:
 - Follow existing code patterns in `lib/`
 - Add appropriate error handling using `lib/errors.js` classes
 - Update schemas in `.ai-context/schemas/` if adding new structures
-- Run `npx create-universal-ai-context validate --all` before submitting
+- Run `npx k0ntext validate --all` before submitting
 
 ### npm Package Contributions
 For changes to `packages/create-ai-context/`:
@@ -122,7 +122,7 @@ npm run test:coverage
 
 # Link for local testing
 npm link
-create-universal-ai-context --version
+k0ntext --version
 ```
 
 ## Code of Conduct

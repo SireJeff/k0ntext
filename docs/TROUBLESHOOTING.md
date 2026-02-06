@@ -10,16 +10,16 @@ Run diagnostics to automatically detect issues:
 
 ```bash
 # Using the unified package
-ai-context stats
+k0ntext stats
 
 # Or using the legacy tools (deprecated)
-npx .ai-context/tools/bin/claude-context.js diagnose
+npx .k0ntext/tools/bin/claude-context.js diagnose
 ```
 
 To attempt auto-fix:
 
 ```bash
-npx .ai-context/tools/bin/claude-context.js diagnose --fix
+npx .k0ntext/tools/bin/claude-context.js diagnose --fix
 ```
 
 ---
@@ -41,7 +41,7 @@ npx .ai-context/tools/bin/claude-context.js diagnose --fix
 ### TSG-001: CLI Tools Won't Install
 
 **Symptoms:**
-- `npm install` fails in `.ai-context/tools/`
+- `npm install` fails in `.k0ntext/tools/`
 - Missing dependencies errors
 
 **Diagnosis:**
@@ -62,12 +62,12 @@ nvm use 18
 **B. Clear npm cache**
 ```bash
 npm cache clean --force
-cd .ai-context/tools && rm -rf node_modules && npm install
+cd .k0ntext/tools && rm -rf node_modules && npm install
 ```
 
 **C. Use yarn instead**
 ```bash
-cd .ai-context/tools && yarn install
+cd .k0ntext/tools && yarn install
 ```
 
 ---
@@ -76,13 +76,13 @@ cd .ai-context/tools && yarn install
 
 **Symptoms:**
 - "AI_CONTEXT.md not found" errors
-- Missing `.ai-context/` directory
+- Missing `.k0ntext/` directory
 
 **Solutions:**
 
 **A. Verify copy was complete**
 ```bash
-ls -la .ai-context/
+ls -la .k0ntext/
 # Should contain: agents/, commands/, context/, indexes/, settings.json, README.md
 ```
 
@@ -181,14 +181,14 @@ The agent should merge related workflows. If not:
 
 **A. Resume initialization**
 ```bash
-npx .ai-context/tools/bin/claude-context.js init --resume
+npx .k0ntext/tools/bin/claude-context.js init --resume
 # Or in Claude Code:
 @context-engineer "Resume initialization"
 ```
 
 **B. Start fresh**
 ```bash
-rm .ai-context/INIT_PROGRESS.json
+rm .k0ntext/INIT_PROGRESS.json
 @context-engineer "Initialize context engineering for this repository"
 ```
 
@@ -261,18 +261,18 @@ Search for the specific function: [function name] in [file pattern]
 
 **Diagnosis:**
 ```bash
-npx .ai-context/tools/bin/claude-context.js validate --schema
+npx .k0ntext/tools/bin/claude-context.js validate --schema
 ```
 
 **Solutions:**
 
 **A. Auto-fix with defaults**
 ```bash
-npx .ai-context/tools/bin/claude-context.js diagnose --fix
+npx .k0ntext/tools/bin/claude-context.js diagnose --fix
 ```
 
 **B. Manual fix**
-Compare your `settings.json` with the schema in `.ai-context/schemas/settings.schema.json`.
+Compare your `settings.json` with the schema in `.k0ntext/schemas/settings.schema.json`.
 
 ---
 
@@ -284,7 +284,7 @@ Compare your `settings.json` with the schema in `.ai-context/schemas/settings.sc
 
 **Diagnosis:**
 ```bash
-npx .ai-context/tools/bin/claude-context.js validate --links
+npx .k0ntext/tools/bin/claude-context.js validate --links
 ```
 
 **Solutions:**
@@ -293,7 +293,7 @@ npx .ai-context/tools/bin/claude-context.js validate --links
 After refactoring, update documentation:
 ```bash
 # Find all references to old path
-grep -r "old/path" .ai-context/
+grep -r "old/path" .k0ntext/
 # Update to new path
 ```
 
@@ -312,7 +312,7 @@ grep -r "old/path" .ai-context/
 
 **Diagnosis:**
 ```bash
-npx .ai-context/tools/bin/claude-context.js validate --lines --threshold 60
+npx .k0ntext/tools/bin/claude-context.js validate --lines --threshold 60
 ```
 
 **Solutions:**
@@ -340,7 +340,7 @@ Line numbers within ±10 lines are acceptable. Focus on function names as anchor
 
 **Diagnosis:**
 ```bash
-npx .ai-context/tools/bin/claude-context.js validate --placeholders
+npx .k0ntext/tools/bin/claude-context.js validate --placeholders
 ```
 
 **Solutions:**
@@ -367,7 +367,7 @@ Search and replace remaining placeholders in AI_CONTEXT.md with actual values.
 
 **A. Check agent exists**
 ```bash
-ls .ai-context/agents/
+ls .k0ntext/agents/
 ```
 
 **B. Use correct invocation**
@@ -391,7 +391,7 @@ ls .ai-context/agents/
 
 **A. Check command exists**
 ```bash
-ls .ai-context/commands/
+ls .k0ntext/commands/
 ```
 
 **B. Verify command is registered**
@@ -441,10 +441,10 @@ Edit `settings.json`:
 **A. Validate specific checks only**
 ```bash
 # Just schema
-npx .ai-context/tools/bin/claude-context.js validate --schema
+npx .k0ntext/tools/bin/claude-context.js validate --schema
 
 # Just structure
-npx .ai-context/tools/bin/claude-context.js validate --structure
+npx .k0ntext/tools/bin/claude-context.js validate --structure
 ```
 
 **B. Skip external link checking**
@@ -467,14 +467,14 @@ Ensure this is disabled (default):
 
 **Diagnosis:**
 ```bash
-npx create-ai-context mcp:status
+npx k0ntext mcp:status
 ```
 
 **Solutions:**
 
 **A. Initialize the database first**
 ```bash
-npx create-ai-context mcp:init
+npx k0ntext mcp:init
 ```
 
 **B. Set the OpenRouter API key**
@@ -484,7 +484,7 @@ export OPENROUTER_API_KEY="your-api-key-here"
 
 **C. Start the server again**
 ```bash
-npx create-ai-context mcp:start
+npx k0ntext mcp:start
 ```
 
 ---
@@ -497,25 +497,25 @@ npx create-ai-context mcp:start
 
 **Diagnosis:**
 ```bash
-npx create-ai-context mcp:sync --status
+npx k0ntext mcp:sync --status
 ```
 
 **Solutions:**
 
 **A. Force overwrite managed files**
 ```bash
-npx create-ai-context mcp:sync --force
+npx k0ntext mcp:sync --force
 ```
 
 **B. Recreate database index**
 ```bash
-rm -f .ai-context.db
-npx create-ai-context mcp:init
+rm -f .k0ntext.db
+npx k0ntext mcp:init
 ```
 
 **C. Ensure database exists**
 ```bash
-ls -la .ai-context.db
+ls -la .k0ntext.db
 ```
 
 ---
@@ -527,18 +527,18 @@ ls -la .ai-context.db
 **Error:** `Failed to generate context files`
 
 **Diagnosis:**
-1. Check if database is initialized: `ai-context stats`
+1. Check if database is initialized: `k0ntext stats`
 2. Verify OpenRouter API key is set
 3. Check file permissions for output directory
 
 **Solution:**
 ```bash
 # Re-initialize database
-ai-context init
-ai-context index
+k0ntext init
+k0ntext index
 
 # Retry generation
-ai-context generate
+k0ntext generate
 ```
 
 ---
@@ -548,20 +548,20 @@ ai-context generate
 **Error:** `Synchronization failed`
 
 **Diagnosis:**
-1. Check sync status: `ai-context sync --check`
+1. Check sync status: `k0ntext sync --check`
 2. Verify tool configurations exist
 3. Check for conflicts
 
 **Solution:**
 ```bash
 # Check status
-ai-context sync --check
+k0ntext sync --check
 
 # Force sync if needed
-ai-context sync --force
+k0ntext sync --force
 
 # Sync from specific tool
-ai-context sync --from claude
+k0ntext sync --from claude
 ```
 
 ---
@@ -593,16 +593,16 @@ If your issue isn't listed:
 
 1. **Run full diagnostics:**
    ```bash
-   npx .ai-context/tools/bin/claude-context.js diagnose --verbose
+   npx .k0ntext/tools/bin/claude-context.js diagnose --verbose
    ```
 
 2. **Check logs:**
    ```bash
-   cat .ai-context/logs/claude.log
+   cat .k0ntext/logs/claude.log
    ```
 
 3. **Report an issue:**
-   https://github.com/SireJeff/claude-context-engineering-template/issues
+   https://github.com/SireJeff/k0ntext/issues
 
 Include:
 - Error message
