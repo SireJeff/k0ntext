@@ -88,8 +88,8 @@ async function generateForTool(
     aider: { path: '.aider.conf.yml', template: 'aider' },
     continue: { path: '.continue/config.json', template: 'continue' },
     cursor: { path: '.cursorrules', template: 'cursor' },
-    gemini: { path: '.gemini/config.md', template: 'gemini' }
-  });
+    gemini: { path: '.gemini/config.md', template: 'gemini' },
+  };
 
   const config = toolConfigs[tool];
   if (!config) {
