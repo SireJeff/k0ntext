@@ -35,7 +35,7 @@ const AI_TOOLS = ['claude', 'copilot', 'cline', 'antigravity', 'windsurf', 'aide
 function showBanner(): void {
   console.log(`
 ${chalk.cyan('╔═══════════════════════════════════════════════════════════════╗')}
-${chalk.cyan('║')}  ${chalk.bold.white('AI Context')} ${chalk.gray('v' + packageJson.version)}                                      ${chalk.cyan('║')}
+${chalk.cyan('║')}  ${chalk.bold.white('K0ntext')} ${chalk.gray('v' + packageJson.version)}                                      ${chalk.cyan('║')}
 ${chalk.cyan('║')}  ${chalk.gray('Unified context engineering for all AI coding assistants')}     ${chalk.cyan('║')}
 ${chalk.cyan('╚═══════════════════════════════════════════════════════════════╝')}
 `);
@@ -65,7 +65,7 @@ function createProgram(): Command {
   const program = new Command();
 
   program
-    .name('ai-context')
+    .name('k0ntext')
     .description('Unified AI Context Engineering - Intelligent context for all AI coding assistants')
     .version(packageJson.version);
 
@@ -129,9 +129,9 @@ function createProgram(): Command {
 
         console.log(`\n${chalk.green('✓')} AI Context initialized successfully!`);
         console.log(`\n${chalk.bold('Next Steps:')}`);
-        console.log(`  ${chalk.cyan('1.')} Run ${chalk.white('ai-context stats')} to view database statistics`);
-        console.log(`  ${chalk.cyan('2.')} Run ${chalk.white('ai-context mcp')} to start the MCP server`);
-        console.log(`  ${chalk.cyan('3.')} Run ${chalk.white('ai-context --help')} to explore all available commands`);
+        console.log(`  ${chalk.cyan('1.')} Run ${chalk.white('k0ntext stats')} to view database statistics`);
+        console.log(`  ${chalk.cyan('2.')} Run ${chalk.white('k0ntext mcp')} to start the MCP server`);
+        console.log(`  ${chalk.cyan('3.')} Run ${chalk.white('k0ntext --help')} to explore all available commands`);
         
       } catch (error) {
         spinner.fail('Analysis failed');

@@ -1,7 +1,7 @@
 # Claude Context Engineering - Ignored Files
 
 # MCP Database files
-.ai-context.db
+.k0ntext.db
 *.db
 
 # Articles (kept separate)
@@ -38,7 +38,7 @@ dist/
 coverage/
 
 # Generated files
-.ai-context/
+.k0ntext/
 .claude/docs/generated/
 
 # Generated AI context (from running package on this repo)

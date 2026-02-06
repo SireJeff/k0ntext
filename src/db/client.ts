@@ -102,7 +102,7 @@ export class DatabaseClient {
   private db: Database.Database;
   private dbPath: string;
 
-  constructor(projectRoot: string, dbFileName = '.ai-context.db') {
+  constructor(projectRoot: string, dbFileName = '.k0ntext.db') {
     this.dbPath = path.join(projectRoot, dbFileName);
     
     // Ensure directory exists
@@ -124,15 +124,31 @@ export class DatabaseClient {
   }
 
   /**
+   * Migrate legacy database
+   */
+  private migrateLegacyDatabase(): void {
+    const legacyPath = path.join(process.cwd(), '.ai-context.db');
+    const newPath = this.dbPath;
+
+    if (fs.existsSync(legacyPath) && !fs.existsSync(newPath)) {
+      fs.copyFileSync(legacyPath, newPath);
+      console.log(`✓ Migrated .ai-context.db to .k0ntext.db`);
+    }
+  }
+
+  /**
    * Initialize database schema
    */
   private initSchema(): void {
+    // Migrate legacy database first
+    this.migrateLegacyDatabase();
+
     // Create core tables
     this.db.exec(SCHEMA_SQL);
-    
+
     // Create vector table
     this.db.exec(VECTOR_SCHEMA_SQL);
-    
+
     // Record schema version
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO schema_version (version, applied_at)

@@ -1,15 +1,20 @@
-# AI Context
+# K0ntext
 
-Unified AI context engineering for Claude, GitHub Copilot, Cline, Cursor, Windsurf, Aider, Continue, Antigravity, and Gemini.
+[![npm version](https://img.shields.io/npm/v/k0ntext.svg)](https://www.npmjs.com/package/k0ntext)
+[![npm downloads](https://img.shields.io/npm/dt/k0ntext.svg)](https://www.npmjs.com/package/k0ntext)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://github.com/SireJeff/k0ntext/workflows/CI/badge.svg)](https://github.com/SireJeff/k0ntext/actions)
 
-## Quick Start
+Universal AI context engineering for Claude, GitHub Copilot, Cline, Cursor, Windsurf, Aider, Continue, Antigravity, and Gemini.
+
+## 🚀 Quick Start
 
 ```bash
-npm install -g ai-context
-ai-context init
+npm install -g k0ntext
+k0ntext init
 ```
 
-## Features
+## ✨ Features
 
 - 🧠 **Intelligent Analysis** - OpenRouter-powered codebase analysis with embeddings
 - 🔍 **Semantic Search** - Vector database (sqlite-vec) for intelligent code retrieval
@@ -18,81 +23,57 @@ ai-context init
 - 🛠️ **Complete CLI** - 7 commands for context management
 - 💾 **SQLite Storage** - Persistent database with SHA256 change detection
 
-## Commands
+## 📖 Commands
 
-```bash
-ai-context init           # Initialize with intelligent analysis
-ai-context generate       # Generate context files for all AI tools
-ai-context sync           # Sync context across tools
-ai-context mcp            # Start MCP server
-ai-context index          # Index codebase into database
-ai-context search <query> # Semantic search
-ai-context stats          # Database statistics
-```
+### k0ntext init
+Initialize new context for your project.
 
-## Documentation
+### k0ntext generate
+Generate context files for all AI tools.
 
-- [Quick Start Guide](docs/QUICKSTART.md) - Get started in 5 minutes
-- [MCP Server Guide](docs/MCP_QUICKSTART.md) - Set up MCP for Claude Desktop
-- [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
-- [Migration Guide](docs/MIGRATE_TO_UNIFIED.md) - Migrating from legacy packages
+### k0ntext mcp
+Start the Model Context Protocol server.
 
-## MCP Server
+### k0ntext cleanup
+Clean up context folders from other AI tools.
 
-The built-in MCP server provides 10 tools:
+### k0ntext stats
+View database statistics.
 
-- `search_context` - Semantic search across indexed content
-- `get_item` - Retrieve specific context items
-- `add_knowledge` - Store insights and facts
-- `analyze` - Run intelligent analysis
-- `get_tool_configs` - View AI tool configurations
-- `query_graph` - Traverse knowledge graph
-- `get_stats` - Database statistics
-- `add_relation` - Add relationships
-- `find_path` - Find paths between items
-- `run_drift_check` - Check documentation sync
+### k0ntext index
+Index your codebase into the database.
 
-See [MCP Quick Start](docs/MCP_QUICKSTART.md) for setup instructions.
+### k0ntext search
+Search your indexed code.
 
-## Supported AI Tools
+### k0ntext sync
+Sync context across AI tools.
 
-| Tool | Sync Support | Notes |
-|------|--------------|-------|
-| Claude Code | ✅ | Full MCP + CLI support |
-| GitHub Copilot | ✅ | `.github/copilot-instructions.md` |
-| Cline | ✅ | `.clinerules` |
-| Cursor | ✅ | `.cursorrules` |
-| Windsurf | ✅ | `.windsurf/rules` |
-| Aider | ✅ | `.aider.conf.yml` |
-| Continue | ✅ | `.continue/config.json` |
-| Antigravity | ✅ | Config file support |
-| Gemini | ✅ | Context file support |
+## 🔧 Configuration
 
-## Development
+## 📦 Database & Migration
 
-```bash
-# Clone and install
-git clone https://github.com/SireJeff/ai-context.git
-cd ai-context
-npm install
+K0ntext uses a SQLite database (`~/.k0ntext.db`) for storing indexed code and context information. The database is automatically managed and includes:
 
-# Build
-npm run build
+- Codebase indexing with embeddings
+- Change detection using SHA256 hashes
+- Semantic search capabilities
+- Knowledge graph relationships
 
-# Run tests
-npm test
+## 🧹 Context Cleanup
 
-# Link for local testing
-npm link
-ai-context --help
-```
+Clean up context folders from other AI tools that may conflict with K0ntext's managed context.
 
-## License
+## 🤝 Contributing
 
-MIT © SireJeff
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+MIT License
 
 ---
 
-**Repository:** https://github.com/SireJeff/ai-context
-**npm Package:** https://www.npmjs.com/package/ai-context
-**Issues:** https://github.com/SireJeff/ai-context/issues
+**Repository:** https://github.com/SireJeff/k0ntext
+**npm Package:** https://www.npmjs.com/package/k0ntext
+**Issues:** https://github.com/SireJeff/k0ntext/issues

@@ -7,13 +7,13 @@ This file provides guidance to Claude Code when working with code in this reposi
 ## Project Identity
 
 **Platform:** Universal AI Context Engineering - CLI tools and templates for Claude Code, GitHub Copilot, Cline, Antigravity, Cursor, Gemini, and more
-**Domain:** https://github.com/SireJeff/claude-context-engineering-template
+**Domain:** https://github.com/SireJeff/k0ntext
 **Tech Stack:** Node.js, TypeScript, Vitest, npm
 **Status:** Active (v3.0.0)
 
 **Quick Reference:**
 - **API:** MCP Server for AI tools
-- **Repo:** https://github.com/SireJeff/claude-context-engineering-template
+- **Repo:** https://github.com/SireJeff/k0ntext
 - **Deploy:** npm registry
 
 ---
@@ -35,9 +35,9 @@ npm run test:run                   # Run once (no watch)
 
 ### Database
 ```bash
-# SQLite database at .ai-context.db
-npx ai-context stats               # View database stats
-npx ai-context index               # Index codebase
+# SQLite database at .k0ntext.db
+npx k0ntext stats               # View database stats
+npx k0ntext index               # Index codebase
 ```
 
 ### Deployment
@@ -47,14 +47,14 @@ npm publish --access public        # Publish to npm
 
 ### New Package Commands
 ```bash
-npx ai-context init                           # Initialize with intelligent analysis
-npx ai-context init --no-intelligent          # Skip OpenRouter analysis
-npx ai-context generate                       # Generate context for all AI tools
-npx ai-context mcp                            # Start MCP server
-npx ai-context sync                           # Sync across AI tools
-npx ai-context index                          # Index codebase into database
-npx ai-context search <query>                 # Semantic search
-npx ai-context stats                          # Database statistics
+npx k0ntext init                           # Initialize with intelligent analysis
+npx k0ntext init --no-intelligent          # Skip OpenRouter analysis
+npx k0ntext generate                       # Generate context for all AI tools
+npx k0ntext mcp                            # Start MCP server
+npx k0ntext sync                           # Sync across AI tools
+npx k0ntext index                          # Index codebase into database
+npx k0ntext search <query>                 # Semantic search
+npx k0ntext stats                          # Database statistics
 ```
 
 ### Legacy Cross-Tool Sync
@@ -152,7 +152,7 @@ grep -r "https://" src/ --include="*.ts" --include="*.js"
 ### Finding Database Schema
 
 **Models:** `src/db/schema.ts`
-**Database:** SQLite at `.ai-context.db`
+**Database:** SQLite at `.k0ntext.db`
 
 ---
 
@@ -168,7 +168,7 @@ grep -r "https://" src/ --include="*.ts" --include="*.js"
 ## System Architecture Mini-Map
 
 ```
-ai-context/
+k0ntext/
 ├── bin/                    # CLI entry point
 ├── src/                    # TypeScript source
 │   ├── cli/                # CLI commands
@@ -204,15 +204,15 @@ ai-context/
 ## Critical Constants
 
 ### Domain & URLs
-- npm package (new): `ai-context`
+- npm package (new): `k0ntext`
 - npm package (legacy): `create-universal-ai-context`
-- GitHub: `SireJeff/claude-context-engineering-template`
+- GitHub: `SireJeff/k0ntext`
 
 ### Business Constants
 - Supported AI tools: Claude Code, GitHub Copilot, Cline, Antigravity, Windsurf, Aider, Continue, Cursor, Gemini
 - Node.js minimum: 18.0.0
-- Database file: `.ai-context.db`
-- Sync state stored in: `.ai-context/sync-state.json`
+- Database file: `.k0ntext.db`
+- Sync state stored in: `.k0ntext/sync-state.json`
 - Git hooks location: `.claude/automation/hooks/`
 - OpenRouter API key: `OPENROUTER_API_KEY` environment variable
 
@@ -289,7 +289,7 @@ ai-context/
 
 ## Contact
 
-- GitHub Issues: https://github.com/SireJeff/claude-context-engineering-template/issues
+- GitHub Issues: https://github.com/SireJeff/k0ntext/issues
 - Author: SireJeff
 
 ---

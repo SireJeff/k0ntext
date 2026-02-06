@@ -39,7 +39,7 @@ export async function createServer(config: ServerConfig): Promise<McpServer> {
   const {
     projectRoot,
     dbPath = '.ai-context.db',
-    name = 'ai-context',
+    name = 'k0ntext',
     version = '1.0.0'
   } = config;
 
@@ -335,7 +335,7 @@ export async function startServer(config: ServerConfig): Promise<void> {
   
   await server.connect(transport);
   
-  console.error(`AI Context MCP Server started`);
+  console.error(`K0NTEXT MCP Server started`);
   console.error(`Project root: ${config.projectRoot}`);
   console.error(`Database: ${config.dbPath || '.ai-context.db'}`);
 }
@@ -344,8 +344,8 @@ export async function startServer(config: ServerConfig): Promise<void> {
  * Main entry point
  */
 export async function main(): Promise<void> {
-  const projectRoot = process.env.AI_CONTEXT_PROJECT_ROOT || process.cwd();
-  const dbPath = process.env.AI_CONTEXT_DB_PATH;
+  const projectRoot = process.env.K0NTEXT_PROJECT_ROOT || process.cwd();
+  const dbPath = process.env.K0NTEXT_DB_PATH;
 
   await startServer({
     projectRoot,

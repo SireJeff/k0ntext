@@ -6,7 +6,7 @@ on:
 
 jobs:
   publish:
-    name: Publish ai-context
+    name: Publish k0ntext
     runs-on: ubuntu-latest
 
     permissions:
@@ -36,7 +36,7 @@ jobs:
       - name: Check if version exists on npm
         id: check_exists
         run: |
-          if npm view ai-context@${{ steps.get_version.outputs.version }} > /dev/null 2>&1; then
+          if npm view k0ntext@${{ steps.get_version.outputs.version }} > /dev/null 2>&1; then
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "Version ${{ steps.get_version.outputs.version }} already exists on npm, skipping publish"
           else

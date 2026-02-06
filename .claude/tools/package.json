@@ -1,10 +1,10 @@
 {
-  "name": "@claude-context/tools",
+  "name": "@k0ntext/tools",
   "version": "2.1.0",
   "description": "CLI tools for Claude Context Engineering template",
   "main": "lib/index.js",
   "bin": {
-    "claude-context": "./bin/claude-context.js"
+    "k0ntext-tools": "./bin/k0ntext-tools.js"
   },
   "scripts": {
     "test": "jest",

@@ -6,16 +6,16 @@
 # Don't block commit if this fails
 set +e
 
-# Check if ai-context binary is available
-if ! command -v create-ai-context &> /dev/null; then
+# Check if k0ntext binary is available
+if ! command -v create-k0ntext &> /dev/null; then
     # Try npx
     if command -v npx &> /dev/null; then
-        AI_CONTEXT_CMD="npx create-universal-ai-context"
+        K0NTEXT_CMD="npx create-universal-k0ntext"
     else
         exit 0
     fi
 else
-    AI_CONTEXT_CMD="create-ai-context"
+    K0NTEXT_CMD="create-k0ntext"
 fi
 
 # Update sync state only (no file regeneration to avoid creating uncommitted changes)
