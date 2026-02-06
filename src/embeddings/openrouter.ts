@@ -131,10 +131,36 @@ export class OpenRouterClient {
   private lastRequestTime = 0;
 
   /**
+   * Timeout configuration
+   */
+  private requestTimeout: number;
+
+  /**
    * Sleep for specified milliseconds
    */
   private sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Create a timeout promise that rejects after specified milliseconds
+   */
+  private createTimeoutPromise(ms: number): Promise<never> {
+    return new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new OpenRouterTimeoutError(`Request timed out after ${ms}ms`));
+      }, ms);
+    });
+  }
+
+  /**
+   * Wrap a fetch promise with timeout
+   */
+  private async fetchWithTimeout(url: string, options: RequestInit, timeout: number): Promise<Response> {
+    return Promise.race([
+      fetch(url, options),
+      this.createTimeoutPromise(timeout)
+    ]);
   }
 
   /**
@@ -163,6 +189,7 @@ export class OpenRouterClient {
     this.siteUrl = config.siteUrl || 'https://github.com/SireJeff/claude-context-engineering-template';
     this.siteName = config.siteName || 'AI Context';
     this.minRequestInterval = config.minRequestInterval || 100; // ms between requests
+    this.requestTimeout = config.requestTimeout || 30000; // 30 seconds default
     this.lastRequestTime = 0;
   }
 
@@ -182,7 +209,7 @@ export class OpenRouterClient {
         // Apply rate limiting before each attempt
         await this.applyRateLimit();
 
-        const response = await fetch(OPENROUTER_EMBEDDINGS_URL, {
+        const response = await this.fetchWithTimeout(OPENROUTER_EMBEDDINGS_URL, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${this.apiKey}`,
@@ -194,7 +221,7 @@ export class OpenRouterClient {
             model: this.embeddingModel,
             input: text
           })
-        });
+        }, this.requestTimeout);
 
         if (!response.ok) {
           const error = await response.text();
@@ -287,7 +314,7 @@ export class OpenRouterClient {
         // Apply rate limiting before each attempt
         await this.applyRateLimit();
 
-        const response = await fetch(OPENROUTER_EMBEDDINGS_URL, {
+        const response = await this.fetchWithTimeout(OPENROUTER_EMBEDDINGS_URL, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${this.apiKey}`,
@@ -299,7 +326,7 @@ export class OpenRouterClient {
             model: this.embeddingModel,
             input: uncachedTexts
           })
-        });
+        }, this.requestTimeout);
 
         if (!response.ok) {
           const error = await response.text();
@@ -373,7 +400,7 @@ export class OpenRouterClient {
         // Apply rate limiting before each attempt
         await this.applyRateLimit();
 
-        const response = await fetch(OPENROUTER_CHAT_URL, {
+        const response = await this.fetchWithTimeout(OPENROUTER_CHAT_URL, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${this.apiKey}`,
@@ -387,7 +414,7 @@ export class OpenRouterClient {
             temperature: options?.temperature ?? 0.3,
             max_tokens: options?.maxTokens ?? 4096
           })
-        });
+        }, this.requestTimeout);
 
         if (!response.ok) {
           const error = await response.text();
