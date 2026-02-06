@@ -23,6 +23,7 @@ import { validateCommand } from './commands/validate.js';
 import { exportCommand } from './commands/export.js';
 import { importCommand } from './commands/import.js';
 import { performanceCommand } from './commands/performance.js';
+import { watchCommand } from './commands/watch.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -190,6 +191,9 @@ function createProgram(): Command {
 
   // ==================== Performance Command ====================
   program.addCommand(performanceCommand);
+
+  // ==================== Watch Command ====================
+  program.addCommand(watchCommand);
 
   // ==================== Index Command ====================
   program

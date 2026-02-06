@@ -325,6 +325,37 @@ export class DatabaseClient {
     };
   }
 
+  /**
+   * Calculate relevance score for a search result
+   */
+  private calculateRelevance(
+    item: ContextItem,
+    query: string,
+    baseScore: number
+  ): number {
+    let score = baseScore;
+
+    // Boost score for exact name matches
+    if (item.name.toLowerCase().includes(query.toLowerCase())) {
+      score *= 1.5;
+    }
+
+    // Boost score for recently updated items
+    if (item.updatedAt) {
+      const daysSinceUpdate = (Date.now() - new Date(item.updatedAt).getTime()) / (1000 * 60 * 60 * 24);
+      if (daysSinceUpdate < 7) {
+        score *= 1.2; // 20% boost for items updated within a week
+      }
+    }
+
+    // Boost score for certain types
+    if (item.type === 'workflow' || item.type === 'agent') {
+      score *= 1.1;
+    }
+
+    return score;
+  }
+
   // ==================== AI Tool Configs ====================
 
   /**
@@ -647,9 +678,9 @@ export class DatabaseClient {
    */
   searchByEmbedding(queryEmbedding: number[], limit = 10): SearchResult[] {
     const buffer = new Float32Array(queryEmbedding);
-    
+
     const stmt = this.db.prepare(`
-      SELECT 
+      SELECT
         e.context_id,
         e.embedding,
         ci.*,
@@ -659,12 +690,61 @@ export class DatabaseClient {
       ORDER BY distance
       LIMIT ?
     `);
-    
+
     const rows = stmt.all(Buffer.from(buffer.buffer), limit) as Record<string, unknown>[];
-    
+
     return rows.map(row => ({
       item: this.rowToItem(row),
       similarity: 1 - (row.distance as number || 0) // Convert distance to similarity
+    }));
+  }
+
+  /**
+   * Hybrid search combining vector and text search
+   */
+  hybridSearch(
+    query: string,
+    queryEmbedding: number[] | null,
+    options: {
+      limit?: number;
+      type?: ContextType;
+      vectorWeight?: number; // 0-1, higher = more weight on semantic
+    } = {}
+  ): SearchResult[] {
+    const {
+      limit = 10,
+      type,
+      vectorWeight = 0.7
+    } = options;
+
+    const textResults = this.searchText(query, type);
+    const semanticResults = queryEmbedding ? this.searchByEmbedding(queryEmbedding, limit * 2) : [];
+
+    // Combine and score
+    const combinedScores = new Map<string, number>();
+
+    // Score text results (inverse of position)
+    for (let i = 0; i < textResults.length; i++) {
+      const score = (1 - i / textResults.length) * (1 - vectorWeight);
+      combinedScores.set(textResults[i].id, (combinedScores.get(textResults[i].id) || 0) + score);
+    }
+
+    // Score semantic results
+    for (const result of semanticResults) {
+      const score = result.similarity * vectorWeight;
+      combinedScores.set(result.item.id, (combinedScores.get(result.item.id) || 0) + score);
+    }
+
+    // Sort by combined score
+    const results = Array.from(combinedScores.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([id]) => this.getItem(id)!)
+      .filter(item => item !== null);
+
+    return results.map(item => ({
+      item,
+      similarity: combinedScores.get(item.id) || 0
     }));
   }
 

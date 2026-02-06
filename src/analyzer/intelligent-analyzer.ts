@@ -585,6 +585,41 @@ Return ONLY valid JSON, no markdown formatting.
 
     return embeddings;
   }
+
+  /**
+   * Set up file watcher for automatic re-indexing
+   */
+  setupFileWatcher(onChange: (filePath: string) => Promise<void>): () => void {
+    // Check if chokidar is available
+    let chokidar: any;
+    try {
+      chokidar = require('chokidar');
+    } catch {
+      console.warn('chokidar not available. File watching disabled. Install with: npm install chokidar');
+      return () => {};
+    }
+
+    const watchPaths = [
+      path.join(this.projectRoot, 'src'),
+      path.join(this.projectRoot, 'lib'),
+      path.join(this.projectRoot, '.claude'),
+      path.join(this.projectRoot, 'CLAUDE.md'),
+      path.join(this.projectRoot, 'README.md'),
+      path.join(this.projectRoot, 'docs')
+    ];
+
+    const watcher = chokidar.watch(watchPaths, {
+      ignored: /node_modules|\.git|dist/,
+      persistent: true,
+      ignoreInitial: true
+    });
+
+    watcher.on('change', async (filePath: string) => {
+      await onChange(filePath);
+    });
+
+    return () => watcher.close();
+  }
 }
 
 /**
