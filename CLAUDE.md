@@ -78,7 +78,7 @@ npx create-ai-context hooks:install           # Install git hooks
 2. Find: Relevant category
 3. Load: Domain index
 4. Detail: Workflow file
-5. Code: [.claude/indexes/code/DOMAIN_LAYER_INDEX.md](./.claude/indexes/code/DOMAIN_LAYER_INDEX.md)
+5. Code: [.claude/indexes/code/CATEGORY_INDEX.md](./.claude/indexes/code/CATEGORY_INDEX.md)
 6. Implement: Use appropriate specialized agent
 
 **Context Budget:** ~40k tokens (20% of 200k window)
@@ -91,9 +91,8 @@ npx create-ai-context hooks:install           # Install git hooks
 **Chain:**
 1. Start: Search Patterns section below
 2. Pattern: Use grep/find
-3. Verify: [.claude/indexes/code/REVERSE_INDEXES.md](./.claude/indexes/code/REVERSE_INDEXES.md)
-4. Fix: Direct file edits
-5. Validate: Run tests
+3. Fix: Direct file edits
+4. Validate: Run tests
 
 **Context Budget:** ~15k tokens (7.5% of 200k window)
 
@@ -104,10 +103,9 @@ npx create-ai-context hooks:install           # Install git hooks
 
 **Chain:**
 1. Start: [.claude/indexes/routing/CATEGORY_INDEX.md](./.claude/indexes/routing/CATEGORY_INDEX.md)
-2. Route: [.claude/indexes/routing/HIGH_LEVEL_ROUTER.md](./.claude/indexes/routing/HIGH_LEVEL_ROUTER.md)
-3. Research: /rpi-research
-4. Plan: /rpi-plan
-5. Implement: /rpi-implement
+2. Research: /rpi-research
+3. Plan: /rpi-plan
+4. Implement: /rpi-implement
 
 **Context Budget:** ~50k tokens (25% of 200k window)
 
@@ -224,14 +222,14 @@ k0ntext/
 
 **Implementing:** [workflows/*.md](./.claude/context/workflows/), [CODE_TO_WORKFLOW_MAP.md](./.claude/context/CODE_TO_WORKFLOW_MAP.md)
 
-**Debugging:** Check Jest output, review lib/ modules
+**Debugging:** Check Vitest output, review src/ modules
 
 ---
 
 ## Agent & Command Routing
 
 **Agents:** @context-engineer (setup), @core-architect (design), @api-developer (endpoints), @database-ops (schema), @integration-hub (external), @deployment-ops (CI/CD)
-**Full matrix:** [.claude/indexes/agents/router.md](./.claude/indexes/agents/router.md)
+**Full matrix:** [.claude/indexes/agents/CAPABILITY_MATRIX.md](./.claude/indexes/agents/CAPABILITY_MATRIX.md)
 
 **Commands:** /rpi-research, /rpi-plan, /rpi-implement, /context-optimize, /verify-docs-current, /validate-all, /help, /collab, /analytics
 **All commands:** [.claude/commands/](./.claude/commands/)
@@ -241,8 +239,9 @@ k0ntext/
 ## Gotcha Quick Reference
 
 ### Testing
-- Integration tests require test fixtures in `tests/fixtures/`
-- Run unit tests separately: `npm test -- tests/unit/`
+- Tests use Vitest with globals enabled
+- Run all tests: `npm test`
+- Run once without watch: `npm run test:run`
 
 ### Publishing
 - Version must be bumped before npm publish
@@ -274,7 +273,7 @@ k0ntext/
 ## Key Constraints
 
 **Migrations:** N/A
-**Testing:** All PRs must pass Jest tests
+**Testing:** All PRs must pass Vitest tests
 **Security:** No secrets in templates, validate user input paths
 
 ---
