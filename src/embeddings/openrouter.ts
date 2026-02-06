@@ -73,6 +73,38 @@ export interface OpenRouterConfig {
   siteUrl?: string;
   siteName?: string;
   minRequestInterval?: number; // ms between requests for rate limiting
+  requestTimeout?: number; // ms timeout for requests
+}
+
+/**
+ * OpenRouter-specific error types
+ */
+export class OpenRouterError extends Error {
+  constructor(message: string, public code?: string) {
+    super(message);
+    this.name = 'OpenRouterError';
+  }
+}
+
+export class OpenRouterRateLimitError extends OpenRouterError {
+  constructor(message: string, public retryAfter?: number) {
+    super(message, 'RATE_LIMIT');
+    this.name = 'OpenRouterRateLimitError';
+  }
+}
+
+export class OpenRouterAuthError extends OpenRouterError {
+  constructor(message: string) {
+    super(message, 'AUTH_ERROR');
+    this.name = 'OpenRouterAuthError';
+  }
+}
+
+export class OpenRouterTimeoutError extends OpenRouterError {
+  constructor(message: string) {
+    super(message, 'TIMEOUT');
+    this.name = 'OpenRouterTimeoutError';
+  }
 }
 
 /**
@@ -168,9 +200,17 @@ export class OpenRouterClient {
           const error = await response.text();
           // Don't retry auth errors
           if (response.status === 401 || response.status === 403) {
-            throw new Error(`OpenRouter API error: ${response.status} - ${error}`);
+            throw new OpenRouterAuthError(`Authentication failed: ${error}`);
           }
-          throw new Error(`OpenRouter API error: ${response.status} - ${error}`);
+          // Rate limit errors - check for retry-after header
+          if (response.status === 429) {
+            const retryAfter = response.headers.get('Retry-After');
+            throw new OpenRouterRateLimitError(
+              `Rate limit exceeded: ${error}`,
+              retryAfter ? parseInt(retryAfter, 10) : undefined
+            );
+          }
+          throw new OpenRouterError(`OpenRouter API error (${response.status}): ${error}`);
         }
 
         const data = await response.json() as EmbeddingResponse;
@@ -182,7 +222,7 @@ export class OpenRouterClient {
           !data.data[0] ||
           !Array.isArray(data.data[0].embedding)
         ) {
-          throw new Error('OpenRouter API error: no embedding data returned in response');
+          throw new OpenRouterError('OpenRouter API error: no embedding data returned in response', 'NO_DATA');
         }
 
         const embedding = data.data[0].embedding;
@@ -192,6 +232,14 @@ export class OpenRouterClient {
 
         return embedding;
       } catch (error) {
+        // Don't retry auth errors - they'll be thrown as OpenRouterAuthError
+        if (error instanceof OpenRouterAuthError) {
+          throw error;
+        }
+        // Don't retry rate limit errors with explicit retry-after
+        if (error instanceof OpenRouterRateLimitError && error.retryAfter) {
+          throw error;
+        }
         lastError = error instanceof Error ? error : new Error(String(error));
 
         // Don't retry if it's the last attempt or certain error types
@@ -205,7 +253,7 @@ export class OpenRouterClient {
       }
     }
 
-    throw lastError || new Error('OpenRouter API error: max retries exceeded');
+    throw lastError || new OpenRouterError('OpenRouter API error: max retries exceeded', 'MAX_RETRIES');
   }
 
   /**
@@ -257,14 +305,30 @@ export class OpenRouterClient {
           const error = await response.text();
           // Don't retry auth errors
           if (response.status === 401 || response.status === 403) {
-            throw new Error(`OpenRouter API error: ${response.status} - ${error}`);
+            throw new OpenRouterAuthError(`Authentication failed: ${error}`);
           }
-          throw new Error(`OpenRouter API error: ${response.status} - ${error}`);
+          // Rate limit errors
+          if (response.status === 429) {
+            const retryAfter = response.headers.get('Retry-After');
+            throw new OpenRouterRateLimitError(
+              `Rate limit exceeded: ${error}`,
+              retryAfter ? parseInt(retryAfter, 10) : undefined
+            );
+          }
+          throw new OpenRouterError(`OpenRouter API error (${response.status}): ${error}`);
         }
 
         data = await response.json() as EmbeddingResponse;
         break; // Success, exit retry loop
       } catch (error) {
+        // Don't retry auth errors - they'll be thrown as OpenRouterAuthError
+        if (error instanceof OpenRouterAuthError) {
+          throw error;
+        }
+        // Don't retry rate limit errors with explicit retry-after
+        if (error instanceof OpenRouterRateLimitError && error.retryAfter) {
+          throw error;
+        }
         lastError = error instanceof Error ? error : new Error(String(error));
 
         if (attempt === this.maxRetries) {
@@ -277,7 +341,7 @@ export class OpenRouterClient {
     }
 
     if (!data) {
-      throw lastError || new Error('OpenRouter API error: max retries exceeded');
+      throw lastError || new OpenRouterError('OpenRouter API error: max retries exceeded', 'MAX_RETRIES');
     }
 
     // Fill in results and cache
@@ -329,14 +393,30 @@ export class OpenRouterClient {
           const error = await response.text();
           // Don't retry auth errors
           if (response.status === 401 || response.status === 403) {
-            throw new Error(`OpenRouter Chat API error: ${response.status} - ${error}`);
+            throw new OpenRouterAuthError(`Authentication failed: ${error}`);
           }
-          throw new Error(`OpenRouter Chat API error: ${response.status} - ${error}`);
+          // Rate limit errors
+          if (response.status === 429) {
+            const retryAfter = response.headers.get('Retry-After');
+            throw new OpenRouterRateLimitError(
+              `Rate limit exceeded: ${error}`,
+              retryAfter ? parseInt(retryAfter, 10) : undefined
+            );
+          }
+          throw new OpenRouterError(`OpenRouter Chat API error (${response.status}): ${error}`);
         }
 
         data = await response.json() as ChatResponse;
         break; // Success, exit retry loop
       } catch (error) {
+        // Don't retry auth errors - they'll be thrown as OpenRouterAuthError
+        if (error instanceof OpenRouterAuthError) {
+          throw error;
+        }
+        // Don't retry rate limit errors with explicit retry-after
+        if (error instanceof OpenRouterRateLimitError && error.retryAfter) {
+          throw error;
+        }
         lastError = error instanceof Error ? error : new Error(String(error));
 
         if (attempt === this.maxRetries) {
@@ -349,7 +429,7 @@ export class OpenRouterClient {
     }
 
     if (!data) {
-      throw lastError || new Error('OpenRouter Chat API error: max retries exceeded');
+      throw lastError || new OpenRouterError('OpenRouter Chat API error: max retries exceeded', 'MAX_RETRIES');
     }
 
     const firstChoice = data?.choices && Array.isArray(data.choices) ? data.choices[0] : undefined;
