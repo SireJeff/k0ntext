@@ -36,6 +36,7 @@ node_modules/
 # Build artifacts
 dist/
 coverage/
+*.tgz
 
 # Generated files
 .k0ntext/
