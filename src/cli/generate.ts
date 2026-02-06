@@ -15,16 +15,16 @@ export const generateCommand = new Command('generate')
     const spinner = ora('Generating context files...').start();
 
     try {
-      const db = new DatabaseClient();
+      const db = new DatabaseClient(process.cwd());
 
       // Check if database has content
-      const stats = await db.getStats();
-      if (stats.totalItems === 0) {
-        spinner.warn(chalk.yellow('No context found in database. Run `ai-context index` first.'));
+      const stats = db.getStats();
+      if (stats.items === 0) {
+        spinner.warn(chalk.yellow('No context found in database. Run `k0ntext index` first.'));
         return;
       }
 
-      spinner.text = `Found ${stats.totalItems} context items`;
+      spinner.text = `Found ${stats.items} context items`;
 
       // Determine which tools to generate for
       const toolsParam = options.ai ? options.ai.split(',') : ['all'];
@@ -47,9 +47,10 @@ export const generateCommand = new Command('generate')
             skipped.push(tool);
           }
         } catch (error) {
-          spinner.fail(chalk.red(`Failed to generate ${tool}: ${error.message}`));
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          spinner.fail(chalk.red(`Failed to generate ${tool}: ${errorMessage}`));
           if (options.verbose) {
-            console.error(chalk.dim(error.stack));
+            console.error(chalk.dim((error as Error).stack));
           }
         }
       }
@@ -65,10 +66,11 @@ export const generateCommand = new Command('generate')
       }
 
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       spinner.fail(chalk.red('Generation failed'));
-      console.error(chalk.dim(error.message));
+      console.error(chalk.dim(errorMessage));
       if (options.verbose) {
-        console.error(chalk.dim(error.stack));
+        console.error(chalk.dim((error as Error).stack));
       }
       process.exit(1);
     }
@@ -107,7 +109,7 @@ async function generateForTool(
   }
 
   // Get context from database
-  const contextItems = await db.getContextItems();
+  const contextItems = db.getAllItems();
 
   // Generate content based on tool
   const content = generateContent(tool, contextItems);
