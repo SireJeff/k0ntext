@@ -19,6 +19,9 @@ import { hasOpenRouterKey } from '../embeddings/openrouter.js';
 import { generateCommand } from './generate.js';
 import { syncCommand } from './sync.js';
 import { cleanupCommand } from './commands/cleanup.js';
+import { validateCommand } from './commands/validate.js';
+import { exportCommand } from './commands/export.js';
+import { importCommand } from './commands/import.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -174,6 +177,15 @@ function createProgram(): Command {
 
   // ==================== Cleanup Command ====================
   program.addCommand(cleanupCommand);
+
+  // ==================== Validate Command ====================
+  program.addCommand(validateCommand);
+
+  // ==================== Export Command ====================
+  program.addCommand(exportCommand);
+
+  // ==================== Import Command ====================
+  program.addCommand(importCommand);
 
   // ==================== Index Command ====================
   program
