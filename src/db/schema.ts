@@ -133,6 +133,20 @@ CREATE TABLE IF NOT EXISTS usage_analytics (
 -- Index for analytics
 CREATE INDEX IF NOT EXISTS idx_analytics_timestamp ON usage_analytics(timestamp);
 CREATE INDEX IF NOT EXISTS idx_analytics_tool ON usage_analytics(tool_name);
+
+-- Performance metrics tracking
+CREATE TABLE IF NOT EXISTS performance_metrics (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  metric_name TEXT NOT NULL,
+  metric_value REAL NOT NULL,
+  metric_unit TEXT,
+  recorded_at TEXT NOT NULL DEFAULT (datetime('now')),
+  metadata JSON
+);
+
+-- Index for performance metrics
+CREATE INDEX IF NOT EXISTS idx_performance_metrics_name ON performance_metrics(metric_name);
+CREATE INDEX IF NOT EXISTS idx_performance_metrics_timestamp ON performance_metrics(recorded_at);
 `;
 
 /**

@@ -22,6 +22,7 @@ import { cleanupCommand } from './commands/cleanup.js';
 import { validateCommand } from './commands/validate.js';
 import { exportCommand } from './commands/export.js';
 import { importCommand } from './commands/import.js';
+import { performanceCommand } from './commands/performance.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -186,6 +187,9 @@ function createProgram(): Command {
 
   // ==================== Import Command ====================
   program.addCommand(importCommand);
+
+  // ==================== Performance Command ====================
+  program.addCommand(performanceCommand);
 
   // ==================== Index Command ====================
   program
