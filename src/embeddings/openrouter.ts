@@ -85,6 +85,19 @@ export class OpenRouterClient {
   private siteName: string;
   private embeddingCache: Map<string, number[]> = new Map();
 
+  /**
+   * Retry configuration
+   */
+  private maxRetries = 3;
+  private baseRetryDelay = 1000; // ms
+
+  /**
+   * Sleep for specified milliseconds
+   */
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   constructor(config: OpenRouterConfig) {
     if (!config.apiKey) {
       throw new Error('OPENROUTER_API_KEY is required');
@@ -107,43 +120,65 @@ export class OpenRouterClient {
       return this.embeddingCache.get(cacheKey)!;
     }
 
-    const response = await fetch(OPENROUTER_EMBEDDINGS_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': this.siteUrl,
-        'X-Title': this.siteName
-      },
-      body: JSON.stringify({
-        model: this.embeddingModel,
-        input: text
-      })
-    });
+    let lastError: Error | null = null;
+    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      try {
+        const response = await fetch(OPENROUTER_EMBEDDINGS_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': this.siteUrl,
+            'X-Title': this.siteName
+          },
+          body: JSON.stringify({
+            model: this.embeddingModel,
+            input: text
+          })
+        });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`OpenRouter API error: ${response.status} - ${error}`);
+        if (!response.ok) {
+          const error = await response.text();
+          // Don't retry auth errors
+          if (response.status === 401 || response.status === 403) {
+            throw new Error(`OpenRouter API error: ${response.status} - ${error}`);
+          }
+          throw new Error(`OpenRouter API error: ${response.status} - ${error}`);
+        }
+
+        const data = await response.json() as EmbeddingResponse;
+
+        if (
+          !data ||
+          !Array.isArray(data.data) ||
+          data.data.length === 0 ||
+          !data.data[0] ||
+          !Array.isArray(data.data[0].embedding)
+        ) {
+          throw new Error('OpenRouter API error: no embedding data returned in response');
+        }
+
+        const embedding = data.data[0].embedding;
+
+        // Cache the result
+        this.embeddingCache.set(cacheKey, embedding);
+
+        return embedding;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+
+        // Don't retry if it's the last attempt or certain error types
+        if (attempt === this.maxRetries) {
+          break;
+        }
+
+        // Exponential backoff: wait longer with each attempt
+        const delay = this.baseRetryDelay * Math.pow(2, attempt);
+        await this.sleep(delay);
+      }
     }
 
-    const data = await response.json() as EmbeddingResponse;
-
-    if (
-      !data ||
-      !Array.isArray(data.data) ||
-      data.data.length === 0 ||
-      !data.data[0] ||
-      !Array.isArray(data.data[0].embedding)
-    ) {
-      throw new Error('OpenRouter API error: no embedding data returned in response');
-    }
-
-    const embedding = data.data[0].embedding;
-
-    // Cache the result
-    this.embeddingCache.set(cacheKey, embedding);
-
-    return embedding;
+    throw lastError || new Error('OpenRouter API error: max retries exceeded');
   }
 
   /**
@@ -168,27 +203,52 @@ export class OpenRouterClient {
       return results as number[][];
     }
 
-    // Batch request to OpenRouter
-    const response = await fetch(OPENROUTER_EMBEDDINGS_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': this.siteUrl,
-        'X-Title': this.siteName
-      },
-      body: JSON.stringify({
-        model: this.embeddingModel,
-        input: uncachedTexts
-      })
-    });
+    // Batch request to OpenRouter with retry
+    let lastError: Error | null = null;
+    let data: EmbeddingResponse | null = null;
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`OpenRouter API error: ${response.status} - ${error}`);
+    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      try {
+        const response = await fetch(OPENROUTER_EMBEDDINGS_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': this.siteUrl,
+            'X-Title': this.siteName
+          },
+          body: JSON.stringify({
+            model: this.embeddingModel,
+            input: uncachedTexts
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.text();
+          // Don't retry auth errors
+          if (response.status === 401 || response.status === 403) {
+            throw new Error(`OpenRouter API error: ${response.status} - ${error}`);
+          }
+          throw new Error(`OpenRouter API error: ${response.status} - ${error}`);
+        }
+
+        data = await response.json() as EmbeddingResponse;
+        break; // Success, exit retry loop
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+
+        if (attempt === this.maxRetries) {
+          break;
+        }
+
+        const delay = this.baseRetryDelay * Math.pow(2, attempt);
+        await this.sleep(delay);
+      }
     }
 
-    const data = await response.json() as EmbeddingResponse;
+    if (!data) {
+      throw lastError || new Error('OpenRouter API error: max retries exceeded');
+    }
 
     // Fill in results and cache
     for (let i = 0; i < data.data.length; i++) {
@@ -211,28 +271,53 @@ export class OpenRouterClient {
     maxTokens?: number;
     model?: string;
   }): Promise<string> {
-    const response = await fetch(OPENROUTER_CHAT_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': this.siteUrl,
-        'X-Title': this.siteName
-      },
-      body: JSON.stringify({
-        model: options?.model || this.chatModel,
-        messages,
-        temperature: options?.temperature ?? 0.3,
-        max_tokens: options?.maxTokens ?? 4096
-      })
-    });
+    let lastError: Error | null = null;
+    let data: ChatResponse | null = null;
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`OpenRouter Chat API error: ${response.status} - ${error}`);
+    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      try {
+        const response = await fetch(OPENROUTER_CHAT_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': this.siteUrl,
+            'X-Title': this.siteName
+          },
+          body: JSON.stringify({
+            model: options?.model || this.chatModel,
+            messages,
+            temperature: options?.temperature ?? 0.3,
+            max_tokens: options?.maxTokens ?? 4096
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.text();
+          // Don't retry auth errors
+          if (response.status === 401 || response.status === 403) {
+            throw new Error(`OpenRouter Chat API error: ${response.status} - ${error}`);
+          }
+          throw new Error(`OpenRouter Chat API error: ${response.status} - ${error}`);
+        }
+
+        data = await response.json() as ChatResponse;
+        break; // Success, exit retry loop
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+
+        if (attempt === this.maxRetries) {
+          break;
+        }
+
+        const delay = this.baseRetryDelay * Math.pow(2, attempt);
+        await this.sleep(delay);
+      }
     }
 
-    const data = await response.json() as ChatResponse;
+    if (!data) {
+      throw lastError || new Error('OpenRouter Chat API error: max retries exceeded');
+    }
 
     const firstChoice = data?.choices && Array.isArray(data.choices) ? data.choices[0] : undefined;
     const content = firstChoice?.message?.content;
