@@ -88,7 +88,7 @@ export async function createServer(config: ServerConfig): Promise<McpServer> {
       const { query, type, limit = 10 } = args as { query: string; type?: string; limit?: number };
       
       // Text search (semantic search requires embeddings)
-      const results = ctx.db.searchText(query, type);
+      const results = ctx.db.searchText(query, type as any);
       
       return {
         content: [{
@@ -205,7 +205,7 @@ export async function createServer(config: ServerConfig): Promise<McpServer> {
       const { tool } = args as { tool?: string };
       
       const configs = tool
-        ? ctx.db.getToolConfigs(tool)
+        ? ctx.db.getToolConfigs(tool as any)
         : ctx.db.getAllToolConfigs();
       
       return {

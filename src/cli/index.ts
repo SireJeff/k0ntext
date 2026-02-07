@@ -208,7 +208,7 @@ function createProgram(): Command {
       showBanner();
 
       const spinner = ora();
-      let db: DatabaseClient | undefined;
+      let db: any;
       
       try {
         spinner.start('Discovering content...');
@@ -391,7 +391,7 @@ function createProgram(): Command {
     .option('-m, --mode <mode>', 'Search mode: text, semantic, hybrid (default: hybrid)', 'hybrid')
     .action(async (query, options) => {
       const spinner = ora();
-      let db: DatabaseClient | undefined;
+      let db: any;
 
       try {
         const limit =

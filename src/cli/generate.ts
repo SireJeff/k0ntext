@@ -123,7 +123,7 @@ async function generateForTool(
   return config.path;
 }
 
-function generateContent(tool: string, contextItems: Array<{ type: string; name: string; content?: string }>): string {
+function generateContent(tool: string, contextItems: Array<any>): string {
   // Basic content generation - in production this would use templates
   const projectName = contextItems.find(i => i.type === 'config' && i.name === 'project')?.content?.name || 'Project';
   const description = contextItems.find(i => i.type === 'config' && i.name === 'project')?.content?.description || '';

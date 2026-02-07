@@ -17,6 +17,9 @@ export interface CleanupConfig {
 
   /** Timeout for folder operations in milliseconds */
   timeout: number;
+
+  /** Default working directory */
+  cwd: string;
 }
 
 /**

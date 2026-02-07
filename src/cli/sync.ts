@@ -86,7 +86,7 @@ export class SyncManager {
   }
 
   async syncFrom(tool: string): Promise<void> {
-    const configs = this.db.getToolConfigs(tool);
+    const configs = this.db.getToolConfigs(tool as any);
     if (!configs || configs.length === 0) {
       throw new Error(`Tool ${tool} not found in database`);
     }
@@ -186,7 +186,6 @@ export class SyncManager {
     this.db.updateSyncState({
         id: `sync:${tool}`,
         tool: tool,
-        // @ts-expect-error - We're using a timestamp as hash for now as requested
         contentHash: Date.now().toString(),
         lastSync: new Date().toISOString(),
         status: 'synced'

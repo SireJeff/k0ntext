@@ -618,7 +618,7 @@ Return ONLY valid JSON, no markdown formatting.
       path.join(this.projectRoot, 'docs')
     ];
 
-    const watcher = chokidar.watch(watchPaths, {
+    const watcher = (chokidar as any).watch(watchPaths, {
       ignored: /node_modules|\.git|dist/,
       persistent: true,
       ignoreInitial: true
