@@ -511,6 +511,47 @@ After initialization, use the RPI workflow for all development:
 
 ---
 
+## k0ntext CLI Commands
+
+This agent integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext init` | First-time project setup - initializes AI context with intelligent analysis |
+| `k0ntext generate` | After making architectural changes - regenerates context files for all AI tools |
+| `k0ntext validate` | Before committing changes - validates context file structure and completeness |
+| `k0ntext index` | After adding new files - indexes codebase content into the database for search |
+| `k0ntext stats` | Check database and indexing status - shows context items, embeddings, and database path |
+
+### Command Examples
+
+```bash
+# Initialize a new project with intelligent analysis
+k0ntext init
+
+# Generate contexts for specific AI tools
+k0ntext generate --tools claude,cursor
+
+# Validate context files
+k0ntext validate
+
+# Index new documentation files
+k0ntext index --docs
+
+# View database statistics
+k0ntext stats
+```
+
+### Workflow Integration
+
+When using this agent:
+1. **Before initialization:** Run `k0ntext init` to establish baseline context
+2. **During template population:** Use `k0ntext index` to discover all project files
+3. **After modifications:** Run `k0ntext generate` to propagate changes to all AI tools
+4. **Before commit:** Use `k0ntext validate` to ensure context integrity
+
+---
+
 ## Version History
 
 | Version | Date | Changes |

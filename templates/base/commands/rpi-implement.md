@@ -162,3 +162,39 @@ Documentation updates
 - All chunks marked IMPLEMENTED (plan + research)
 - Updated documentation per chunk
 - Documents archived to completed/
+
+---
+
+## k0ntext CLI Commands
+
+This command integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext watch` | Auto-index on file changes during implementation |
+| `k0ntext validate` | Validate context files after changes |
+| `k0ntext fact-check` | Validate documentation accuracy before finalizing |
+
+### Command Examples
+
+```bash
+# Start watch mode for auto-indexing
+k0ntext watch
+
+# Validate context after changes
+k0ntext validate
+
+# Fact-check documentation updates
+k0ntext fact-check
+
+# Search for related tests
+k0ntext search "test"
+```
+
+### Workflow Integration
+
+When implementing changes:
+1. **Before implementing:** Start `k0ntext watch` for automatic indexing
+2. **During implementation:** Use search to find related tests and patterns
+3. **After each change:** Use `k0ntext validate` to ensure integrity
+4. **Before finalizing:** Run `k0ntext fact-check` to validate documentation

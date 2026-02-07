@@ -192,3 +192,40 @@ Requires `.ai-context/team/config.json` to be configured. See `.ai-context/team/
 - [Team Configuration](./../team/README.md)
 - [Knowledge Base](./../knowledge/README.md)
 - [Session Handoff Template](./../knowledge/sessions/TEMPLATE.md)
+
+---
+
+## k0ntext CLI Commands
+
+This command integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext sync` | Sync shared knowledge across AI tools |
+| `k0ntext cross-sync` | Intelligent cross-tool synchronization for teams |
+| `k0ntext export` | Export context for team handoff |
+| `k0ntext import` | Import context from team members |
+
+### Command Examples
+
+```bash
+# Sync across all AI tools
+k0ntext sync
+
+# Cross-tool sync for team consistency
+k0ntext cross-sync
+
+# Export for handoff
+k0ntext export --file handoff-data.json
+
+# Import from team member
+k0ntext import --file handoff-data.json
+```
+
+### Workflow Integration
+
+When collaborating with team:
+1. **Before handoff:** Run `k0ntext export` to package current context
+2. **During collaboration:** Use `k0ntext sync` to keep everyone aligned
+3. **For consistency:** Use `k0ntext cross-sync` for intelligent synchronization
+4. **After receiving:** Use `k0ntext import` to load handoff context

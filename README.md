@@ -9,6 +9,38 @@
 
 Universal AI context engineering for Claude, GitHub Copilot, Cline, Cursor, Windsurf, Aider, Continue, Antigravity, and Gemini with OpenRouter-powered intelligent analysis.
 
+## Table of Contents
+
+- [Quick Start](#-quick-start-30-seconds)
+- [Zero-to-Hero Workflow](#-zero-to-hero-workflow)
+- [Windows Support](#-windows-support)
+- [Features Overview](#-features-overview)
+  - [Intelligent Analysis](#-intelligent-analysis)
+  - [Semantic Search](#-semantic-search)
+  - [Cross-Tool Sync](#-cross-tool-sync)
+  - [Git Hooks Automation](#-git-hooks-automation-v310)
+  - [Drift Detection](#-drift-detection-v310)
+  - [Fact-Checking](#-fact-checking-v310)
+  - [Map-Based Context](#-map-based-context-v310)
+  - [MCP Server](#-mcp-server)
+  - [Complete CLI](#-complete-cli-18-commands)
+  - [Smart Agents](#-smart-agents)
+  - [SQLite Storage](#-sqlite-storage)
+- [Complete CLI Reference](#-complete-cli-reference)
+  - [Core Commands](#core-commands)
+  - [v3.1.0 New Commands](#v310-new-commands)
+  - [Git Hooks Workflow](#-git-hooks-workflow-v310)
+- [MCP Server Usage](#-mcp-server-usage)
+- [Supported AI Tools](#-supported-ai-tools)
+- [Configuration](#-configuration)
+- [Architecture](#-architecture)
+- [Development](#-development)
+- [Performance Monitoring](#-performance-monitoring)
+- [Troubleshooting](#-troubleshooting)
+- [Community](#-community)
+
+---
+
 ## 🚀 Quick Start (30 Seconds)
 
 ```bash
@@ -38,7 +70,7 @@ k0ntext index
 # 3. Generate context files
 k0ntext generate
 
-# 4. Start MCP server
+# 4. Start MCP server (auto-configured)
 k0ntext mcp
 ```
 
@@ -111,12 +143,36 @@ K0ntext uses native SQLite extensions for high-performance vector search.
 - Alternative to verbose documentation format
 
 ### 🤖 MCP Server
+- **Auto-Configuration** (v3.1.1) - MCP server automatically configured in `.claude/settings.json` on init
+- **10 Tools:** search_context, get_item, add_knowledge, analyze, get_tool_configs, query_graph, get_stats
+- **6 Prompts:** context-engineer, core-architect, api-developer, database-ops, integration-hub, deployment-ops
+- Real-time context access for AI assistants
+- Knowledge graph traversal
 - **10 Tools:** search_context, get_item, add_knowledge, analyze, get_tool_configs, query_graph, get_stats
 - **6 Prompts:** context-engineer, core-architect, api-developer, database-ops, integration-hub, deployment-ops
 - Real-time context access for AI assistants
 - Knowledge graph traversal
 
 ### 🛠️ Complete CLI (18 Commands)
+- `init` - Initialize with intelligent analysis **(auto-configures MCP in v3.1.1)**
+- `generate` - Generate context files for all tools
+- `mcp` - Start MCP server
+- `sync` - Sync across AI tools
+- `cleanup` - Clean up conflicting tool folders
+- `validate` - Validate context files
+- `export` - Export database
+- `import` - Import from exports
+- `performance` - Show performance metrics
+- `watch` - Auto-index file changes
+- `index` - Index codebase
+- `search` - Search indexed content
+- `stats` - View database statistics
+- **`drift-detect`** - AI-powered documentation drift detection (v3.1.0)
+- **`cross-sync`** - Intelligent sync across all AI tools (v3.1.0)
+- **`hooks`** - Git hooks management (install/uninstall/status) (v3.1.0)
+- **`fact-check`** - Validate documentation accuracy (v3.1.0)
+- `generate --map` - Generate concise map-based context files (v3.1.0)
+- **CLI documentation in all templates** (v3.1.1) - Agent and command templates now include k0ntext CLI usage guidance
 - `init` - Initialize with intelligent analysis
 - `generate` - Generate context files for all tools
 - `mcp` - Start MCP server
@@ -519,9 +575,29 @@ git commit --no-verify -m "message"
 
 ## 🤖 MCP Server Usage
 
+### Auto-Configuration (v3.1.1)
+
+When you run `k0ntext init`, the MCP server is **automatically configured** in `.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "k0ntext": {
+      "command": "npx",
+      "args": ["k0ntext", "mcp"],
+      "env": {
+        "K0NTEXT_PROJECT_ROOT": "${projectFolder}"
+      }
+    }
+  }
+}
+```
+
+**Manual setup is no longer required!** The MCP server works immediately after initialization.
+
 ### Start the Server
 ```bash
-# Start MCP server
+# Start MCP server (auto-configured)
 k0ntext mcp
 ```
 

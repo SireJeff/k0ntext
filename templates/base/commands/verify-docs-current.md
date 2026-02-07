@@ -84,3 +84,36 @@ Overall: HEALTHY / NEEDS UPDATE / STALE
 - After ANY code modification
 - Before deploying
 - Monthly as maintenance check
+
+---
+
+## k0ntext CLI Commands
+
+This command integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext drift-detect` | AI-powered drift detection across all documentation |
+| `k0ntext fact-check` | Validate documentation accuracy for quality assurance |
+| `k0ntext search <query>` | Find related documentation before verification |
+
+### Command Examples
+
+```bash
+# Detect documentation drift using AI
+k0ntext drift-detect
+
+# Fact-check specific documentation
+k0ntext fact-check
+
+# Search for related files
+k0ntext search "authentication flow"
+```
+
+### Workflow Integration
+
+When verifying documentation:
+1. **Before verification:** Run `k0ntext drift-detect` to identify potential issues
+2. **During verification:** Use search to find related documentation
+3. **After verification:** Run `k0ntext fact-check` for additional validation
+4. **For updates:** Use `k0ntext sync` to propagate changes across tools

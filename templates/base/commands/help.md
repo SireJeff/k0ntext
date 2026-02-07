@@ -467,6 +467,61 @@ npx claude-context config
 
 ---
 
+## k0ntext CLI Commands
+
+The k0ntext CLI provides comprehensive context engineering commands. Here's a quick reference:
+
+| Command | Purpose |
+|---------|---------|
+| `k0ntext init` | Initialize project with intelligent analysis |
+| `k0ntext generate` | Generate context files for AI tools |
+| `k0ntext mcp` | Start MCP server for AI tools |
+| `k0ntext sync` | Sync context across AI tools |
+| `k0ntext cleanup` | Remove unused AI tool folders |
+| `k0ntext validate` | Validate context files |
+| `k0ntext export` | Export database to file |
+| `k0ntext import` | Import context from file |
+| `k0ntext performance` | Show performance metrics |
+| `k0ntext watch` | Auto-index on file changes |
+| `k0ntext drift-detect` | AI-powered drift detection |
+| `k0ntext cross-sync` | Intelligent cross-tool sync |
+| `k0ntext hooks` | Git hooks management |
+| `k0ntext fact-check` | Validate documentation accuracy |
+| `k0ntext index` | Index codebase into database |
+| `k0ntext search <query>` | Search indexed content |
+| `k0ntext stats` | View database statistics |
+
+### Command Details
+
+**Initialization Commands:**
+- `k0ntext init` - First-time setup with intelligent codebase analysis
+- `k0ntext generate` - Generate contexts for specific AI tools
+- `k0ntext mcp` - Start the MCP server for tool integration
+
+**Sync & Validation Commands:**
+- `k0ntext sync` - Propagate context changes across AI tools
+- `k0ntext validate` - Check context file structure and validity
+- `k0ntext drift-detect` - Detect documentation drift using AI
+- `k0ntext cross-sync` - Intelligent synchronization after drift
+- `k0ntext fact-check` - Validate documentation against code
+
+**Database Commands:**
+- `k0ntext index` - Index codebase files for semantic search
+- `k0ntext search <query>` - Search indexed content (text/semantic/hybrid)
+- `k0ntext stats` - View database statistics and indexing status
+
+**Utility Commands:**
+- `k0ntext export` - Export database to JSON file
+- `k0ntext import` - Import database from JSON file
+- `k0ntext cleanup` - Remove unused AI tool folders
+- `k0ntext performance` - Show system performance metrics
+- `k0ntext watch` - Auto-index on file changes
+- `k0ntext hooks` - Git hooks management
+
+For detailed documentation, see [CLI_COMMANDS.md](../CLI_COMMANDS.md)
+
+---
+
 ## Quick Tips
 
 1. **Start with indexes:** Load CATEGORY_INDEX.md before detail files

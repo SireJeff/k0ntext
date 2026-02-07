@@ -170,3 +170,36 @@ npx claude-context sync --check
 npx claude-context sync --fix
 npx claude-context generate --code-map
 ```
+
+---
+
+## k0ntext CLI Commands
+
+This command integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext sync` | Sync context across AI tools |
+| `k0ntext cross-sync` | Intelligent cross-tool synchronization |
+| `k0ntext hooks` | Git hooks management for automatic sync |
+
+### Command Examples
+
+```bash
+# Sync across all AI tools
+k0ntext sync
+
+# Intelligent cross-tool sync
+k0ntext cross-sync
+
+# Install git hooks for auto-sync
+k0ntext hooks install
+```
+
+### Workflow Integration
+
+When synchronizing documentation:
+1. **Before sync:** Use `k0ntext drift-detect` to identify what needs syncing
+2. **During sync:** Use `k0ntext sync` to propagate changes
+3. **For automation:** Install git hooks with `k0ntext hooks install`
+4. **For cross-tool:** Use `k0ntext cross-sync` for intelligent synchronization

@@ -142,3 +142,35 @@ In `.ai-context/settings.json`:
 - `/rpi-research` - Start research phase
 - `/rpi-plan` - Start plan phase
 - `/rpi-implement` - Start implement phase
+
+---
+
+## k0ntext CLI Commands
+
+This command integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext import` | Import context database for session restoration |
+| `k0ntext search <query>` | Search for context from previous session |
+
+### Command Examples
+
+```bash
+# Import session database
+k0ntext import --file session-backup.json
+
+# Search for previous work
+k0ntext search "authentication"
+
+# Check database status
+k0ntext stats
+```
+
+### Workflow Integration
+
+When resuming a session:
+1. **Before resume:** Use `k0ntext import` to restore database if needed
+2. **During resume:** Use `k0ntext search` to find previous context
+3. **For verification:** Check `k0ntext stats` to confirm data restoration
+4. **For continuity:** Exported data provides session continuity

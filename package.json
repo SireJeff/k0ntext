@@ -1,6 +1,6 @@
 {
   "name": "k0ntext",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Unified AI Context Engineering - Intelligent context for Claude, Copilot, Cline, and more with OpenRouter-powered initialization",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -28,7 +28,7 @@
     "test:run": "vitest run",
     "lint": "eslint src/",
     "clean": "rm -rf dist",
-    "prepublishOnly": "npm run build && npm test",
+    "prepublishOnly": "npm run build && npm run test:run",
     "publish:dry": "npm pack --dry-run",
     "publish:public": "npm publish --access public"
   },

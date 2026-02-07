@@ -143,3 +143,37 @@ REQUIRED_OUTPUT: CHUNK-Pn per CHUNK-Rn
 After completion: `/rpi-plan [feature-name]`
 
 RPI-Plan will read chunk manifest and create CHUNK-Pn todolist per CHUNK-Rn
+
+---
+
+## k0ntext CLI Commands
+
+This command integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext index` | Index codebase before research for complete file discovery |
+| `k0ntext search <query>` | Search indexed content during research phase |
+| `k0ntext stats` | Check indexing status before starting research |
+
+### Command Examples
+
+```bash
+# Index codebase before research
+k0ntext index --all
+
+# Search for related code patterns
+k0ntext search "authentication"
+k0ntext search "API endpoint"
+
+# View indexing statistics
+k0ntext stats
+```
+
+### Workflow Integration
+
+When conducting RPI research:
+1. **Before research:** Run `k0ntext index` to ensure all files are indexed
+2. **During research:** Use `k0ntext search <query>` to find related code and patterns
+3. **For coverage:** Check `k0ntext stats` to verify indexing completeness
+4. **After research:** Indexed data aids the planning phase

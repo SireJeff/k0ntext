@@ -69,6 +69,65 @@ function _parseAiTools(toolsString: string): string[] {
 }
 
 /**
+ * Configure MCP server for AI tools that support it
+ *
+ * Tools with native MCP support:
+ * - Claude Code (.claude/settings.json)
+ * - Cursor (.cursor/mcp.json or settings)
+ * - Continue (.continue/config.json)
+ */
+async function configureMcpServer(projectRoot: string): Promise<void> {
+  const fsPromises = fs.promises;
+
+  // Configure Claude Code MCP server
+  const claudeSettingsPath = path.join(projectRoot, '.claude', 'settings.json');
+
+  try {
+    let settings: Record<string, any> = {};
+
+    // Read existing settings if they exist
+    if (fs.existsSync(claudeSettingsPath)) {
+      const content = fs.readFileSync(claudeSettingsPath, 'utf-8');
+      try {
+        settings = JSON.parse(content);
+      } catch {
+        // File exists but is invalid JSON, start fresh
+        settings = {};
+      }
+    }
+
+    // Ensure mcpServers object exists
+    if (!settings.mcpServers) {
+      settings.mcpServers = {};
+    }
+
+    // Add k0ntext MCP server configuration
+    if (!settings.mcpServers.k0ntext) {
+      settings.mcpServers.k0ntext = {
+        command: 'npx',
+        args: ['k0ntext', 'mcp'],
+        env: {
+          K0NTEXT_PROJECT_ROOT: projectRoot
+        }
+      };
+    }
+
+    // Ensure directory exists
+    await fsPromises.mkdir(path.dirname(claudeSettingsPath), { recursive: true });
+
+    // Write settings with proper formatting
+    await fsPromises.writeFile(
+      claudeSettingsPath,
+      JSON.stringify(settings, null, 2),
+      'utf-8'
+    );
+  } catch (error) {
+    // Log warning but don't fail the entire init process
+    console.warn(chalk.yellow(`\nWarning: Could not configure MCP server: ${error instanceof Error ? error.message : error}`));
+  }
+}
+
+/**
  * Create the CLI program
  */
 function createProgram(): Command {
@@ -138,11 +197,17 @@ function createProgram(): Command {
         }
 
         console.log(`\n${chalk.green('✓')} AI Context initialized successfully!`);
+
+        // Configure MCP server for Claude Code and other tools
+        spinner.start('Configuring MCP server...');
+        await configureMcpServer(targetDir);
+        spinner.succeed('MCP server configured');
+
         console.log(`\n${chalk.bold('Next Steps:')}`);
         console.log(`  ${chalk.cyan('1.')} Run ${chalk.white('k0ntext stats')} to view database statistics`);
         console.log(`  ${chalk.cyan('2.')} Run ${chalk.white('k0ntext mcp')} to start the MCP server`);
         console.log(`  ${chalk.cyan('3.')} Run ${chalk.white('k0ntext --help')} to explore all available commands`);
-        
+
       } catch (error) {
         spinner.fail('Analysis failed');
         console.error(chalk.red(`\nError: ${error instanceof Error ? error.message : error}`));

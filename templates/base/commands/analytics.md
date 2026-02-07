@@ -236,3 +236,36 @@ Configure analytics behavior in `.ai-context/settings.json`:
 
 - [Settings Configuration](./../settings.json)
 - [Context Budget Guidelines](./../README.md#context-budget)
+
+---
+
+## k0ntext CLI Commands
+
+This command integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext stats` | View database and indexing statistics |
+| `k0ntext performance` | Show system performance metrics |
+| `k0ntext export` | Export analytics data to JSON file |
+
+### Command Examples
+
+```bash
+# View database statistics
+k0ntext stats
+
+# Show performance metrics
+k0ntext performance
+
+# Export analytics data
+k0ntext export --file analytics-data.json
+```
+
+### Workflow Integration
+
+When analyzing metrics:
+1. **Before analysis:** Run `k0ntext stats` to gather baseline data
+2. **During analysis:** Use `k0ntext performance` for detailed metrics
+3. **For reporting:** Use `k0ntext export` to export data for analysis
+4. **For trends:** Track stats over time to identify patterns

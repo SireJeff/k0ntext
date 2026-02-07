@@ -2,6 +2,101 @@
 
 All notable changes to the `k0ntext` package will be documented in this file.
 
+## [3.1.1] - 2026-02-08
+
+### 🚀 MCP Auto-Configuration & CLI Documentation Integration
+
+### Added
+
+#### MCP Server Auto-Configuration
+- **`k0ntext init`** - Now automatically configures MCP server in `.claude/settings.json`
+- **`src/cli/index.ts`** - Added `configureMcpServer()` function for automatic setup
+- **`templates/base/settings.json`** - Updated with k0ntext MCP server configuration
+- **No more manual setup** - MCP server works immediately after initialization
+- Support for Claude Code, Cursor, and Continue (tools with native MCP support)
+
+#### CLI Documentation in Templates
+- **All 6 agent templates** now include k0ntext CLI command documentation:
+  - `context-engineer.md` - init, generate, validate, index, stats
+  - `core-architect.md` - init, generate, drift-detect, cross-sync, search
+  - `database-ops.md` - index, search, stats, validate
+  - `api-developer.md` - generate, drift-detect, fact-check
+  - `integration-hub.md` - sync, cross-sync, validate
+  - `deployment-ops.md` - hooks, validate, export, import
+
+- **All 12 command templates** now include k0ntext CLI command documentation:
+  - `help.md` - Comprehensive reference to all 17 commands
+  - `context-optimize.md` - stats, performance, validate
+  - `verify-docs-current.md` - drift-detect, fact-check, search
+  - `validate-all.md` - validate, stats, fact-check
+  - `rpi-research.md` - index, search, stats
+  - `rpi-plan.md` - search, drift-detect
+  - `rpi-implement.md` - watch, validate, fact-check
+  - `auto-sync.md` - sync, cross-sync, hooks
+  - `session-save.md` - export, stats
+  - `session-resume.md` - import, search
+  - `analytics.md` - stats, performance, export
+  - `collab.md` - sync, cross-sync, export, import
+
+#### Comprehensive CLI Reference
+- **`templates/base/CLI_COMMANDS.md`** - New comprehensive reference document
+- All 17 k0ntext CLI commands documented with:
+  - Command syntax and options
+  - When to use each command
+  - Practical examples
+  - Command categories (Setup, Sync, Validation, Database, Utility)
+  - Common workflows
+  - Integration with AI tools
+
+### Changed
+- **`README.md`** - Updated with MCP auto-configuration feature
+- **`README.md`** - Enhanced MCP Server Usage section with auto-configuration notes
+- Agent and command templates now provide actionable CLI guidance
+
+### New Files Created (20)
+1. `src/cli/index.ts` - Added `configureMcpServer()` function
+2. `templates/base/settings.json` - Updated with MCP configuration
+3. `templates/base/CLI_COMMANDS.md` - New comprehensive CLI reference
+4-9. Updated 6 agent templates with CLI documentation
+10-21. Updated 12 command templates with CLI documentation
+
+### Documentation Coverage Matrix
+
+| CLI Command | Agent Templates | Command Templates | CLI Reference |
+|-------------|----------------|-------------------|---------------|
+| init | ✅ context-engineer | ✅ help | ✅ CLI_COMMANDS.md |
+| generate | ✅ context-engineer, core-architect | ✅ help | ✅ CLI_COMMANDS.md |
+| mcp | ✅ context-engineer | ✅ help | ✅ CLI_COMMANDS.md |
+| sync | ✅ integration-hub | ✅ auto-sync, help | ✅ CLI_COMMANDS.md |
+| cleanup | ✅ deployment-ops | ✅ help | ✅ CLI_COMMANDS.md |
+| validate | ✅ all agents | ✅ validate-all, help | ✅ CLI_COMMANDS.md |
+| export | ✅ deployment-ops | ✅ session-save, analytics, help | ✅ CLI_COMMANDS.md |
+| import | ✅ deployment-ops | ✅ session-resume, help | ✅ CLI_COMMANDS.md |
+| performance | ✅ context-engineer | ✅ analytics, help | ✅ CLI_COMMANDS.md |
+| watch | ✅ rpi-implement | ✅ help | ✅ CLI_COMMANDS.md |
+| drift-detect | ✅ core-architect, api-developer | ✅ rpi-plan, verify-docs-current, help | ✅ CLI_COMMANDS.md |
+| cross-sync | ✅ core-architect, integration-hub | ✅ auto-sync, help | ✅ CLI_COMMANDS.md |
+| hooks | ✅ deployment-ops | ✅ auto-sync, help | ✅ CLI_COMMANDS.md |
+| fact-check | ✅ api-developer | ✅ verify-docs-current, validate-all, help | ✅ CLI_COMMANDS.md |
+| index | ✅ database-ops, context-engineer | ✅ rpi-research, help | ✅ CLI_COMMANDS.md |
+| search | ✅ core-architect, database-ops | ✅ rpi-research, rpi-plan, help | ✅ CLI_COMMANDS.md |
+| stats | ✅ context-engineer, database-ops | ✅ analytics, context-optimize, help | ✅ CLI_COMMANDS.md |
+
+### Breaking Changes
+- None - fully backward compatible with v3.1.0
+
+### Success Metrics
+
+| Metric | Before | After | Status |
+|--------|--------|-------|--------|
+| MCP auto-config | Manual | Automatic | ✅ Complete |
+| CLI commands in templates | 0 | 17+ references | ✅ Complete |
+| Agent templates with CLI docs | 0/6 | 6/6 | ✅ 100% |
+| Command templates with CLI docs | 0/12 | 12/12 | ✅ 100% |
+| CLI reference document | None | CLI_COMMANDS.md | ✅ Created |
+
+---
+
 ## [3.1.0] - 2026-02-07
 
 ### 🎉 Intelligence-First Context Engineering

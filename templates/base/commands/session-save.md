@@ -110,3 +110,32 @@ Use '/session-resume' to restore this session.
 - `/session-resume` - Resume a saved session
 - `/collab handoff` - Create team handoff document
 - `/auto-sync` - Process pending documentation updates
+
+---
+
+## k0ntext CLI Commands
+
+This command integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext export` | Export database for session backup |
+| `k0ntext stats` | View database statistics for session summary |
+
+### Command Examples
+
+```bash
+# Export database before session end
+k0ntext export --file session-backup.json
+
+# View statistics for session summary
+k0ntext stats
+```
+
+### Workflow Integration
+
+When saving session state:
+1. **Before save:** Run `k0ntext export` to backup current database
+2. **During save:** Include statistics from `k0ntext stats`
+3. **For handoff:** Export data can be shared with team members
+4. **For resume:** Use `k0ntext import` to restore session state

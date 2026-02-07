@@ -145,3 +145,35 @@ Plan document in `.ai-context/plans/active/[feature]_plan.md` with:
 After human approval: `/rpi-implement [feature-name]`
 
 RPI-Implement will process chunks in dependency order, executing todos atomically
+
+---
+
+## k0ntext CLI Commands
+
+This command integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext search <query>` | Search for related code patterns during planning |
+| `k0ntext drift-detect` | Check for documentation drift before planning changes |
+
+### Command Examples
+
+```bash
+# Search for similar implementations
+k0ntext search "authentication flow"
+
+# Detect documentation drift
+k0ntext drift-detect
+
+# Search for API patterns
+k0ntext search "endpoint"
+```
+
+### Workflow Integration
+
+When creating implementation plans:
+1. **Before planning:** Use `k0ntext drift-detect` to identify documentation issues
+2. **During planning:** Search for related patterns and implementations
+3. **For reference:** Use semantic search to find similar code structures
+4. **After planning:** Document search results for implementation phase

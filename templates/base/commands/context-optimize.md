@@ -224,3 +224,39 @@ After completion, execute the generated TODO list:
 2. `/rpi-plan [first-plan-task]`
 3. `/rpi-implement [first-impl-task]`
 4. `/validate-all`
+
+---
+
+## k0ntext CLI Commands
+
+This command integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext stats` | View context metrics and database statistics |
+| `k0ntext performance` | Show system performance metrics for optimization |
+| `k0ntext validate` | Validate context file structure after optimization |
+
+### Command Examples
+
+```bash
+# Check current database statistics
+k0ntext stats
+
+# View performance metrics
+k0ntext performance
+
+# Validate context structure
+k0ntext validate
+
+# Search for optimization patterns
+k0ntext search "performance"
+```
+
+### Workflow Integration
+
+When optimizing context:
+1. **Before optimization:** Run `k0ntext stats` to establish baseline metrics
+2. **During optimization:** Reference indexed patterns and configurations
+3. **After changes:** Use `k0ntext validate` to ensure context integrity
+4. **For metrics:** Use `k0ntext performance` to measure improvements

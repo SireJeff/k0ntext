@@ -75,3 +75,39 @@ Overall: READY / NOT READY
 - Before creating PR
 - Before deploying
 - After major refactoring
+
+---
+
+## k0ntext CLI Commands
+
+This command integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext validate` | CLI validation of context file structure |
+| `k0ntext stats` | Check database and indexing status |
+| `k0ntext fact-check` | Validate documentation accuracy |
+
+### Command Examples
+
+```bash
+# Validate context files
+k0ntext validate
+
+# View database statistics
+k0ntext stats
+
+# Fact-check documentation
+k0ntext fact-check
+
+# Search for validation patterns
+k0ntext search "validation"
+```
+
+### Workflow Integration
+
+When running validation:
+1. **Before validation:** Run `k0ntext stats` to check indexing status
+2. **During validation:** Reference indexed configuration files
+3. **After failures:** Use `k0ntext fact-check` to identify specific issues
+4. **For fixes:** Use `k0ntext sync` to propagate corrections
