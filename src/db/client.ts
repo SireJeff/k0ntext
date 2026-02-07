@@ -158,11 +158,40 @@ export class DatabaseClient {
   }
 
   /**
-   * Execute callback within a transaction
+   * Execute callback within a transaction (sync)
    */
-  transaction<T>(callback: () => T): T {
-    const txn = this.db.transaction(callback);
-    return txn();
+  transaction<T>(callback: () => T): T;
+
+  /**
+   * Execute callback within a transaction (async)
+   */
+  transaction<T>(callback: () => Promise<T>): Promise<T>;
+
+  /**
+   * Execute callback within a transaction (implementation)
+   */
+  transaction<T>(callback: () => T | Promise<T>): T | Promise<T> {
+    // Detect if callback is async by checking if it returns a Promise
+    const result = callback();
+
+    if (result instanceof Promise) {
+      // For async, use manual transaction control
+      return (async () => {
+        this.db.exec('BEGIN TRANSACTION');
+        try {
+          const value = await result;
+          this.db.exec('COMMIT');
+          return value;
+        } catch (error) {
+          this.db.exec('ROLLBACK');
+          throw error;
+        }
+      })();
+    } else {
+      // For sync, use better-sqlite3 transaction helper
+      const txn = this.db.transaction(callback as () => T);
+      return txn();
+    }
   }
 
   /**
@@ -755,6 +784,28 @@ export class DatabaseClient {
     const stmt = this.db.prepare('DELETE FROM embeddings WHERE context_id = ?');
     const result = stmt.run(contextId);
     return result.changes > 0;
+  }
+
+  /**
+   * Insert or update an embedding for a file by path
+   */
+  insertEmbedding(filePath: string, embedding: number[]): void {
+    const itemId = this.getItemIdByPath(filePath);
+
+    if (!itemId) {
+      throw new Error(`Cannot insert embedding: no item found for path ${filePath}`);
+    }
+
+    this.storeEmbedding(itemId, embedding);
+  }
+
+  /**
+   * Get item ID by file path
+   */
+  private getItemIdByPath(filePath: string): string | null {
+    const stmt = this.db.prepare('SELECT id FROM context_items WHERE file_path = ? LIMIT 1');
+    const row = stmt.get(filePath) as { id: string } | undefined;
+    return row?.id || null;
   }
 
   // ==================== Analytics ====================

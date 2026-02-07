@@ -4,6 +4,8 @@
  * Monitors database performance, query times, and system metrics.
  */
 
+import path from 'path';
+import fs from 'fs';
 import { DatabaseClient } from '../db/client.js';
 
 export interface PerformanceMetrics {
@@ -47,13 +49,14 @@ export class PerformanceMonitorAgent {
     const slowQueries = this.queryTimes.filter(t => t > this.slowQueryThreshold).length;
 
     // Get database size
-    const dbPath = this.db.getPath();
+    const dbPath = path.resolve(this.db.getPath());
     let databaseSize = 0;
     try {
-      const fs = require('fs');
-      databaseSize = fs.statSync(dbPath).size;
-    } catch {
+      const stats = fs.statSync(dbPath);
+      databaseSize = stats.size;
+    } catch (error) {
       // File doesn't exist or can't be read
+      console.error(`Warning: Could not read database size for ${dbPath}:`, error instanceof Error ? error.message : error);
     }
 
     return {

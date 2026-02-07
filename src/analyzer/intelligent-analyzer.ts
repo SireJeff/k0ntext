@@ -587,6 +587,16 @@ Return ONLY valid JSON, no markdown formatting.
   }
 
   /**
+   * Generate embedding for a single text string (e.g., search query)
+   */
+  async embedText(text: string): Promise<number[]> {
+    if (!this.client) {
+      throw new Error('OpenRouter client not available for embeddings');
+    }
+    return this.client.embed(text);
+  }
+
+  /**
    * Set up file watcher for automatic re-indexing
    */
   setupFileWatcher(onChange: (filePath: string) => Promise<void>): () => void {

@@ -219,7 +219,8 @@ function createProgram(): Command {
         
         let discoveredCount = 0;
         let indexedCount = 0;
-        
+        let allIndexedFiles: string[] = []; // Track all indexed files for embeddings
+
         if (options.all || (!options.docs && !options.code && !options.tools)) {
           // Discover everything
           const [docs, code, tools] = await Promise.all([
@@ -228,9 +229,9 @@ function createProgram(): Command {
             analyzer.discoverToolConfigs()
           ]);
           discoveredCount = docs.length + code.length + tools.length;
-          
+
           spinner.text = `Indexing ${discoveredCount} files...`;
-          
+
           // Store docs in database
           for (const doc of docs) {
             const content = fs.existsSync(doc.path) ? fs.readFileSync(doc.path, 'utf-8').slice(0, 50000) : '';
@@ -242,8 +243,9 @@ function createProgram(): Command {
               metadata: { size: doc.size }
             });
             indexedCount++;
+            allIndexedFiles.push(doc.relativePath);
           }
-          
+
           // Store tool configs in database
           for (const config of tools) {
             const content = fs.existsSync(config.path) ? fs.readFileSync(config.path, 'utf-8').slice(0, 50000) : '';
@@ -255,8 +257,9 @@ function createProgram(): Command {
               metadata: { tool: config.tool, size: config.size }
             });
             indexedCount++;
+            allIndexedFiles.push(config.relativePath);
           }
-          
+
           // Store code in database (first N files to avoid overwhelming the db)
           const maxCodeFiles = 100;
           for (const codeFile of code.slice(0, maxCodeFiles)) {
@@ -269,6 +272,7 @@ function createProgram(): Command {
               metadata: { size: codeFile.size }
             });
             indexedCount++;
+            allIndexedFiles.push(codeFile.relativePath);
           }
           if (code.length > maxCodeFiles) {
             console.log(chalk.gray(`\nNote: Indexed first ${maxCodeFiles} of ${code.length} code files.`));
@@ -288,6 +292,7 @@ function createProgram(): Command {
                 metadata: { size: doc.size }
               });
               indexedCount++;
+              allIndexedFiles.push(doc.relativePath);
             }
           }
           if (options.code) {
@@ -305,6 +310,7 @@ function createProgram(): Command {
                 metadata: { size: codeFile.size }
               });
               indexedCount++;
+              allIndexedFiles.push(codeFile.relativePath);
             }
             if (code.length > maxCodeFiles) {
               console.log(chalk.gray(`\nNote: Indexed first ${maxCodeFiles} of ${code.length} code files.`));
@@ -324,11 +330,42 @@ function createProgram(): Command {
                 metadata: { tool: config.tool, size: config.size }
               });
               indexedCount++;
+              allIndexedFiles.push(config.relativePath);
             }
           }
         }
-        
-        spinner.succeed(`Discovered ${discoveredCount} files, indexed ${indexedCount} into database`);
+
+        // Generate embeddings if OpenRouter is available
+        let embeddingsCount = 0;
+        if (hasOpenRouterKey() && indexedCount > 0) {
+          spinner.text = `Generating embeddings for ${indexedCount} files...`;
+
+          try {
+            const embeddings = await analyzer.generateEmbeddings(
+              allIndexedFiles.map(fp => ({
+                path: path.resolve(process.cwd(), fp),
+                relativePath: fp,
+                type: 'code' as const,
+                size: 0
+              }))
+            );
+
+            spinner.text = `Storing ${embeddings.size} embeddings...`;
+            for (const [filePath, embedding] of embeddings.entries()) {
+              db.insertEmbedding(filePath, embedding);
+              embeddingsCount++;
+            }
+          } catch (error) {
+            spinner.warn(`Indexed ${indexedCount} files (embeddings failed: ${error instanceof Error ? error.message : error})`);
+            embeddingsCount = 0;
+          }
+        }
+
+        if (embeddingsCount > 0) {
+          spinner.succeed(`Discovered ${discoveredCount} files, indexed ${indexedCount} into database, generated ${embeddingsCount} embeddings`);
+        } else {
+          spinner.succeed(`Discovered ${discoveredCount} files, indexed ${indexedCount} into database`);
+        }
         
       } catch (error) {
         spinner.fail('Indexing failed');
@@ -351,23 +388,57 @@ function createProgram(): Command {
     .description('Search across indexed content')
     .option('-t, --type <type>', 'Filter by type (workflow, agent, command, code, doc)')
     .option('-l, --limit <n>', 'Maximum results', '10')
+    .option('-m, --mode <mode>', 'Search mode: text, semantic, hybrid (default: hybrid)', 'hybrid')
     .action(async (query, options) => {
       const spinner = ora();
       let db: any | undefined;
-      
+
       try {
         const limit =
           typeof options.limit === 'string'
             ? Number.parseInt(options.limit, 10) || 10
             : 10;
 
+        const mode = options.mode || 'hybrid';
+
         spinner.start('Searching...');
 
         const { DatabaseClient } = await import('../db/client.js');
         db = new DatabaseClient(process.cwd());
 
-        const results = db.searchText(query, options.type);
-        const items = Array.isArray(results) ? results.slice(0, limit) : [];
+        let items: any[];
+
+        if (mode === 'semantic') {
+          // Semantic search requires query embedding
+          const { createIntelligentAnalyzer } = await import('../analyzer/intelligent-analyzer.js');
+          const analyzer = createIntelligentAnalyzer(process.cwd());
+
+          if (!analyzer.isIntelligentModeAvailable()) {
+            spinner.fail('Semantic search requires OPENROUTER_API_KEY');
+            process.exit(1);
+          }
+
+          const queryEmbedding = await analyzer.embedText(query);
+          const results = db.searchByEmbedding(queryEmbedding, limit);
+          items = results.map((r: { item: any }) => r.item);
+        } else if (mode === 'text') {
+          // Pure text search
+          const results = db.searchText(query, options.type);
+          items = Array.isArray(results) ? results.slice(0, limit) : [];
+        } else {
+          // Hybrid search (default)
+          const { createIntelligentAnalyzer } = await import('../analyzer/intelligent-analyzer.js');
+          const analyzer = createIntelligentAnalyzer(process.cwd());
+
+          let queryEmbedding: number[] | null = null;
+          if (analyzer.isIntelligentModeAvailable()) {
+            queryEmbedding = await analyzer.embedText(query);
+          }
+
+          const results = db.hybridSearch(query, queryEmbedding, { limit, type: options.type });
+          // Unwrap items from { item, similarity } structure
+          items = Array.isArray(results) ? results.slice(0, limit).map((r: { item: any }) => r.item) : [];
+        }
 
         spinner.stop();
 
