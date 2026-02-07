@@ -690,13 +690,14 @@ export class DatabaseClient {
    * Store an embedding
    */
   storeEmbedding(contextId: string, embedding: number[]): void {
+    // Delete existing embedding first (virtual tables don't support UPSERT)
+    this.deleteEmbedding(contextId);
+
     const stmt = this.db.prepare(`
       INSERT INTO embeddings (context_id, embedding)
       VALUES (?, ?)
-      ON CONFLICT(context_id) DO UPDATE SET
-        embedding = excluded.embedding
     `);
-    
+
     // Convert to blob for sqlite-vec
     const buffer = new Float32Array(embedding);
     stmt.run(contextId, Buffer.from(buffer.buffer));

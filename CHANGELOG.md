@@ -2,6 +2,115 @@
 
 All notable changes to the `k0ntext` package will be documented in this file.
 
+## [3.1.0] - 2026-02-07
+
+### 🎉 Intelligence-First Context Engineering
+
+### Added
+
+#### Centralized Model Configuration
+- **`src/config/models.ts`** - Single source of truth for all AI model usage
+- Strict enforcement of `google/gemini-3-flash-preview` for all intelligent operations
+- Type-safe model configuration with `as const` assertions
+- Environment variable override support for flexibility
+- Models: DRIFT_DETECTION, WORKFLOW_DISCOVERY, SMART_MERGE, CLEANUP, FACT_CHECK, EMBEDDING
+
+#### AI-Powered Drift Detection
+- **`k0ntext drift-detect`** - New command for semantic drift detection
+- **`src/agents/drift-agent.ts`** - AI-powered drift detection agent
+- Replaces hash-based drift checks with intelligent semantic analysis
+- Severity-based reporting (high/medium/low)
+- Automatic fix suggestions for detected drift
+- Configurable file limits and confidence thresholds
+
+#### Intelligent Cross-Sync
+- **`k0ntext cross-sync`** - New command for intelligent tool synchronization
+- AI analysis of which files are affected by recent changes
+- Targeted updates to only the necessary tool context files
+- Dry-run mode for previewing changes
+- Detailed sync operation logging
+
+#### Git Hooks Automation
+- **`k0ntext hooks`** - New command group for git hooks management
+- Subcommands: `install`, `uninstall`, `status`
+- Full pre-commit workflow:
+  1. Autosync from source of truth
+  2. Validate context files
+  3. AI-powered drift detection
+  4. Cross-sync affected files
+  5. Auto-add updated context files to commit
+- Skip mechanism via `K0NTEXT_SKIP_HOOKS` environment variable
+
+#### Fact-Checking Agent
+- **`k0ntext fact-check`** - New command for documentation validation
+- **`src/agents/fact-check-agent.ts`** - Fact-checking agent
+- Identifies outdated APIs, wrong file paths, missing dependencies
+- Confidence scoring for each claim (0-1)
+- Minimum confidence threshold filtering
+
+#### Map-Based Context Templates
+- **`k0ntext generate --map`** - New flag for concise map-based format
+- **`templates/map/`** - New directory with map-based templates
+- Reduces hallucination through precise references
+- Structured tables for workflows, architecture, commands
+- Alternative to verbose documentation format
+
+#### Enhanced Cleanup Command
+- **`k0ntext cleanup --ai`** - New AI analysis mode
+- Intelligent recommendations for which folders to keep/remove
+- OpenRouter-powered analysis of project structure
+
+### Changed
+- **`src/embeddings/openrouter.ts`** - Now uses centralized model configuration
+- **`src/cli/generate.ts`** - Added map-based template generation with `--map` flag
+- **`src/cli/commands/cleanup.ts`** - Enhanced with AI analysis mode
+- **`.claude/automation/hooks/pre-commit.sh`** - Complete rewrite with 5-step workflow
+- Package version: `3.0.0` → `3.1.0`
+
+### New CLI Commands (5 total)
+1. `k0ntext drift-detect` - AI-powered drift detection
+2. `k0ntext cross-sync` - Intelligent cross-tool sync
+3. `k0ntext hooks install` - Install git hooks
+4. `k0ntext hooks status` - Check hooks installation
+5. `k0ntext fact-check` - Validate documentation accuracy
+
+### New Files Created (15)
+1. `src/config/models.ts`
+2. `src/agents/drift-agent.ts`
+3. `src/agents/fact-check-agent.ts`
+4. `src/cli/commands/drift-detect.ts`
+5. `src/cli/commands/cross-sync.ts`
+6. `src/cli/commands/hooks.ts`
+7. `src/cli/commands/fact-check.ts`
+8. `templates/map/claude.md`
+9. `templates/map/copilot.md`
+10. `templates/map/cline.md`
+11. `templates/map/cursor.md`
+12. `templates/map/gemini.md`
+13. Updated `.claude/automation/hooks/pre-commit.sh`
+14. Updated `README.md` with v3.1.0 features
+15. Updated `CHANGELOG.md` with v3.1.0 entry
+
+### Model Enforcement
+All AI operations now use centralized configuration:
+- Drift Detection → `google/gemini-3-flash-preview`
+- Workflow Discovery → `google/gemini-3-flash-preview`
+- Smart Merge → `google/gemini-3-flash-preview`
+- Cleanup → `google/gemini-3-flash-preview`
+- Fact Check → `google/gemini-3-flash-preview`
+- Embeddings → `openai/text-embedding-3-small`
+
+### Breaking Changes
+- None - fully backward compatible with v3.0.0
+
+### Documentation Updates
+- README.md - Added v3.1.0 command documentation
+- README.md - Added git hooks workflow section
+- README.md - Updated feature overview with new capabilities
+- README.md - Updated CLI command count from 13 to 18
+
+---
+
 ## [3.0.0] - 2026-02-05
 
 ### 🎉 Major Release - Unified AI Context Package

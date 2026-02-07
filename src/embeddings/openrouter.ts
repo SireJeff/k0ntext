@@ -6,6 +6,7 @@
  */
 
 import { createHash } from 'crypto';
+import { K0NTEXT_MODELS, MODEL_CONFIG, getPrimaryChatModel, getEmbeddingModel } from '../config/models.js';
 
 /**
  * OpenRouter API endpoints
@@ -14,11 +15,12 @@ const OPENROUTER_EMBEDDINGS_URL = 'https://openrouter.ai/api/v1/embeddings';
 const OPENROUTER_CHAT_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 /**
- * Default models
+ * Default models - now using centralized configuration
+ * @deprecated Use K0NTEXT_MODELS from ../config/models.js instead
  */
-const DEFAULT_EMBEDDING_MODEL = 'openai/text-embedding-3-small';
-const DEFAULT_CHAT_MODEL = 'anthropic/claude-3-haiku';
-const EMBEDDING_DIMENSION = 1536;
+const DEFAULT_EMBEDDING_MODEL = K0NTEXT_MODELS.EMBEDDING;
+const DEFAULT_CHAT_MODEL = K0NTEXT_MODELS.DRIFT_DETECTION;
+const EMBEDDING_DIMENSION = MODEL_CONFIG.EMBEDDING_DIMENSION;
 
 /**
  * Embedding response from OpenRouter
@@ -566,10 +568,13 @@ Be specific and actionable in your suggestions.`
 
 /**
  * Create OpenRouter client from environment
+ *
+ * Uses centralized model configuration from ../config/models.ts
+ * Environment variables can override for testing purposes
  */
 export function createOpenRouterClient(): OpenRouterClient {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  
+
   if (!apiKey) {
     throw new Error(
       'OPENROUTER_API_KEY environment variable is required.\n' +
@@ -579,8 +584,9 @@ export function createOpenRouterClient(): OpenRouterClient {
 
   return new OpenRouterClient({
     apiKey,
-    embeddingModel: process.env.OPENROUTER_EMBEDDING_MODEL,
-    chatModel: process.env.OPENROUTER_CHAT_MODEL
+    // Use centralized models from config, allow env override for testing
+    embeddingModel: process.env.OPENROUTER_EMBEDDING_MODEL || getEmbeddingModel(),
+    chatModel: process.env.OPENROUTER_CHAT_MODEL || getPrimaryChatModel()
   });
 }
 
@@ -590,3 +596,9 @@ export function createOpenRouterClient(): OpenRouterClient {
 export function hasOpenRouterKey(): boolean {
   return !!process.env.OPENROUTER_API_KEY;
 }
+
+/**
+ * Re-export model configuration for convenience
+ */
+export { K0NTEXT_MODELS, MODEL_CONFIG, getModelFor, getPrimaryChatModel, getEmbeddingModel, isValidModel } from '../config/models.js';
+export type { ModelType, ModelCategory } from '../config/models.js';

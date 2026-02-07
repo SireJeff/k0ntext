@@ -9,7 +9,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 **Platform:** Universal AI Context Engineering - CLI tools and templates for Claude Code, GitHub Copilot, Cline, Antigravity, Cursor, Gemini, and more
 **Domain:** https://github.com/SireJeff/k0ntext
 **Tech Stack:** Node.js, TypeScript, Vitest, npm
-**Status:** Active (v3.0.0)
+**Status:** Active (v3.1.0)
 
 **Quick Reference:**
 - **API:** MCP Server for AI tools
@@ -293,5 +293,5 @@ k0ntext/
 
 ---
 
-**Version:** 3.0.0 | **Last Updated:** 2026-02-05 | **Context Target:** 200k
+**Version:** 3.1.0 | **Last Updated:** 2026-02-07 | **Context Target:** 200k
 **Architecture:** 3-Level Chain-of-Index | **Index Files:** 20

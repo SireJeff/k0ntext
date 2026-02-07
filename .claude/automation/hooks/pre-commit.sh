@@ -1,103 +1,155 @@
 #!/bin/bash
 #
-# Claude Context Engineering - Pre-Commit Hook
+# k0ntext Pre-Commit Hook
 #
-# Validates documentation synchronization before allowing commits.
-# Install with: npx claude-context hooks install
+# Automatic context synchronization workflow:
+# 1. Run autosync (sync from source of truth)
+# 2. Run validation (check for errors)
+# 3. Run drift-detect (AI-powered drift check)
+# 4. If drift found, run cross-sync
+# 5. Commit updated context files
+#
+# @version 3.1.0
 #
 
-# Colors for output
+# Colors
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 GREEN='\033[0;32m'
-NC='\033[0m' # No Color
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m'
 
-# Get the repository root
+# Get repository root
 REPO_ROOT=$(git rev-parse --show-toplevel)
-CLAUDE_DIR="$REPO_ROOT/.claude"
-CONFIG_FILE="$CLAUDE_DIR/automation/config.json"
+cd "$REPO_ROOT" || exit 0
 
-# Check if claude context is set up
-if [ ! -d "$CLAUDE_DIR" ]; then
-    exit 0  # No .claude directory, skip checks
-fi
+# Check if k0ntext is available
+K0NTEXT_CMD=""
 
-# Load config (if jq is available)
-BLOCK_ON_STALE=false
-CHECK_DRIFT=true
-
-if command -v jq &> /dev/null && [ -f "$CONFIG_FILE" ]; then
-    BLOCK_ON_STALE=$(jq -r '.hooks.pre_commit.block_on_stale // false' "$CONFIG_FILE")
-    CHECK_DRIFT=$(jq -r '.hooks.pre_commit.check_drift // true' "$CONFIG_FILE")
-fi
-
-# Skip if drift check is disabled
-if [ "$CHECK_DRIFT" != "true" ]; then
+if command -v k0ntext &> /dev/null; then
+    K0NTEXT_CMD="k0ntext"
+elif command -v npx &> /dev/null; then
+    K0NTEXT_CMD="npx k0ntext"
+else
+    # No k0ntext available, skip
     exit 0
 fi
 
-echo -e "${GREEN}Claude Context: Pre-commit validation${NC}"
+# Check if we should skip (K0NTEXT_SKIP_HOOKS env variable)
+if [ "$K0NTEXT_SKIP_HOOKS" = "true" ] || [ "$K0NTEXT_SKIP_HOOKS" = "1" ]; then
+    exit 0
+fi
 
-# Get list of staged files
-STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR)
+# Check if OPENROUTER_API_KEY is set for AI operations
+if [ -z "$OPENROUTER_API_KEY" ]; then
+    # No API key, skip AI-powered checks but do basic validation
+    echo -e "${BLUE}k0ntext: Pre-commit validation (basic mode)${NC}"
+    echo -e "${YELLOW}⚠ OPENROUTER_API_KEY not set, skipping AI-powered drift detection${NC}"
+    echo -e "${CYAN}  Set OPENROUTER_API_KEY for intelligent drift detection${NC}"
 
-# Check if any code files are being committed
-CODE_FILES=""
+    # Still run validation if available
+    if $K0NTEXT_CMD validate --help &> /dev/null; then
+        echo -e "${GREEN}Step 1: Validating context files...${NC}"
+        if $K0NTEXT_CMD validate 2> /dev/null; then
+            echo -e "${GREEN}✓ Validation passed${NC}"
+        else
+            echo -e "${YELLOW}⚠ Validation had warnings${NC}"
+        fi
+    fi
+
+    exit 0
+fi
+
+echo -e "${BLUE}k0ntext: Pre-commit workflow${NC}"
+
+# Get list of staged files to determine if we need to run checks
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null)
+
+# Check if any relevant files are being committed
+RELEVANT_FILES=false
 for file in $STAGED_FILES; do
     case "$file" in
-        *.py|*.js|*.ts|*.jsx|*.tsx|*.go|*.rs|*.rb|*.java)
-            CODE_FILES="$CODE_FILES $file"
+        *.ts|*.js|*.tsx|*.jsx|*.py|*.go|*.rs|*.java|*.md|CLAUDE.md|.cursorrules|.clinerules)
+            RELEVANT_FILES=true
+            break
             ;;
     esac
 done
 
-# If no code files, skip checks
-if [ -z "$CODE_FILES" ]; then
-    echo -e "${GREEN}No code files in commit, skipping drift check.${NC}"
+if [ "$RELEVANT_FILES" = false ]; then
+    # No relevant files changed, skip full workflow
     exit 0
 fi
 
-# Check if npx is available
-if ! command -v npx &> /dev/null; then
-    echo -e "${YELLOW}Warning: npx not found, skipping documentation drift check.${NC}"
-    exit 0
+# Step 1: Autosync from source of truth (if available)
+echo -e "${GREEN}Step 1: Running autosync...${NC}"
+if $K0NTEXT_CMD autosync --help &> /dev/null 2>&1; then
+    if $K0NTEXT_CMD autosync 2>/dev/null; then
+        echo -e "${GREEN}✓ Autosync complete${NC}"
+    else
+        echo -e "${YELLOW}⚠ Autosync had warnings, continuing...${NC}"
+    fi
+else
+    echo -e "${YELLOW}○ Autosync not available${NC}"
 fi
 
-# Run drift check
-DRIFT_FOUND=false
-DRIFT_OUTPUT=""
+# Step 2: Validate context files
+echo -e "${GREEN}Step 2: Validating context files...${NC}"
+if $K0NTEXT_CMD validate --help &> /dev/null 2>&1; then
+    if $K0NTEXT_CMD validate 2>/dev/null; then
+        echo -e "${GREEN}✓ Validation passed${NC}"
+    else
+        echo -e "${RED}✖ Validation failed${NC}"
+        echo -e "${YELLOW}  Run 'k0ntext validate --fix' to fix errors${NC}"
+        echo -e "${YELLOW}  To skip: git commit --no-verify${NC}"
+        exit 1
+    fi
+else
+    echo -e "${YELLOW}○ Validation not available${NC}"
+fi
 
-for file in $CODE_FILES; do
-    # Check if this file is referenced in any workflow
-    if grep -r "$file" "$CLAUDE_DIR/context/workflows" &> /dev/null; then
-        echo -e "  Checking: $file"
+# Step 3: AI-powered drift detection
+echo -e "${GREEN}Step 3: Detecting documentation drift...${NC}"
+if $K0NTEXT_CMD drift-detect --help &> /dev/null 2>&1; then
+    # Run drift detection with output capture
+    DRIFT_OUTPUT=$($K0NTEXT_CMD drift-detect --max-files 10 2>&1)
+    DRIFT_EXIT=$?
 
-        # Simple hash-based check
-        CURRENT_HASH=$(git hash-object "$file" 2>/dev/null)
-        STAGED_HASH=$(git ls-files -s "$file" 2>/dev/null | awk '{print $2}')
+    if [ $DRIFT_EXIT -eq 0 ]; then
+        echo -e "${GREEN}✓ No drift detected${NC}"
+    else
+        echo -e "${YELLOW}⚠ Drift detected, running cross-sync...${NC}"
 
-        if [ -n "$STAGED_HASH" ]; then
-            DRIFT_OUTPUT="$DRIFT_OUTPUT\n  - $file (modified, may affect documentation)"
-            DRIFT_FOUND=true
+        # Step 4: Cross-sync affected files
+        if $K0NTEXT_CMD cross-sync --help &> /dev/null 2>&1; then
+            if $K0NTEXT_CMD cross-sync --affected "$STAGED_FILES" 2>/dev/null; then
+                echo -e "${GREEN}✓ Cross-sync complete${NC}"
+
+                # Add newly synced files to commit
+                git add AI_CONTEXT.md 2>/dev/null
+                git add .github/copilot-instructions.md 2>/dev/null
+                git add .clinerules 2>/dev/null
+                git add .windsurf/rules.md 2>/dev/null
+                git add .aider.conf.yml 2>/dev/null
+                git add .continue/config.json 2>/dev/null
+                git add .cursorrules 2>/dev/null
+                git add .gemini/config.md 2>/dev/null
+                git add CLAUDE.md 2>/dev/null
+                git add .claude/context/ 2>/dev/null
+
+                echo -e "${BLUE}ℹ Updated context files added to commit${NC}"
+            else
+                echo -e "${YELLOW}⚠ Cross-sync had issues${NC}"
+                echo -e "${YELLOW}  Run 'k0ntext cross-sync' manually after commit${NC}"
+            fi
+        else
+            echo -e "${YELLOW}○ Cross-sync not available${NC}"
         fi
     fi
-done
-
-# Report findings
-if [ "$DRIFT_FOUND" = true ]; then
-    echo -e "${YELLOW}Documentation may need updating:${NC}"
-    echo -e "$DRIFT_OUTPUT"
-    echo ""
-
-    if [ "$BLOCK_ON_STALE" = true ]; then
-        echo -e "${RED}Commit blocked: Documentation drift detected.${NC}"
-        echo -e "Run ${GREEN}/verify-docs-current${NC} or ${GREEN}npx claude-context sync --check${NC}"
-        echo -e "To skip this check: git commit --no-verify"
-        exit 1
-    else
-        echo -e "${YELLOW}Warning: Consider running /verify-docs-current to check documentation.${NC}"
-    fi
+else
+    echo -e "${YELLOW}○ Drift detection not available${NC}"
 fi
 
-echo -e "${GREEN}Pre-commit check complete.${NC}"
+echo -e "${GREEN}✓ Pre-commit workflow complete${NC}"
 exit 0

@@ -24,6 +24,10 @@ import { exportCommand } from './commands/export.js';
 import { importCommand } from './commands/import.js';
 import { performanceCommand } from './commands/performance.js';
 import { watchCommand } from './commands/watch.js';
+import { driftDetectCommand } from './commands/drift-detect.js';
+import { crossSyncCommand } from './commands/cross-sync.js';
+import { hooksCommand } from './commands/hooks.js';
+import { factCheckCommand } from './commands/fact-check.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -195,6 +199,18 @@ function createProgram(): Command {
   // ==================== Watch Command ====================
   program.addCommand(watchCommand);
 
+  // ==================== Drift Detection Command ====================
+  program.addCommand(driftDetectCommand);
+
+  // ==================== Cross-Sync Command ====================
+  program.addCommand(crossSyncCommand);
+
+  // ==================== Hooks Command ====================
+  program.addCommand(hooksCommand);
+
+  // ==================== Fact-Check Command ====================
+  program.addCommand(factCheckCommand);
+
   // ==================== Index Command ====================
   program
     .command('index')
@@ -220,6 +236,7 @@ function createProgram(): Command {
         let discoveredCount = 0;
         let indexedCount = 0;
         const allIndexedFiles: string[] = []; // Track all indexed files for embeddings
+        const indexedItemIds: Map<string, string> = new Map(); // Map file path to item ID for embeddings
 
         if (options.all || (!options.docs && !options.code && !options.tools)) {
           // Discover everything
@@ -235,7 +252,7 @@ function createProgram(): Command {
           // Store docs in database
           for (const doc of docs) {
             const content = fs.existsSync(doc.path) ? fs.readFileSync(doc.path, 'utf-8').slice(0, 50000) : '';
-            db.upsertItem({
+            const item = db.upsertItem({
               type: 'doc',
               name: path.basename(doc.relativePath),
               content,
@@ -244,12 +261,13 @@ function createProgram(): Command {
             });
             indexedCount++;
             allIndexedFiles.push(doc.relativePath);
+            indexedItemIds.set(doc.relativePath, item.id);
           }
 
           // Store tool configs in database
           for (const config of tools) {
             const content = fs.existsSync(config.path) ? fs.readFileSync(config.path, 'utf-8').slice(0, 50000) : '';
-            db.upsertItem({
+            const item = db.upsertItem({
               type: 'tool_config',
               name: `${config.tool}:${path.basename(config.relativePath)}`,
               content,
@@ -258,13 +276,14 @@ function createProgram(): Command {
             });
             indexedCount++;
             allIndexedFiles.push(config.relativePath);
+            indexedItemIds.set(config.relativePath, item.id);
           }
 
           // Store code in database (first N files to avoid overwhelming the db)
           const maxCodeFiles = 100;
           for (const codeFile of code.slice(0, maxCodeFiles)) {
             const content = fs.existsSync(codeFile.path) ? fs.readFileSync(codeFile.path, 'utf-8').slice(0, 20000) : '';
-            db.upsertItem({
+            const item = db.upsertItem({
               type: 'code',
               name: path.basename(codeFile.relativePath),
               content,
@@ -273,6 +292,7 @@ function createProgram(): Command {
             });
             indexedCount++;
             allIndexedFiles.push(codeFile.relativePath);
+            indexedItemIds.set(codeFile.relativePath, item.id);
           }
           if (code.length > maxCodeFiles) {
             console.log(chalk.gray(`\nNote: Indexed first ${maxCodeFiles} of ${code.length} code files.`));
@@ -284,7 +304,7 @@ function createProgram(): Command {
             spinner.text = `Indexing ${docs.length} docs...`;
             for (const doc of docs) {
               const content = fs.existsSync(doc.path) ? fs.readFileSync(doc.path, 'utf-8').slice(0, 50000) : '';
-              db.upsertItem({
+              const item = db.upsertItem({
                 type: 'doc',
                 name: path.basename(doc.relativePath),
                 content,
@@ -293,6 +313,7 @@ function createProgram(): Command {
               });
               indexedCount++;
               allIndexedFiles.push(doc.relativePath);
+              indexedItemIds.set(doc.relativePath, item.id);
             }
           }
           if (options.code) {
@@ -302,7 +323,7 @@ function createProgram(): Command {
             spinner.text = `Indexing code files...`;
             for (const codeFile of code.slice(0, maxCodeFiles)) {
               const content = fs.existsSync(codeFile.path) ? fs.readFileSync(codeFile.path, 'utf-8').slice(0, 20000) : '';
-              db.upsertItem({
+              const item = db.upsertItem({
                 type: 'code',
                 name: path.basename(codeFile.relativePath),
                 content,
@@ -311,6 +332,7 @@ function createProgram(): Command {
               });
               indexedCount++;
               allIndexedFiles.push(codeFile.relativePath);
+              indexedItemIds.set(codeFile.relativePath, item.id);
             }
             if (code.length > maxCodeFiles) {
               console.log(chalk.gray(`\nNote: Indexed first ${maxCodeFiles} of ${code.length} code files.`));
@@ -322,7 +344,7 @@ function createProgram(): Command {
             spinner.text = `Indexing ${tools.length} tool configs...`;
             for (const config of tools) {
               const content = fs.existsSync(config.path) ? fs.readFileSync(config.path, 'utf-8').slice(0, 50000) : '';
-              db.upsertItem({
+              const item = db.upsertItem({
                 type: 'tool_config',
                 name: `${config.tool}:${path.basename(config.relativePath)}`,
                 content,
@@ -331,6 +353,7 @@ function createProgram(): Command {
               });
               indexedCount++;
               allIndexedFiles.push(config.relativePath);
+              indexedItemIds.set(config.relativePath, item.id);
             }
           }
         }
@@ -352,8 +375,13 @@ function createProgram(): Command {
 
             spinner.text = `Storing ${embeddings.size} embeddings...`;
             for (const [filePath, embedding] of embeddings.entries()) {
-              db.insertEmbedding(filePath, embedding);
-              embeddingsCount++;
+              const itemId = indexedItemIds.get(filePath);
+              if (itemId) {
+                db.storeEmbedding(itemId, embedding);
+                embeddingsCount++;
+              } else {
+                console.warn(`Warning: No item ID found for path: ${filePath}`);
+              }
             }
           } catch (error) {
             spinner.warn(`Indexed ${indexedCount} files (embeddings failed: ${error instanceof Error ? error.message : error})`);

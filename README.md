@@ -73,6 +73,7 @@ K0ntext uses native SQLite extensions for high-performance vector search.
 - Tech stack detection and documentation
 - Workflow discovery and categorization
 - Automatic context generation
+- **Centralized model configuration** (v3.1.0) - Single source of truth for all AI operations
 
 ### 🔍 Semantic Search
 - Vector database (sqlite-vec) for intelligent code retrieval
@@ -85,6 +86,29 @@ K0ntext uses native SQLite extensions for high-performance vector search.
 - Automatic synchronization between tool configurations
 - Change detection with SHA256 hashing
 - Sync status monitoring
+- **Intelligent cross-sync** (v3.1.0) - AI-powered propagation of changes across tools
+
+### 🤖 Git Hooks Automation (v3.1.0)
+- **Pre-commit workflow** - Automatic context maintenance
+- Drift detection on every commit
+- Automatic cross-sync when drift detected
+- Updated context files auto-added to commits
+
+### 🎯 Drift Detection (v3.1.0)
+- **AI-powered semantic analysis** - Detect when documentation diverges from code
+- Replaces hash-based checks with intelligent understanding
+- Severity-based reporting (high/medium/low)
+- Automatic fix suggestions
+
+### 📋 Fact-Checking (v3.1.0)
+- Validate documentation accuracy against codebase
+- Identify outdated APIs, wrong file paths, missing dependencies
+- Confidence scoring for each claim
+
+### 🗺️ Map-Based Context (v3.1.0)
+- Concise, structured context files
+- Reduce hallucination through precise references
+- Alternative to verbose documentation format
 
 ### 🤖 MCP Server
 - **10 Tools:** search_context, get_item, add_knowledge, analyze, get_tool_configs, query_graph, get_stats
@@ -92,7 +116,7 @@ K0ntext uses native SQLite extensions for high-performance vector search.
 - Real-time context access for AI assistants
 - Knowledge graph traversal
 
-### 🛠️ Complete CLI (13 Commands)
+### 🛠️ Complete CLI (18 Commands)
 - `init` - Initialize with intelligent analysis
 - `generate` - Generate context files for all tools
 - `mcp` - Start MCP server
@@ -106,10 +130,17 @@ K0ntext uses native SQLite extensions for high-performance vector search.
 - `index` - Index codebase
 - `search` - Search indexed content
 - `stats` - View database statistics
+- **`drift-detect`** - AI-powered documentation drift detection
+- **`cross-sync`** - Intelligent sync across all AI tools
+- **`hooks`** - Git hooks management (install/uninstall/status)
+- **`fact-check`** - Validate documentation accuracy
+- `generate --map` - Generate concise map-based context files
 
 ### 📊 Smart Agents
 - **CleanupAgent** - Remove conflicting AI tool folders (.cursor, .windsurf, .cline, etc.)
 - **PerformanceMonitorAgent** - Track database performance and suggest optimizations
+- **DriftAgent** (v3.1.0) - AI-powered documentation drift detection
+- **FactCheckAgent** (v3.1.0) - Validate documentation accuracy against codebase
 
 ### 🗃️ SQLite Storage
 - Persistent database with SHA256 change detection
@@ -159,6 +190,7 @@ k0ntext generate -v
 **Options:**
 - `-ai, --ai <tools>` - Specific tools (comma-separated)
 - `--force` - Force regenerate all files
+- `--map` - Use concise map-based format (new in v3.1.0)
 - `-v, --verbose` - Show detailed output
 
 #### `k0ntext mcp`
@@ -218,6 +250,7 @@ k0ntext cleanup -v
 **Options:**
 - `--dry-run` - Show what would be removed
 - `--keep <folders>` - Folders to keep (comma-separated)
+- `--ai` - Use AI to intelligently analyze which folders can be safely removed (new in v3.1.0)
 - `-v, --verbose` - Show detailed output
 
 #### `k0ntext validate`
@@ -362,6 +395,128 @@ k0ntext stats
 k0ntext stats | grep "Context Items"
 ```
 
+### v3.1.0 New Commands
+
+#### `k0ntext drift-detect`
+AI-powered documentation drift detection using semantic analysis.
+
+```bash
+# Detect drift in all context files
+k0ntext drift-detect
+
+# Detect drift in specific paths
+k0ntext drift-detect -p CLAUDE.md,.cursorrules
+
+# Check up to 20 files
+k0ntext drift-detect --max-files 20
+
+# Strict mode (fails on any drift)
+k0ntext drift-detect --strict
+
+# Verbose output
+k0ntext drift-detect -v
+```
+
+**Options:**
+- `--fix` - Automatically fix detected drift (experimental)
+- `--strict` - Fail on any drift detected
+- `-p, --paths <paths>` - Comma-separated paths to check
+- `--max-files <number>` - Maximum files to check (default: 50)
+- `--model <model>` - Override model (not recommended)
+- `-v, --verbose` - Show detailed output
+
+#### `k0ntext cross-sync`
+Intelligently synchronize context across all AI tools after drift detection.
+
+```bash
+# Sync all affected files
+k0ntext cross-sync
+
+# Dry run to see what would be synced
+k0ntext cross-sync --dry-run
+
+# Sync to specific tools only
+k0ntext cross-sync --to claude,cursor
+
+# Sync from specific files
+k0ntext cross-sync --affected CLAUDE.md,.cursorrules
+
+# Verbose output with details
+k0ntext cross-sync -v
+```
+
+**Options:**
+- `--dry-run` - Show what would be synced without making changes
+- `--from <tool>` - Sync only from specific tool
+- `--to <tools>` - Sync only to specific tools (comma-separated)
+- `--affected <files>` - Comma-separated list of affected files
+- `-v, --verbose` - Show detailed sync output
+
+#### `k0ntext hooks`
+Manage git hooks for automatic context synchronization.
+
+```bash
+# Install git hooks
+k0ntext hooks install
+
+# Install with force (overwrite existing)
+k0ntext hooks install -f
+
+# Uninstall git hooks
+k0ntext hooks uninstall
+
+# Check hooks status
+k0ntext hooks status
+```
+
+**Subcommands:**
+- `install` - Install pre-commit hook for automatic workflow
+- `uninstall` - Remove installed hooks
+- `status` - Show hook installation status
+
+**Install Options:**
+- `-f, --force` - Overwrite existing hooks
+- `--skip-backup` - Skip backing up existing hooks
+
+#### `k0ntext fact-check [files...]`
+Validate documentation accuracy using AI analysis.
+
+```bash
+# Check all documentation files
+k0ntext fact-check
+
+# Check specific files
+k0ntext fact-check CLAUDE.md .cursorrules
+
+# Set minimum confidence threshold
+k0ntext fact-check --min-confidence 0.7
+
+# Verbose output
+k0ntext fact-check -v
+```
+
+**Options:**
+- `--fix` - Automatically fix detected issues (experimental)
+- `-v, --verbose` - Show detailed output
+- `--min-confidence <number>` - Minimum confidence to report (0-1, default: 0.5)
+
+### Git Hooks Workflow (v3.1.0)
+
+When you install hooks with `k0ntext hooks install`, the pre-commit hook automatically:
+
+1. **Autosync** - Sync context from source of truth
+2. **Validate** - Check for context errors
+3. **Drift Detect** - AI-powered drift detection
+4. **Cross-Sync** - Update all AI tool contexts if drift found
+5. **Auto-Add** - Include updated context files in commit
+
+**Skip hooks temporarily:**
+```bash
+K0NTEXT_SKIP_HOOKS=1 git commit -m "message"
+# or
+git commit --no-verify -m "message"
+```
+
 ## 🤖 MCP Server Usage
 
 ### Start the Server
@@ -467,11 +622,12 @@ Each AI tool has its own configuration file path:
 ```
 k0ntext/
 ├── src/                    # TypeScript source
-│   ├── cli/                # CLI commands (13 commands)
+│   ├── cli/                # CLI commands (18 commands)
+│   ├── config/             # Centralized configuration (v3.1.0)
 │   ├── db/                 # SQLite database client
 │   ├── analyzer/           # Intelligent codebase analysis
 │   ├── embeddings/         # OpenRouter integration
-│   ├── agents/             # Smart agents (Cleanup, Performance)
+│   ├── agents/             # Smart agents (Cleanup, Performance, Drift, FactCheck)
 │   └── mcp.ts              # MCP server implementation
 ├── agents/                 # Agent definitions
 ├── skills/                 # RPI workflow skills
