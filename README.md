@@ -4,14 +4,57 @@
 [![npm downloads](https://img.shields.io/npm/dt/k0ntext.svg)](https://www.npmjs.com/package/k0ntext)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://github.com/SireJeff/k0ntext/workflows/CI/badge.svg)](https://github.com/SireJeff/k0ntext/actions)
+[![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
+[![MCP Protocol](https://img.shields.io/badge/MCP-Protocol-blue)](https://modelcontextprotocol.io)
 
-Universal AI context engineering for Claude, GitHub Copilot, Cline, Cursor, Windsurf, Aider, Continue, Antigravity, and Gemini.
+Universal AI context engineering for Claude, GitHub Copilot, Cline, Cursor, Windsurf, Aider, Continue, Antigravity, and Gemini with OpenRouter-powered intelligent analysis.
 
-## 🚀 Quick Start
+## 🚀 Quick Start (30 Seconds)
 
 ```bash
+# Install globally
 npm install -g k0ntext
+
+# Initialize your project with intelligent analysis
 k0ntext init
+
+# Generate context files for all AI tools
+k0ntext generate
+
+# Start the MCP server for AI tools
+k0ntext mcp
+```
+
+## 🎯 Zero-to-Hero Workflow
+
+### New Project Setup
+```bash
+# 1. Initialize with intelligent analysis
+k0ntext init --intelligent
+
+# 2. Index your codebase
+k0ntext index
+
+# 3. Generate context files
+k0ntext generate
+
+# 4. Start MCP server
+k0ntext mcp
+```
+
+### Existing Project Setup
+```bash
+# 1. Check existing context
+k0ntext stats
+
+# 2. Index codebase if needed
+k0ntext index --docs --code
+
+# 3. Generate missing tool configs
+k0ntext generate --force
+
+# 4. Validate everything
+k0ntext validate --strict
 ```
 
 ## 🖥️ Windows Support
@@ -19,44 +62,376 @@ k0ntext init
 K0ntext uses native SQLite extensions for high-performance vector search.
 
 **For Windows Users:**
-- We recommend using **Node.js LTS (v18, v20, v22)**.
-- These versions have pre-built binaries and will install instantly without extra tools.
-- If you use a non-LTS version (like v23/v24), you may need [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) to compile the database driver.
+- **Recommended:** Use Node.js LTS (v18, v20, v22) with pre-built binaries
+- **Instant install:** These versions install without extra tools
+- **Non-LTS versions (v23/v24):** May require [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) to compile the database driver
 
-## ✨ Features
+## ✨ Features Overview
 
-- 🧠 **Intelligent Analysis** - OpenRouter-powered codebase analysis with embeddings
-- 🔍 **Semantic Search** - Vector database (sqlite-vec) for intelligent code retrieval
-- 🔄 **Cross-Tool Sync** - Synchronize context across 9 AI tools
-- 📊 **MCP Server** - 10 tools + 6 prompts for Model Context Protocol
-- 🛠️ **Complete CLI** - 7 commands for context management
-- 💾 **SQLite Storage** - Persistent database with SHA256 change detection
+### 🧠 Intelligent Analysis
+- OpenRouter-powered codebase analysis with embeddings
+- Tech stack detection and documentation
+- Workflow discovery and categorization
+- Automatic context generation
 
-## 📖 Commands
+### 🔍 Semantic Search
+- Vector database (sqlite-vec) for intelligent code retrieval
+- Hybrid search (text + semantic)
+- Content type filtering (workflow, agent, command, code, doc, etc.)
+- Real-time indexing with watch mode
 
-### k0ntext init
-Initialize new context for your project.
+### 🔄 Cross-Tool Sync
+- **9 AI Tools Supported:** Claude, Copilot, Cline, Antigravity, Windsurf, Aider, Continue, Cursor, Gemini
+- Automatic synchronization between tool configurations
+- Change detection with SHA256 hashing
+- Sync status monitoring
 
-### k0ntext generate
+### 🤖 MCP Server
+- **10 Tools:** search_context, get_item, add_knowledge, analyze, get_tool_configs, query_graph, get_stats
+- **6 Prompts:** context-engineer, core-architect, api-developer, database-ops, integration-hub, deployment-ops
+- Real-time context access for AI assistants
+- Knowledge graph traversal
+
+### 🛠️ Complete CLI (13 Commands)
+- `init` - Initialize with intelligent analysis
+- `generate` - Generate context files for all tools
+- `mcp` - Start MCP server
+- `sync` - Sync across AI tools
+- `cleanup` - Clean up conflicting tool folders
+- `validate` - Validate context files
+- `export` - Export database
+- `import` - Import from exports
+- `performance` - Show performance metrics
+- `watch` - Auto-index file changes
+- `index` - Index codebase
+- `search` - Search indexed content
+- `stats` - View database statistics
+
+### 📊 Smart Agents
+- **CleanupAgent** - Remove conflicting AI tool folders (.cursor, .windsurf, .cline, etc.)
+- **PerformanceMonitorAgent** - Track database performance and suggest optimizations
+
+### 🗃️ SQLite Storage
+- Persistent database with SHA256 change detection
+- Embeddings support for semantic search
+- Knowledge graph relationships
+- Automatic schema migrations
+
+## 📖 Complete CLI Reference
+
+### Core Commands
+
+#### `k0ntext init [project-name]`
+Initialize AI context for a project with intelligent analysis.
+
+```bash
+# Initialize current directory
+k0ntext init
+
+# Initialize specific project
+k0ntext init my-project
+
+# Skip intelligent analysis (faster)
+k0ntext init --no-intelligent
+```
+
+**Options:**
+- `--no-intelligent` - Skip OpenRouter-powered analysis
+- `-v, --verbose` - Show detailed output
+
+#### `k0ntext generate`
 Generate context files for all AI tools.
 
-### k0ntext mcp
+```bash
+# Generate for all tools
+k0ntext generate
+
+# Generate for specific tools
+k0ntext generate -ai claude,copilot,cursor
+
+# Force regenerate all files
+k0ntext generate --force
+
+# Verbose output
+k0ntext generate -v
+```
+
+**Options:**
+- `-ai, --ai <tools>` - Specific tools (comma-separated)
+- `--force` - Force regenerate all files
+- `-v, --verbose` - Show detailed output
+
+#### `k0ntext mcp`
 Start the Model Context Protocol server.
 
-### k0ntext cleanup
+```bash
+# Start with default database
+k0ntext mcp
+
+# Specify database path
+k0ntext mcp --db .my-context.db
+```
+
+**Options:**
+- `--db <path>` - Database file path
+
+#### `k0ntext sync`
+Synchronize context across AI tools.
+
+```bash
+# Sync all tools
+k0ntext sync
+
+# Check sync status only
+k0ntext sync --check
+
+# Sync from specific tool
+k0ntext sync --from claude
+
+# Sync to specific tool
+k0ntext sync --to copilot
+
+# Force sync
+k0ntext sync --force
+```
+
+**Options:**
+- `--check` - Only check synchronization status
+- `--from <tool>` - Sync from specific tool
+- `--to <tool>` - Sync to specific tool
+- `--force` - Force sync even if up-to-date
+
+#### `k0ntext cleanup`
 Clean up context folders from other AI tools.
 
-### k0ntext stats
-View database statistics.
+```bash
+# Dry run to see what would be removed
+k0ntext cleanup --dry-run
 
-### k0ntext index
-Index your codebase into the database.
+# Keep specific folders
+k0ntext cleanup --keep .github,.vscode
 
-### k0ntext search
-Search your indexed code.
+# Verbose output
+k0ntext cleanup -v
+```
 
-### k0ntext sync
-Sync context across AI tools.
+**Options:**
+- `--dry-run` - Show what would be removed
+- `--keep <folders>` - Folders to keep (comma-separated)
+- `-v, --verbose` - Show detailed output
+
+#### `k0ntext validate`
+Validate context files and AI tool configurations.
+
+```bash
+# Basic validation
+k0ntext validate
+
+# Auto-fix errors
+k0ntext validate --fix
+
+# Treat warnings as errors
+k0ntext validate --strict
+```
+
+**Options:**
+- `--fix` - Automatically fix validation errors
+- `--strict` - Treat warnings as errors
+
+#### `k0ntext export <output>`
+Export context database to file.
+
+```bash
+# Export as JSON
+k0ntext export context.json
+
+# Export as markdown
+k0ntext export docs.md --format markdown
+
+# Export specific type
+k0ntext export workflows.json --type workflow
+```
+
+**Options:**
+- `--format <format>` - Export format (json, markdown)
+- `--type <type>` - Filter by context type
+
+#### `k0ntext import <input>`
+Import context data from exported files.
+
+```bash
+# Import JSON export
+k0ntext import context.json
+
+# Import and merge with existing data
+k0ntext import context.json --merge
+```
+
+**Options:**
+- `--format <format>` - Import format (json, markdown)
+- `--merge` - Merge with existing data (default: replace)
+
+#### `k0ntext performance`
+Show performance metrics and optimization suggestions.
+
+```bash
+# Human-readable report
+k0ntext performance
+
+# JSON output
+k0ntext performance --json
+```
+
+**Options:**
+- `--json` - Output as JSON
+
+#### `k0ntext watch`
+Watch for file changes and auto-update index.
+
+```bash
+# Start watching with 1s delay
+k0ntext watch
+
+# Custom debounce delay
+k0ntext watch -d 2000
+```
+
+**Options:**
+- `-d, --delay <ms>` - Debounce delay in milliseconds
+
+#### `k0ntext index`
+Index codebase content into the database.
+
+```bash
+# Index everything
+k0ntext index
+
+# Index documentation only
+k0ntext index --docs
+
+# Index source code only
+k0ntext index --code
+
+# Index AI tool configs only
+k0ntext index --tools
+
+# Verbose output
+k0ntext index -v
+```
+
+**Options:**
+- `--docs` - Index documentation files only
+- `--code` - Index source code only
+- `--tools` - Index AI tool configurations only
+- `--all` - Index everything (default)
+- `-v, --verbose` - Show detailed output
+
+#### `k0ntext search <query>`
+Search across indexed content.
+
+```bash
+# Basic search
+k0ntext search "authentication"
+
+# Search specific type
+k0ntext search "user login" -t workflow
+
+# Text-only search
+k0ntext search "API endpoint" -m text
+
+# Semantic search (requires OPENROUTER_API_KEY)
+k0ntext search "data persistence" -m semantic
+
+# Limit results
+k0ntext search "database" -l 5
+```
+
+**Options:**
+- `-t, --type <type>` - Filter by type
+- `-l, --limit <n>` - Maximum results (default: 10)
+- `-m, --mode <mode>` - Search mode: text, semantic, hybrid
+
+#### `k0ntext stats`
+Show database and indexing statistics.
+
+```bash
+# View all statistics
+k0ntext stats
+
+# Show specific stats (filtered by index)
+k0ntext stats | grep "Context Items"
+```
+
+## 🤖 MCP Server Usage
+
+### Start the Server
+```bash
+# Start MCP server
+k0ntext mcp
+```
+
+### Available MCP Tools
+
+1. **search_context** - Semantic search across all indexed content
+2. **get_item** - Get a specific context item by ID or path
+3. **add_knowledge** - Store new insights or facts
+4. **analyze** - Run intelligent analysis on codebase
+5. **get_tool_configs** - Get AI tool configurations
+6. **query_graph** - Traverse knowledge graph
+7. **get_stats** - Get database statistics
+
+### Available Prompts
+
+1. **context-engineer** - Initialize and configure AI context system
+2. **core-architect** - Design system architecture
+3. **api-developer** - Develop API endpoints
+4. **database-ops** - Database operations
+5. **integration-hub** - External integrations
+6. **deployment-ops** - CI/CD and deployment
+
+### Example MCP Tool Usage
+
+```javascript
+// Search for authentication workflows
+const results = await search_context({
+  query: "user authentication flow",
+  type: "workflow",
+  limit: 5
+});
+
+// Get a specific item
+const item = await get_item({
+  id: "workflow:user-auth"
+});
+
+// Add new knowledge
+await add_knowledge({
+  name: "API Rate Limiting",
+  content: "Our API uses token bucket algorithm with 1000 req/min",
+  relatedTo: ["api:main-endpoint"]
+});
+```
+
+## 🎨 Supported AI Tools
+
+### Fully Supported
+- **Claude** - AI_CONTEXT.md
+- **GitHub Copilot** - .github/copilot-instructions.md
+- **Cursor** - .cursorrules
+- **Windsurf** - .windsurf/rules.md
+- **Cline** - .clinerules
+- **Aider** - .aider.conf.yml
+- **Continue** - .continue/config.json
+- **Antigravity** - .agent/README.md
+- **Gemini** - .gemini/config.md
+
+### RPI Workflow Skills
+- **@context-engineer** - Setup and configuration
+- **@core-architect** - System design
+- **@api-developer** - API development
+- **@database-ops** - Database operations
+- **@integration-hub** - External integrations
+- **@deployment-ops** - CI/CD and deployment
 
 ## 🔧 Configuration
 
@@ -65,34 +440,184 @@ Sync context across AI tools.
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `OPENROUTER_API_KEY` | API key for intelligent analysis via OpenRouter | For `--intelligent` flag |
+| `K0NTEXT_PROJECT_ROOT` | Override project root path | Optional |
+| `K0NTEXT_DB_PATH` | Override database file path | Optional |
 
 ### Database Location
 
 By default, k0ntext stores its SQLite database at `.k0ntext.db` in the project root. This file is automatically added to `.gitignore`.
 
-## 📦 Database & Migration
+### Tool Configuration Paths
 
-K0ntext uses a SQLite database (`~/.k0ntext.db`) for storing indexed code and context information. The database is automatically managed and includes:
+Each AI tool has its own configuration file path:
+- Claude: `AI_CONTEXT.md`
+- Copilot: `.github/copilot-instructions.md`
+- Cursor: `.cursorrules`
+- Windsurf: `.windsurf/rules.md`
+- Cline: `.clinerules`
+- Aider: `.aider.conf.yml`
+- Continue: `.continue/config.json`
+- Antigravity: `.agent/README.md`
+- Gemini: `.gemini/config.md`
 
-- Codebase indexing with embeddings
-- Change detection using SHA256 hashes
-- Semantic search capabilities
-- Knowledge graph relationships
+## 🏗️ Architecture
 
-## 🧹 Context Cleanup
+### System Components
 
-Clean up context folders from other AI tools that may conflict with K0ntext's managed context.
+```
+k0ntext/
+├── src/                    # TypeScript source
+│   ├── cli/                # CLI commands (13 commands)
+│   ├── db/                 # SQLite database client
+│   ├── analyzer/           # Intelligent codebase analysis
+│   ├── embeddings/         # OpenRouter integration
+│   ├── agents/             # Smart agents (Cleanup, Performance)
+│   └── mcp.ts              # MCP server implementation
+├── agents/                 # Agent definitions
+├── skills/                 # RPI workflow skills
+├── templates/              # Output templates
+└── .k0ntext.db             # SQLite database (auto-created)
+```
 
-## 🤝 Contributing
+### Data Flow
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+1. **Initialization** - `k0ntext init` discovers and analyzes codebase
+2. **Indexing** - `k0ntext index` stores content in SQLite with embeddings
+3. **Generation** - `k0ntext generate` creates tool-specific context files
+4. **Sync** - `k0ntext sync` keeps all AI tools synchronized
+5. **MCP Server** - `k0ntext mcp` provides real-time context to AI assistants
+
+### Database Schema
+
+The SQLite database contains:
+- **Context Items** - Workflows, agents, commands, code, docs
+- **Embeddings** - Vector embeddings for semantic search
+- **Relations** - Knowledge graph connections
+- **Sync State** - Change tracking for synchronization
+- **Tool Configs** - AI tool configurations
+
+## 🚀 Development
+
+### Build and Test
+
+```bash
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Run tests
+npm test
+
+# Run tests once (no watch)
+npm run test:run
+
+# Lint code
+npm run lint
+```
+
+### Publishing
+
+```bash
+# Dry run
+npm run publish:dry
+
+# Publish to npm
+npm run publish:public
+```
+
+### Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests and linting
+5. Submit a pull request
+
+### Project Structure
+
+- `src/cli/` - Command implementations
+- `src/db/` - Database operations
+- `src/analyzer/` - Code analysis logic
+- `src/agents/` - Smart agents
+- `templates/` - Context templates
+- `.claude/` - Claude Code development context
+
+## 📊 Performance Monitoring
+
+The PerformanceMonitorAgent provides insights into:
+- Query execution times
+- Database size and growth
+- Slow query detection
+- Optimization suggestions
+
+```bash
+# View performance report
+k0ntext performance
+
+# Get JSON metrics
+k0ntext performance --json
+```
+
+Common optimization suggestions:
+- Add indexes for frequently queried columns
+- Run VACUUM for large databases
+- Review and optimize slow queries
+- Monitor cache hit rates
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+1. **SQLite Native Extension Issues (Windows)**
+   ```bash
+   # Use Node.js LTS version
+   node --version
+   ```
+
+2. **OpenRouter API Key Not Found**
+   ```bash
+   # Set the environment variable
+   export OPENROUTER_API_KEY=your_api_key_here
+   ```
+
+3. **Database Locked**
+   ```bash
+   # Close other instances of k0ntext
+   # Or wait a few seconds
+   ```
+
+4. **Permission Errors**
+   ```bash
+   # Check file permissions
+   ls -la .k0ntext.db
+   ```
+
+### Debug Mode
+
+```bash
+# Verbose output for most commands
+k0ntext init -v
+k0ntext index -v
+k0ntext generate -v
+```
+
+## 🤝 Community
+
+- **GitHub Issues:** [Report bugs and request features](https://github.com/SireJeff/k0ntext/issues)
+- **Discussions:** [Join community discussions](https://github.com/SireJeff/k0ntext/discussions)
+- **Documentation:** [Full API documentation](./docs/)
 
 ## 📄 License
 
-MIT License
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
 **Repository:** https://github.com/SireJeff/k0ntext
 **npm Package:** https://www.npmjs.com/package/k0ntext
 **Issues:** https://github.com/SireJeff/k0ntext/issues
+**MCP Protocol:** https://modelcontextprotocol.io
+
+Made with ❤️ by [SireJeff](https://github.com/SireJeff)

@@ -1,18 +1,39 @@
 import fs from 'fs';
 import path from 'path';
-import { getCleanupConfig, DEFAULT_CLEANUP_CONFIG } from '../config/cleanup-config.js';
+import { DEFAULT_CLEANUP_CONFIG } from '../config/cleanup-config.js';
 
 export interface CleanupOptions {
   dryRun?: boolean;
   keep?: string[];
   verbose?: boolean;
+  cwd?: string;
+}
+
+export interface CleanupConfig {
+  /** Default dry run mode (safe mode) */
+  dryRun: boolean;
+
+  /** Default folders to keep */
+  defaultKeep: string[];
+
+  /** Verbose output by default */
+  verbose: boolean;
+
+  /** Maximum folder depth to scan */
+  maxDepth: number;
+
+  /** Timeout for folder operations in milliseconds */
+  timeout: number;
+
+  /** Default working directory */
+  cwd: string;
 }
 
 export interface CleanupResult {
   scanned: number;
   removed: string[];
   kept: string[];
-  errors: Array<{ folder: string; error: any }>;
+  errors: Array<{ folder: string; error: unknown }>;
 }
 
 export class CleanupAgent {
@@ -26,11 +47,11 @@ export class CleanupAgent {
   private config: typeof DEFAULT_CLEANUP_CONFIG;
 
   constructor(config?: Partial<typeof DEFAULT_CLEANUP_CONFIG>) {
-    this.config = { ...DEFAULT_CLEANUP_CONFIG, ...config };
+    this.config = { ...DEFAULT_CLEANUP_CONFIG, ...config, cwd: config?.cwd || process.cwd() };
   }
 
   async cleanup(options: CleanupOptions = {}): Promise<CleanupResult> {
-    const cwd = process.cwd();
+    const cwd = options.cwd || this.config.cwd;
     const entries = fs.readdirSync(cwd, { withFileTypes: true });
 
     const toolFolders = entries
@@ -65,8 +86,8 @@ export class CleanupAgent {
     return results;
   }
 
-  async analyze(): Promise<CleanupResult> {
-    return this.cleanup({ dryRun: true, verbose: true });
+  async analyze(options: Omit<CleanupOptions, 'dryRun'> = {}): Promise<CleanupResult> {
+    return this.cleanup({ ...options, dryRun: true, verbose: true });
   }
 
   getConfig(): typeof DEFAULT_CLEANUP_CONFIG {

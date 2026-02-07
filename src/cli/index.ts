@@ -50,16 +50,16 @@ ${chalk.cyan('╚═════════════════════
 /**
  * Parse AI tools from comma-separated string
  */
-function parseAiTools(toolsString: string): string[] {
+function _parseAiTools(toolsString: string): string[] {
   const tools = toolsString.split(',').map(t => t.trim().toLowerCase());
   const invalid = tools.filter(t => !AI_TOOLS.includes(t));
-  
+
   if (invalid.length > 0) {
     console.error(chalk.red(`\n✖ Error: Invalid AI tools: ${invalid.join(', ')}`));
     console.error(chalk.gray(`  Valid options: ${AI_TOOLS.join(', ')}`));
     process.exit(1);
   }
-  
+
   const allTools = AI_TOOLS.filter(t => t !== 'all');
   return tools.includes('all') ? allTools : tools;
 }
@@ -206,9 +206,9 @@ function createProgram(): Command {
     .option('-v, --verbose', 'Show detailed output')
     .action(async (options) => {
       showBanner();
-      
+
       const spinner = ora();
-      let db: any | undefined;
+      let db: DatabaseClient | undefined;
       
       try {
         spinner.start('Discovering content...');
@@ -219,7 +219,7 @@ function createProgram(): Command {
         
         let discoveredCount = 0;
         let indexedCount = 0;
-        let allIndexedFiles: string[] = []; // Track all indexed files for embeddings
+        const allIndexedFiles: string[] = []; // Track all indexed files for embeddings
 
         if (options.all || (!options.docs && !options.code && !options.tools)) {
           // Discover everything
@@ -391,7 +391,7 @@ function createProgram(): Command {
     .option('-m, --mode <mode>', 'Search mode: text, semantic, hybrid (default: hybrid)', 'hybrid')
     .action(async (query, options) => {
       const spinner = ora();
-      let db: any | undefined;
+      let db: DatabaseClient | undefined;
 
       try {
         const limit =
@@ -406,7 +406,7 @@ function createProgram(): Command {
         const { DatabaseClient } = await import('../db/client.js');
         db = new DatabaseClient(process.cwd());
 
-        let items: any[];
+        let items: Array<{ type: string; name?: string; id?: string; filePath?: string }>;
 
         if (mode === 'semantic') {
           // Semantic search requires query embedding
@@ -420,7 +420,7 @@ function createProgram(): Command {
 
           const queryEmbedding = await analyzer.embedText(query);
           const results = db.searchByEmbedding(queryEmbedding, limit);
-          items = results.map((r: { item: any }) => r.item);
+          items = results.map((r: { item: { type: string; name?: string; id?: string; filePath?: string } }) => r.item);
         } else if (mode === 'text') {
           // Pure text search
           const results = db.searchText(query, options.type);
@@ -437,7 +437,7 @@ function createProgram(): Command {
 
           const results = db.hybridSearch(query, queryEmbedding, { limit, type: options.type });
           // Unwrap items from { item, similarity } structure
-          items = Array.isArray(results) ? results.slice(0, limit).map((r: { item: any }) => r.item) : [];
+          items = Array.isArray(results) ? results.slice(0, limit).map((r: { item: { type: string; name?: string; id?: string; filePath?: string } }) => r.item) : [];
         }
 
         spinner.stop();

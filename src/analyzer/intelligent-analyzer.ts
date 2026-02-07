@@ -601,7 +601,7 @@ Return ONLY valid JSON, no markdown formatting.
    */
   setupFileWatcher(onChange: (filePath: string) => Promise<void>): () => void {
     // Check if chokidar is available
-    let chokidar: any;
+    let chokidar: unknown;
     try {
       chokidar = require('chokidar');
     } catch {

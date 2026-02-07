@@ -27,7 +27,8 @@ export const DEFAULT_CLEANUP_CONFIG: CleanupConfig = {
   defaultKeep: ['.github', '.vscode', '.idea', '.devcontainer'],
   verbose: false,
   maxDepth: 3,
-  timeout: 30000
+  timeout: 30000,
+  cwd: process.cwd()
 };
 
 /**

@@ -86,7 +86,7 @@ export class SyncManager {
   }
 
   async syncFrom(tool: string): Promise<void> {
-    const configs = this.db.getToolConfigs(tool as any);
+    const configs = this.db.getToolConfigs(tool);
     if (!configs || configs.length === 0) {
       throw new Error(`Tool ${tool} not found in database`);
     }
@@ -166,26 +166,14 @@ export class SyncManager {
     return await fs.readFile(toolPaths[tool], 'utf-8');
   }
 
-  private async propagateToTools(fromTool: string, content: string): Promise<void> {
+  private async propagateToTools(_fromTool: string, _content: string): Promise<void> {
     // In a full implementation, this would parse the content
     // and propagate it to all other tools
     // For now, this is a placeholder
-    console.log(chalk.dim(`Propagating from ${fromTool} to other tools...`));
+    console.log(chalk.dim(`Propagating from ${_fromTool} to other tools...`));
   }
 
   private async syncTool(tool: string, options: { force?: boolean }): Promise<void> {
-    const toolPaths: Record<string, string> = {
-      claude: 'AI_CONTEXT.md',
-      copilot: '.github/copilot-instructions.md',
-      cline: '.clinerules',
-      antigravity: '.agent/README.md',
-      windsurf: '.windsurf/rules.md',
-      aider: '.aider.conf.yml',
-      continue: '.continue/config.json',
-      cursor: '.cursorrules',
-      gemini: '.gemini/config.md'
-    };
-
     // Check if sync is needed
     if (!options.force) {
       const content = this.db.getAllItems();
@@ -198,7 +186,7 @@ export class SyncManager {
     this.db.updateSyncState({
         id: `sync:${tool}`,
         tool: tool,
-        // @ts-ignore - We're using a timestamp as hash for now as requested
+        // @ts-expect-error - We're using a timestamp as hash for now as requested
         contentHash: Date.now().toString(),
         lastSync: new Date().toISOString(),
         status: 'synced'

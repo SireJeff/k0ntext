@@ -44,10 +44,10 @@ export const watchCommand = new Command('watch')
 
             // Determine type based on path
             let type: 'doc' | 'code' | 'tool_config' = 'code';
-            if (filePath.includes('.claude') || filePath.endsWith('README.md')) {
-              type = 'doc';
-            } else if (filePath.includes('.claude')) {
+            if (filePath.includes('.claude') && !filePath.endsWith('README.md')) {
               type = 'tool_config';
+            } else if (filePath.endsWith('README.md')) {
+              type = 'doc';
             }
 
             db.upsertItem({

@@ -1,6 +1,5 @@
 import { Command } from 'commander';
 import { DatabaseClient } from '../db/client.js';
-import { IntelligentAnalyzer } from '../analyzer/intelligent-analyzer.js';
 import ora from 'ora';
 import chalk from 'chalk';
 import fs from 'fs/promises';
@@ -124,7 +123,7 @@ async function generateForTool(
   return config.path;
 }
 
-function generateContent(tool: string, contextItems: any[]): string {
+function generateContent(tool: string, contextItems: Array<{ type: string; name: string; content?: string }>): string {
   // Basic content generation - in production this would use templates
   const projectName = contextItems.find(i => i.type === 'config' && i.name === 'project')?.content?.name || 'Project';
   const description = contextItems.find(i => i.type === 'config' && i.name === 'project')?.content?.description || '';
@@ -143,7 +142,7 @@ function generateContent(tool: string, contextItems: any[]): string {
   }
 }
 
-function generateClaudeContext(projectName: string, description: string, items: any[]): string {
+function generateClaudeContext(projectName: string, description: string, items: Array<{ type: string; name: string; content?: string }>): string {
   return `# ${projectName}
 
 ${description}
@@ -161,7 +160,7 @@ ${items.filter(i => i.type === 'code').slice(0, 10).map(i => `- \`${i.name}\``).
 `;
 }
 
-function generateCopilotContext(projectName: string, description: string, items: any[]): string {
+function generateCopilotContext(projectName: string, description: string, items: Array<{ type: string; name: string; content?: string }>): string {
   return `# ${projectName}
 
 ${description}
@@ -178,7 +177,7 @@ ${items.filter(i => i.type === 'workflow').slice(0, 5).map(i => `- ${i.name}: ${
 `;
 }
 
-function generateClineContext(projectName: string, description: string, items: any[]): string {
+function generateClineContext(projectName: string, description: string, items: Array<{ type: string; name: string; content?: string }>): string {
   return `# ${projectName} - Cline Rules
 
 ${description}
@@ -196,7 +195,7 @@ ${items.filter(i => i.type === 'workflow').slice(0, 3).map(i => `### ${i.name}\n
 `;
 }
 
-function generateAiderConfig(items: any[]): string {
+function generateAiderConfig(_items: Array<{ type: string; name: string; content?: string }>): string {
   return `# Aider Configuration
 model: claude-3-5-sonnet-20241022
 auto-commits: false
