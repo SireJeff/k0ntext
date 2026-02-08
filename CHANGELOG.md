@@ -2,6 +2,86 @@
 
 All notable changes to the `k0ntext` package will be documented in this file.
 
+## [3.2.1] - 2026-02-08
+
+### 🐛 Bug Fixes
+
+#### Fixed: `--max-files` option not working
+- **Commander.js option parsing bug**: The `--max-files` option was defined with kebab-case but accessed incorrectly
+- **Root cause**: Commander.js converts option names to camelCase (`maxFiles`), but code was checking for kebab-case (`max-files`)
+- **Fix**: Updated `BatchIndexOptions` interface to use camelCase property names
+- **Impact**: `npx k0ntext index:batch --max-files 4000` now correctly indexes up to 4000 files per module
+
+### Changed
+- **`src/cli/commands/batch-index.ts`**: Added `BatchIndexOptions` interface with proper camelCase types
+- **`src/cli/commands/batch-index.ts`**: Updated option access to use `options.maxFiles` instead of `options['max-files']`
+
+### Usage
+```bash
+# Now works correctly
+npx k0ntext index:batch --max-files 4000
+npx k0ntext index:batch -m 2000  # Short form also works
+```
+
+---
+
+## [3.2.0] - 2026-02-08
+
+### 🚀 Monorepo Batch Indexing
+
+### Added
+
+#### New Command: `index:batch`
+- **Monorepo-aware indexing** - Automatically detects and processes monorepo modules
+- **Module auto-detection** - Finds backend/, frontend/, core/, packages/, services/, apps/, docs/, devops/
+- **Submodule discovery** - Recursively discovers submodules within each module
+- **Per-module limits** - Configurable `--max-files` per module (default: 500)
+- **Batch processing** - Splits large modules into batches (default: 100 files per batch)
+- **Progress tracking** - Shows detailed progress for each module with file counts
+- **Skip embeddings** - `--skip-embeddings` flag for faster indexing
+
+#### New File
+- **`src/cli/commands/batch-index.ts`** - Batch indexing implementation with monorepo detection
+
+### Changed
+- **`src/cli/index.ts`** - Added `index:batch` command registration
+
+### Usage
+
+```bash
+# Basic monorepo indexing
+npx k0ntext index:batch
+
+# Increase limits for very large modules
+npx k0ntext index:batch --max-files 1000
+
+# Skip embeddings for faster indexing
+npx k0ntext index:batch --skip-embeddings
+
+# Verbose output
+npx k0ntext index:batch -v
+```
+
+### Example Output
+```
+Detected Modules:
+• root                    (953 files) - Root configuration and documentation
+• backend                 (475 files) - backend module
+• frontend                (396 files) - frontend module
+• core                    (66 files) - core module
+• frontend/DLKFTD-1       (267 files) - DLKFTD-1 submodule
+• frontend/DLKFTD-2       (129 files) - DLKFTD-2 submodule
+
+Batch Index Summary:
+• Modules Processed:  6
+• Documentation Files: 472
+• Code Files:         1564
+• Config Files:       463
+• Total Indexed:      2499 files
+```
+
+---
+
 ## [3.1.1] - 2026-02-08
 
 ### 🚀 MCP Auto-Configuration & CLI Documentation Integration

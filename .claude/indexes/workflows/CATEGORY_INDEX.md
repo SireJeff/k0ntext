@@ -7,6 +7,7 @@ Entry point for workflow-related navigation and task classification
 
 | Category | Description | When to Use |
 |----------|-------------|-------------|
+| **core** | Core system workflows (database, CLI, context) | When working with system infrastructure and core features |
 | **jobs** | Job-related workflows (hiring, onboarding, payroll) | When working with HR or recruitment processes |
 | **payment** | Payment processing workflows | When implementing payment features |
 | **email** | Email-related workflows | When building email functionality |

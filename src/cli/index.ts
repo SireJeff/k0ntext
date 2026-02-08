@@ -28,6 +28,7 @@ import { driftDetectCommand } from './commands/drift-detect.js';
 import { crossSyncCommand } from './commands/cross-sync.js';
 import { hooksCommand } from './commands/hooks.js';
 import { factCheckCommand } from './commands/fact-check.js';
+import { batchIndexCommand } from './commands/batch-index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -586,13 +587,25 @@ function createProgram(): Command {
         console.log(`  ${chalk.cyan('•')} Embeddings: ${stats.embeddings}`);
         console.log(`  ${chalk.cyan('•')} Tool Configs: ${stats.toolConfigs}`);
         console.log(`  ${chalk.cyan('•')} Database Path: ${db.getPath()}`);
-        
+
         db.close();
-        
+
       } catch (error) {
         console.error(chalk.red(`\nError: ${error instanceof Error ? error.message : error}`));
         process.exit(1);
       }
+    });
+
+  // ==================== Batch Index Command ====================
+  program
+    .command('index:batch')
+    .description('Index large monorepos by processing modules in batches')
+    .option('-b, --batch-size <n>', 'Files per batch', '100')
+    .option('-m, --max-files <n>', 'Maximum files per module', '500')
+    .option('--skip-embeddings', 'Skip generating embeddings')
+    .option('-v, --verbose', 'Show detailed output')
+    .action(async (options) => {
+      await batchIndexCommand(options);
     });
 
   return program;
