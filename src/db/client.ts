@@ -859,31 +859,33 @@ export class DatabaseClient {
   /**
    * Get database statistics
    */
-  getStats(): { 
-    items: number; 
-    relations: number; 
-    commits: number; 
+  getStats(): {
+    items: number;
+    relations: number;
+    commits: number;
     embeddings: number;
     toolConfigs: number;
+    path: string;
   } {
     const itemCount = (this.db.prepare('SELECT COUNT(*) as count FROM context_items').get() as { count: number }).count;
     const relationCount = (this.db.prepare('SELECT COUNT(*) as count FROM knowledge_graph').get() as { count: number }).count;
     const commitCount = (this.db.prepare('SELECT COUNT(*) as count FROM git_commits').get() as { count: number }).count;
     const toolConfigCount = (this.db.prepare('SELECT COUNT(*) as count FROM ai_tool_configs').get() as { count: number }).count;
-    
+
     let embeddingCount = 0;
     try {
       embeddingCount = (this.db.prepare('SELECT COUNT(*) as count FROM embeddings').get() as { count: number }).count;
     } catch {
       // Vector table might not exist yet
     }
-    
+
     return {
       items: itemCount,
       relations: relationCount,
       commits: commitCount,
       embeddings: embeddingCount,
-      toolConfigs: toolConfigCount
+      toolConfigs: toolConfigCount,
+      path: this.dbPath
     };
   }
 

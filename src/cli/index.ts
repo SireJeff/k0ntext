@@ -608,9 +608,35 @@ function createProgram(): Command {
       await batchIndexCommand(options);
     });
 
+  // ==================== Shell/REPL Command ====================
+  program
+    .command('shell')
+    .description('Start interactive REPL shell')
+    .alias('$')
+    .option('--no-tui', 'Start in command-only mode')
+    .action(async (options) => {
+      const { startREPL } = await import('./repl/index.js');
+      await startREPL(process.cwd(), packageJson.version, options.noTui);
+    });
+
   return program;
 }
 
-// Main entry point
+// Main entry point - default to shell if no command
 const program = createProgram();
-program.parse();
+const args = process.argv.slice(2);
+
+// If no arguments (or just -h/--help), start shell instead of showing error
+if (args.length === 0 || (args.length === 1 && (args[0] === '-h' || args[0] === '--help'))) {
+  if (args.length === 0) {
+    // Start shell
+    (async () => {
+      const { startREPL } = await import('./repl/index.js');
+      await startREPL(process.cwd(), packageJson.version, false);
+    })();
+  } else {
+    program.parse();
+  }
+} else {
+  program.parse();
+}

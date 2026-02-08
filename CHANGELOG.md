@@ -2,6 +2,66 @@
 
 All notable changes to the `k0ntext` package will be documented in this file.
 
+## [3.3.0] - 2026-02-08
+
+### 🚀 Interactive REPL Shell & Redesigned Init Experience
+
+### Added
+
+#### New REPL Shell Mode (`k0ntext shell` or `k0ntext`)
+- **Interactive shell** for managing k0ntext context with live commands
+- **Auto-start on no arguments**: Running `k0ntext` with no arguments starts the REPL shell
+- **Session persistence**: Command history and stats saved across sessions
+- **Built-in commands**: help, stats, index, search, config, drift, init, update, exit
+
+#### New Init Wizard
+- **Interactive prompts** using @inquirer/prompts for modern CLI experience
+- **Step-by-step setup**:
+  1. OpenRouter API Key (with validation)
+  2. Project Type selection (Monorepo, Web App, Library, API, CLI Tool)
+  3. AI Tools selection (Claude, Copilot, Cursor, Windsurf, Aider, Continue, Cline)
+  4. Feature selection (Stats, Search, Docs, Drift Detection, MCP, Workflows)
+  5. Embeddings generation choice
+
+#### New Orange Gradient Theme
+- **Orange gradient primary** with purple/pink/cyan accents
+- **Beautiful box borders** with Unicode/ASCII fallback
+- **Progress bars** for visual feedback
+- **Terminal capability detection** for graceful degradation
+
+#### Update Checker
+- **Automatic version checking** on REPL start
+- **Update notifications** with type indicators (major/minor/patch)
+- **npm update instructions** included
+
+### New Files
+- `src/cli/repl/index.ts` - Main REPL shell
+- `src/cli/repl/core/session.ts` - Session management
+- `src/cli/repl/core/parser.ts` - Command parsing and execution
+- `src/cli/repl/tui/theme.ts` - Orange gradient theme system
+- `src/cli/repl/init/wizard.ts` - Interactive init wizard
+- `src/cli/repl/update/checker.ts` - Version checking
+
+### Changed
+- `package.json` - Added @inquirer/prompts@^5.0.0, blessed@^0.1.81 dependencies
+- `src/db/client.ts` - Added `path` property to `getStats()` return type
+- `src/cli/index.ts` - Added shell command and default to REPL when no args
+
+### Usage
+
+```bash
+# Start REPL shell (auto-init if first time)
+k0ntext
+
+# Start shell explicitly
+k0ntext shell
+
+# Available commands in REPL:
+help, stats, index, search, config, drift, init, update, exit
+```
+
+---
+
 ## [3.2.1] - 2026-02-08
 
 ### 🐛 Bug Fixes
