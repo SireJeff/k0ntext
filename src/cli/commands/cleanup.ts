@@ -98,7 +98,15 @@ Respond with JSON:
 
     console.log(chalk.bold(`\nCleanup complete:`));
     console.log(`  Scanned: ${chalk.cyan(result.scanned.toString())} tool folders`);
-    console.log(`  Removed: ${chalk.cyan(result.removed.length.toString())}`);
+
+    // Use different messaging for dry-run
+    if (options.dryRun) {
+      const wouldRemoveCount = result.removed.filter(r => r.includes('(dry-run)')).length;
+      console.log(`  Would remove: ${chalk.cyan(wouldRemoveCount.toString())}`);
+    } else {
+      console.log(`  Removed: ${chalk.cyan(result.removed.length.toString())}`);
+    }
+
     console.log(`  Kept: ${chalk.cyan(result.kept.length.toString())}`);
 
     if (result.errors.length > 0) {

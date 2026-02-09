@@ -54,19 +54,27 @@ export class CleanupAgent {
     const cwd = options.cwd || this.config.cwd;
     const entries = fs.readdirSync(cwd, { withFileTypes: true });
 
-    const toolFolders = entries
+    const allToolFolders = entries
       .filter(e => e.isDirectory() && e.name.startsWith('.'))
-      .filter(e => this.KNOWN_TOOL_FOLDERS.includes(e.name))
-      .filter(e => !options.keep?.includes(e.name) && !this.config.defaultKeep.includes(e.name));
+      .filter(e => this.KNOWN_TOOL_FOLDERS.includes(e.name));
+
+    // Separate folders to remove vs folders to keep
+    const keepList = [
+      ...(options.keep || []),
+      ...this.config.defaultKeep
+    ];
+
+    const foldersToRemove = allToolFolders.filter(e => !keepList.includes(e.name));
+    const foldersToKeep = allToolFolders.filter(e => keepList.includes(e.name));
 
     const results: CleanupResult = {
-      scanned: toolFolders.length,
+      scanned: allToolFolders.length,
       removed: [],
-      kept: [],
+      kept: foldersToKeep.map(f => f.name),
       errors: [],
     };
 
-    for (const folder of toolFolders) {
+    for (const folder of foldersToRemove) {
       try {
         const folderPath = path.join(cwd, folder.name);
 
@@ -80,6 +88,13 @@ export class CleanupAgent {
         }
       } catch (error) {
         results.errors.push({ folder: folder.name, error });
+      }
+    }
+
+    // Log kept folders in verbose mode
+    if ((options.verbose || this.config.verbose) && foldersToKeep.length > 0) {
+      for (const folder of foldersToKeep) {
+        console.log(`Kept: ${folder.name} (preserved)`);
       }
     }
 
