@@ -100,7 +100,8 @@ async function generateForTool(
   }
 
   // Check if file exists and force is not set
-  if (!force) {
+  // Note: --map format should regenerate even without --force
+  if (!force && !useMapFormat) {
     try {
       await fs.access(config.path);
       return null; // File exists, skip
