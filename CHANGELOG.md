@@ -2,6 +2,54 @@
 
 All notable changes to the `k0ntext` package will be documented in this file.
 
+## [3.3.1] - 2026-02-09
+
+### 🎨 Enhanced TUI Panels for REPL Shell
+
+### Added
+
+#### Advanced Search Panel
+- **Filtered search** with `--type`, `--sort`, `--order`, `--limit` flags
+- **Type-based emoji indicators** for doc, code, config, workflow, agent, command, commit, knowledge
+- **Content previews** with highlighted query terms in results
+- **Sortable results** by relevance, name, date, or size
+
+#### Configuration UI Panel
+- **Interactive configuration editor** using @inquirer/prompts
+- **4 config categories**: Project, AI Tools, Features, Display
+- **Validation and persistence** to `.k0ntext/config.json`
+- **Type-safe editing** with select, checkbox, and text inputs
+
+#### Indexing Progress Visualizer
+- **Real-time progress tracking** with ora spinner integration
+- **Multi-stage display**: discovering, indexing docs/code/tools, generating embeddings
+- **File-level updates** showing current file being processed
+- **Error tracking** with inline error counts and completion statistics
+
+#### Drift Detection Display
+- **Three-axis drift analysis**: file dates, structure changes, git diff
+- **Severity-based reporting** with color-coded indicators (🔴 Critical, 🟠 High, 🟡 Medium, 🟢 Good)
+- **Database-driven file date analysis** using indexed item timestamps
+- **Git integration** for uncommitted change detection
+- **Actionable recommendations** based on drift severity
+
+### New Files
+- `src/cli/repl/tui/panels/search.ts` - Advanced search panel
+- `src/cli/repl/tui/panels/config.ts` - Configuration UI panel
+- `src/cli/repl/tui/panels/indexing.ts` - Indexing progress visualizer
+- `src/cli/repl/tui/panels/drift.ts` - Drift detection display
+- `tests/tui-panels.test.ts` - 68 unit tests for all 4 panels
+
+### Changed
+- `src/cli/repl/index.ts` - Integrated all 4 panels into the REPL shell
+- `package.json` - Version bump to 3.3.1
+
+### Testing
+- 82 total tests (14 existing + 68 new TUI panel tests)
+- All tests passing
+
+---
+
 ## [3.3.0] - 2026-02-08
 
 ### 🚀 Interactive REPL Shell & Redesigned Init Experience

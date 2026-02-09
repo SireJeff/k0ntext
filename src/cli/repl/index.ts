@@ -13,6 +13,10 @@ import { K0NTEXT_THEME, terminal } from './tui/theme.js';
 import { createIntelligentAnalyzer } from '../../analyzer/intelligent-analyzer.js';
 import { DatabaseClient } from '../../db/client.js';
 import { hasOpenRouterKey } from '../../embeddings/openrouter.js';
+import { AdvancedSearchPanel, EnhancedSearchResult } from './tui/panels/search.js';
+import { ConfigPanel } from './tui/panels/config.js';
+import { IndexingProgressVisualizer } from './tui/panels/indexing.js';
+import { DriftDetectionPanel } from './tui/panels/drift.js';
 
 /**
  * REPL options
@@ -36,6 +40,11 @@ export class REPLShell {
   private isActive: boolean = false;
   private noTUI: boolean;
 
+  // Enhanced panels
+  private searchPanel: AdvancedSearchPanel;
+  private configPanel: ConfigPanel;
+  private driftPanel: DriftDetectionPanel;
+
   constructor(options: REPLOptions) {
     this.projectRoot = options.projectRoot;
     this.version = options.version;
@@ -44,6 +53,11 @@ export class REPLShell {
     this.session = new REPLSessionManager(this.projectRoot);
     this.parser = new REPLCommandParser();
     this.updateChecker = new UpdateChecker(options.version);
+
+    // Initialize enhanced panels
+    this.searchPanel = new AdvancedSearchPanel();
+    this.configPanel = new ConfigPanel(this.projectRoot, { ...this.session.getState().config } as Record<string, unknown>);
+    this.driftPanel = new DriftDetectionPanel(this.projectRoot);
 
     // Create readline interface
     this.readline = readline.createInterface({
@@ -171,8 +185,12 @@ export class REPLShell {
       handler: async (args, flags) => {
         const analyzer = createIntelligentAnalyzer(this.projectRoot);
         const db = new DatabaseClient(this.projectRoot);
+        const visualizer = new IndexingProgressVisualizer();
 
         let indexedCount = 0;
+        let docsCount = 0;
+        let codeIndexedCount = 0;
+        let toolsIndexedCount = 0;
 
         try {
           const [docs, code, tools] = await Promise.all([
@@ -181,9 +199,12 @@ export class REPLShell {
             analyzer.discoverToolConfigs()
           ]);
 
-          const docsCount = docs.length;
+          docsCount = docs.length;
           const codeCount = Math.min(code.length, 500); // Limit for now
           const toolsCount = tools.length;
+          const totalFiles = docsCount + codeCount + toolsCount;
+
+          visualizer.start(totalFiles);
 
           // Index docs
           for (const doc of docs) {
@@ -196,6 +217,8 @@ export class REPLShell {
               metadata: { size: doc.size }
             });
             indexedCount++;
+            docsCount++;
+            visualizer.update('indexing_docs', { processed: indexedCount, currentFile: doc.relativePath });
           }
 
           // Index code
@@ -212,7 +235,9 @@ export class REPLShell {
                 metadata: { size: codeFile.size }
               });
               indexedCount++;
+              codeIndexedCount++;
             }
+            visualizer.update('indexing_code', { processed: indexedCount, currentFile: codeFile.relativePath });
           }
 
           // Index tools
@@ -229,27 +254,22 @@ export class REPLShell {
                 metadata: { tool: tool.tool, size: tool.size }
               });
               indexedCount++;
+              toolsIndexedCount++;
             }
+            visualizer.update('indexing_tools', { processed: indexedCount, currentFile: tool.relativePath });
           }
 
           this.session.updateStats({
             filesIndexed: this.session.getStats().filesIndexed + indexedCount
           });
 
-          const output = [
-            '',
-            K0NTEXT_THEME.success('✓ Indexing complete'),
-            `  ${K0NTEXT_THEME.cyan('•')} Documents: ${docsCount}`,
-            `  ${K0NTEXT_THEME.cyan('•')} Code Files: ${codeCount}`,
-            `  ${K0NTEXT_THEME.cyan('•')} Tool Configs: ${toolsCount}`,
-            `  ${K0NTEXT_THEME.cyan('•')} Total Indexed: ${indexedCount}`,
-            ''
-          ];
+          visualizer.complete({ docsIndexed: docsCount, codeIndexed: codeIndexedCount, configsIndexed: toolsIndexedCount });
 
           db.close();
 
-          return { success: true, output: output.join('\n') };
+          return { success: true, output: '' };
         } catch (error) {
+          visualizer.cancel();
           db.close();
           return {
             success: false,
@@ -259,14 +279,18 @@ export class REPLShell {
       }
     });
 
-    // Search command
+    // Search command - Enhanced
     this.parser.registerCommand({
       name: 'search',
-      description: 'Search indexed content',
-      usage: 'search <query>',
-      examples: ['search auth', 'search "user login"'],
-      completions: () => [],
-      handler: async (args) => {
+      description: 'Search indexed content with advanced options',
+      usage: 'search <query> [options]',
+      examples: [
+        'search auth',
+        'search "user login"',
+        'search config --type code',
+        'search auth --sort date --limit 20'
+      ],
+      handler: async (args, flags) => {
         const query = args.join(' ');
         if (!query) {
           return {
@@ -282,37 +306,24 @@ export class REPLShell {
           searchesPerformed: this.session.getStats().searchesPerformed + 1
         });
 
-        if (results.length === 0) {
-          db.close();
-          return {
-            success: true,
-            output: K0NTEXT_THEME.dim('\nNo results found.')
-          };
+        // Parse search flags
+        const filters = this.searchPanel.parseSearchFlags(args);
+
+        // Apply filters
+        let filteredResults: EnhancedSearchResult[] = results.map(r => ({ item: r, score: 0.5, highlights: [] }));
+        if (filters.type) {
+          filteredResults = this.searchPanel.filterByType(filteredResults, filters.type);
+        }
+        if (filters.sortBy) {
+          filteredResults = this.searchPanel.sortResults(filteredResults, filters.sortBy, filters.sortOrder || 'desc');
         }
 
-        const output = [
-          '',
-          K0NTEXT_THEME.header(`━━━ Search Results: "${query}" ━━━`),
-          ''
-        ];
-
-        for (let i = 0; i < Math.min(results.length, 10); i++) {
-          const result = results[i];
-          output.push(`  ${K0NTEXT_THEME.primary(`${i + 1}.`)} ${result.name} [${result.type}]`);
-          if (result.filePath) {
-            output.push(`     ${K0NTEXT_THEME.dim(result.filePath)}`);
-          }
-        }
-
-        if (results.length > 10) {
-          output.push(`  ${K0NTEXT_THEME.dim(`... and ${results.length - 10} more`)}`);
-        }
-
-        output.push('');
+        // Display results
+        const output = this.searchPanel.displayResults(filteredResults, query, filters);
 
         db.close();
 
-        return { success: true, output: output.join('\n') };
+        return { success: true, output };
       }
     });
 
@@ -364,81 +375,72 @@ export class REPLShell {
       usage: 'drift',
       examples: ['drift'],
       handler: async () => {
-        const db = new DatabaseClient(this.projectRoot);
-        const items = db.getAllItems();
-
-        const now = new Date();
-        const driftDays = 7;
-        const driftThreshold = new Date(now.getTime() - driftDays * 24 * 60 * 60 * 1000);
-
-        const drifted = items.filter(item => {
-          if (!item.updatedAt) return false;
-          const updated = new Date(item.updatedAt);
-          return updated < driftThreshold;
-        });
-
-        db.close();
-
-        const output = [
-          '',
-          K0NTEXT_THEME.header('━━━ Documentation Drift Check ━━━'),
-          ''
-        ];
-
-        if (drifted.length === 0) {
-          output.push(K0NTEXT_THEME.success('✓ All context files are up to date'));
-        } else {
-          output.push(K0NTEXT_THEME.warning(`⚠ Found ${drifted.length} files that may be out of sync:`));
-          output.push('');
-
-          for (const item of drifted.slice(0, 10)) {
-            output.push(`  ${K0NTEXT_THEME.primary('•')} ${item.name} ${K0NTEXT_THEME.dim(`(${item.updatedAt})`)}`);
-          }
-
-          if (drifted.length > 10) {
-            output.push(`  ${K0NTEXT_THEME.dim(`... and ${drifted.length - 10} more`)}`);
-          }
-
-          output.push('');
-          output.push(K0NTEXT_THEME.info('Run "index" to update your context.'));
-        }
-
-        output.push('');
-
-        return { success: true, output: output.join('\n') };
+        const report = await this.driftPanel.analyze();
+        const output = this.driftPanel.displayReport(report);
+        return { success: true, output };
       }
     });
 
-    // Config command
+    // Config command - Enhanced
     this.parser.registerCommand({
       name: 'config',
       description: 'View or set configuration',
-      usage: 'config [get|set|list] [key] [value]',
-      examples: ['config list', 'config get projectType', 'config set projectType webapp'],
+      usage: 'config [get|set|list|edit|validate] [key] [value]',
+      examples: ['config list', 'config get projectType', 'config set projectType webapp', 'config edit', 'config validate'],
       handler: async (args) => {
         const action = args[0] || 'list';
-        const state = this.session.getState();
 
-        if (action === 'list') {
+        if (action === 'edit') {
+          // Interactive configuration editor
+          const category = args[1]; // Optional category filter
+          await this.configPanel.interactiveConfig(category);
+          return { success: true, output: '' };
+        }
+
+        if (action === 'validate') {
+          const validation = this.configPanel.validateConfig();
           const output = [
             '',
-            K0NTEXT_THEME.header('━━━ Configuration ━━━'),
-            '',
-            `  ${K0NTEXT_THEME.cyan('projectType:')}  ${state.config.projectType || 'not set'}`,
-            `  ${K0NTEXT_THEME.cyan('apiKey:')}       ${state.config.apiKey ? '✓ set' : '○ not set'}`,
-            `  ${K0NTEXT_THEME.cyan('aiTools:')}       ${state.config.aiTools.join(', ') || 'none'}`,
-            `  ${K0NTEXT_THEME.cyan('features:')}      ${state.config.features.join(', ') || 'none'}`,
-            `  ${K0NTEXT_THEME.cyan('autoUpdate:')}   ${state.config.autoUpdate}`,
+            K0NTEXT_THEME.header('━━━ Configuration Validation ━━━'),
             ''
           ];
-          return { success: true, output: output.join('\n') };
+
+          if (validation.valid) {
+            output.push(K0NTEXT_THEME.success('✓ Configuration is valid'));
+          } else {
+            output.push(K0NTEXT_THEME.error('✗ Configuration errors found:'));
+            for (const error of validation.errors) {
+              output.push(`  ${K0NTEXT_THEME.error('•')} ${error}`);
+            }
+          }
+
+          if (validation.warnings.length > 0) {
+            output.push('');
+            output.push(K0NTEXT_THEME.warning('⚠ Warnings:'));
+            for (const warning of validation.warnings) {
+              output.push(`  ${K0NTEXT_THEME.warning('•')} ${warning}`);
+            }
+          }
+          output.push('');
+
+          return { success: validation.valid, output: output.join('\n') };
+        }
+
+        if (action === 'list') {
+          return { success: true, output: this.configPanel.displayConfig() };
         }
 
         if (action === 'get') {
           const key = args[1];
           if (!key) return { success: false, error: 'Please specify a key' };
-          const value = (state.config as any)[key];
-          return { success: true, output: `${key}: ${value || 'not set'}` };
+          const value = this.configPanel.getValue(key);
+          const formatted = this.configPanel.formatValue(value, {
+            name: key,
+            type: 'string',
+            description: '',
+            defaultValue: ''
+          });
+          return { success: true, output: `${key}: ${formatted}` };
         }
 
         if (action === 'set') {
@@ -447,10 +449,11 @@ export class REPLShell {
           if (!key || !value) return { success: false, error: 'Usage: config set <key> <value>' };
 
           this.session.updateConfig({ [key]: value });
+          await this.configPanel.saveConfig();
           return { success: true, output: K0NTEXT_THEME.success(`✓ Set ${key} = ${value}`) };
         }
 
-        return { success: false, error: 'Unknown action. Use: get, set, or list' };
+        return { success: false, error: 'Unknown action. Use: list, get, set, edit, or validate' };
       }
     });
   }

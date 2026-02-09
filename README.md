@@ -15,6 +15,8 @@ Universal AI context engineering for Claude, GitHub Copilot, Cline, Cursor, Wind
 - [Zero-to-Hero Workflow](#-zero-to-hero-workflow)
 - [Windows Support](#-windows-support)
 - [Features Overview](#-features-overview)
+  - [Interactive REPL Shell](#-interactive-repl-shell-v330)
+  - [Enhanced TUI Panels](#-enhanced-tui-panels-v331)
   - [Intelligent Analysis](#-intelligent-analysis)
   - [Semantic Search](#-semantic-search)
   - [Cross-Tool Sync](#-cross-tool-sync)
@@ -99,6 +101,19 @@ K0ntext uses native SQLite extensions for high-performance vector search.
 - **Non-LTS versions (v23/v24):** May require [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) to compile the database driver
 
 ## ✨ Features Overview
+
+### 🖥️ Interactive REPL Shell (v3.3.0)
+- **Auto-start**: Running `k0ntext` with no arguments launches the interactive shell
+- **Session persistence**: Command history and statistics saved across sessions
+- **Built-in commands**: help, stats, index, search, config, drift, init, update, exit
+- **Orange gradient theme** with Unicode/ASCII fallback and terminal capability detection
+- **Update checker** with automatic version notifications on startup
+
+### 🎨 Enhanced TUI Panels (v3.3.1)
+- **Advanced Search Panel** - Filtered, sortable search with `--type`, `--sort`, `--limit` flags and content previews
+- **Configuration UI** - Interactive editor with 4 categories (Project, AI Tools, Features, Display)
+- **Indexing Progress** - Real-time multi-stage progress visualization with ora spinner
+- **Drift Detection** - Three-axis analysis (file dates, structure, git diff) with severity-coded reporting
 
 ### 🧠 Intelligent Analysis
 - OpenRouter-powered codebase analysis with embeddings
