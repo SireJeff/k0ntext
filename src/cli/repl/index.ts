@@ -39,6 +39,7 @@ export class REPLShell {
   private readline: readline.Interface;
   private isActive: boolean = false;
   private noTUI: boolean;
+  private readlineClosed: boolean = false;
 
   // Enhanced panels
   private searchPanel: AdvancedSearchPanel;
@@ -84,12 +85,12 @@ export class REPLShell {
    */
   private setupEventHandlers(): void {
     this.readline.on('line', async (input) => {
-      if (!this.isActive) return;
+      if (!this.isActive || this.readlineClosed) return;
 
       const trimmed = input.trim();
 
       if (!trimmed) {
-        this.readline.prompt();
+        if (!this.readlineClosed) this.readline.prompt();
         return;
       }
 
@@ -121,16 +122,17 @@ export class REPLShell {
         console.log(K0NTEXT_THEME.warning('\n⚠ Invalid command. Type "help" for available commands.'));
       }
 
-      this.readline.prompt();
+      if (!this.readlineClosed) this.readline.prompt();
     });
 
     this.readline.on('SIGINT', async () => {
       console.log('');
       console.log(K0NTEXT_THEME.warning('\n⚠ Use "exit" to quit the REPL.'));
-      this.readline.prompt();
+      if (!this.readlineClosed) this.readline.prompt();
     });
 
     this.readline.on('close', async () => {
+      this.readlineClosed = true;
       await this.stop();
     });
   }
@@ -519,11 +521,19 @@ export class REPLShell {
    * Stop the REPL
    */
   async stop(): Promise<void> {
+    if (!this.isActive) return; // Already stopping
     this.isActive = false;
     this.session.end();
+    this.readlineClosed = true;
+
+    // Only print goodbye if not in piped mode
+    const isPiped = !process.stdin.isTTY;
     this.readline.close();
-    console.log('');
-    console.log(K0NTEXT_THEME.success('✓ Session saved. Goodbye!'));
+
+    if (!isPiped) {
+      console.log('');
+      console.log(K0NTEXT_THEME.success('✓ Session saved. Goodbye!'));
+    }
   }
 
   /**
