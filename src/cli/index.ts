@@ -290,6 +290,7 @@ function createProgram(): Command {
       showBanner();
 
       const spinner = ora();
+      const verbose = options.verbose || false;
       let db: any;
       
       try {
@@ -317,6 +318,11 @@ function createProgram(): Command {
 
           // Store docs in database
           for (const doc of docs) {
+            if (verbose) {
+              spinner.stop();
+              console.log(chalk.dim(`  Indexing: ${doc.relativePath}`));
+              spinner.start();
+            }
             const content = fs.existsSync(doc.path) ? fs.readFileSync(doc.path, 'utf-8').slice(0, 50000) : '';
             const item = db.upsertItem({
               type: 'doc',
@@ -332,6 +338,11 @@ function createProgram(): Command {
 
           // Store tool configs in database
           for (const config of tools) {
+            if (verbose) {
+              spinner.stop();
+              console.log(chalk.dim(`  Indexing: ${config.relativePath}`));
+              spinner.start();
+            }
             const content = fs.existsSync(config.path) ? fs.readFileSync(config.path, 'utf-8').slice(0, 50000) : '';
             const item = db.upsertItem({
               type: 'tool_config',
@@ -348,6 +359,11 @@ function createProgram(): Command {
           // Store code in database (first N files to avoid overwhelming the db)
           const maxCodeFiles = 100;
           for (const codeFile of code.slice(0, maxCodeFiles)) {
+            if (verbose) {
+              spinner.stop();
+              console.log(chalk.dim(`  Indexing: ${codeFile.relativePath}`));
+              spinner.start();
+            }
             const content = fs.existsSync(codeFile.path) ? fs.readFileSync(codeFile.path, 'utf-8').slice(0, 20000) : '';
             const item = db.upsertItem({
               type: 'code',
@@ -369,6 +385,11 @@ function createProgram(): Command {
             discoveredCount += docs.length;
             spinner.text = `Indexing ${docs.length} docs...`;
             for (const doc of docs) {
+              if (verbose) {
+                spinner.stop();
+                console.log(chalk.dim(`  Indexing: ${doc.relativePath}`));
+                spinner.start();
+              }
               const content = fs.existsSync(doc.path) ? fs.readFileSync(doc.path, 'utf-8').slice(0, 50000) : '';
               const item = db.upsertItem({
                 type: 'doc',
@@ -388,6 +409,11 @@ function createProgram(): Command {
             const maxCodeFiles = 100;
             spinner.text = `Indexing code files...`;
             for (const codeFile of code.slice(0, maxCodeFiles)) {
+              if (verbose) {
+                spinner.stop();
+                console.log(chalk.dim(`  Indexing: ${codeFile.relativePath}`));
+                spinner.start();
+              }
               const content = fs.existsSync(codeFile.path) ? fs.readFileSync(codeFile.path, 'utf-8').slice(0, 20000) : '';
               const item = db.upsertItem({
                 type: 'code',
@@ -409,6 +435,11 @@ function createProgram(): Command {
             discoveredCount += tools.length;
             spinner.text = `Indexing ${tools.length} tool configs...`;
             for (const config of tools) {
+              if (verbose) {
+                spinner.stop();
+                console.log(chalk.dim(`  Indexing: ${config.relativePath}`));
+                spinner.start();
+              }
               const content = fs.existsSync(config.path) ? fs.readFileSync(config.path, 'utf-8').slice(0, 50000) : '';
               const item = db.upsertItem({
                 type: 'tool_config',
