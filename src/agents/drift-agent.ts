@@ -43,6 +43,10 @@ export interface DriftResult {
   filesChecked: number;
   /** Time taken in milliseconds */
   duration: number;
+  /** Files that failed due to authentication errors */
+  authFailures?: string[];
+  /** Files that failed due to other errors */
+  errors?: Array<{ file: string; error: string }>;
 }
 
 /**
@@ -131,6 +135,8 @@ export class DriftAgent {
     const startTime = Date.now();
     const drifts: DriftIssue[] = [];
     let fixed = 0;
+    const authFailures: string[] = [];
+    const errors: Array<{ file: string; error: string }> = [];
 
     // Get list of files to check
     const filesToCheck = options.paths
@@ -147,14 +153,29 @@ export class DriftAgent {
 
     // Analyze each file for drift
     for (const relativePath of filesToProcess) {
-      const drift = await this.checkFileForDrift(relativePath, sourceFiles);
-      if (drift) {
-        drifts.push(drift);
+      try {
+        const drift = await this.checkFileForDrift(relativePath, sourceFiles);
+        if (drift) {
+          drifts.push(drift);
 
-        if (options.autoFix && drift.suggestion) {
-          const didFix = await this.fixDrift(relativePath, drift);
-          if (didFix) fixed++;
+          if (options.autoFix && drift.suggestion) {
+            const didFix = await this.fixDrift(relativePath, drift);
+            if (didFix) fixed++;
+          }
         }
+      } catch (error) {
+        // Check for authentication errors
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes('401') ||
+            errorMessage.includes('Authentication') ||
+            errorMessage.includes('Unauthorized') ||
+            errorMessage.includes('API key')) {
+          authFailures.push(relativePath);
+        } else {
+          errors.push({ file: relativePath, error: errorMessage });
+        }
+        // Log error but continue
+        console.error(`Failed to analyze ${relativePath}: ${errorMessage}`);
       }
     }
 
@@ -162,7 +183,9 @@ export class DriftAgent {
       drifts,
       fixed,
       filesChecked: filesToProcess.length,
-      duration: Date.now() - startTime
+      duration: Date.now() - startTime,
+      authFailures,
+      errors
     };
   }
 

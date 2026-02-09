@@ -53,7 +53,30 @@ export const driftDetectCommand = new Command('drift-detect')
       console.log(`Duration: ${chalk.dim(`${result.duration}ms`)}`);
       console.log(`Drifts found: ${result.drifts.length > 0 ? chalk.red(result.drifts.length.toString()) : chalk.green('0')}`);
 
-      if (result.drifts.length === 0) {
+      // Show auth failures if any
+      if (result.authFailures && result.authFailures.length > 0) {
+        console.log(chalk.red(`Authentication failures: ${result.authFailures.length}`));
+        console.log(chalk.dim(`  ${result.authFailures.slice(0, 5).join(', ')}${result.authFailures.length > 5 ? '...' : ''}`));
+        console.log(chalk.yellow(`\n⚠ Check your OPENROUTER_API_KEY`));
+
+        // Exit with error if all files failed auth
+        if (result.authFailures.length === result.filesChecked) {
+          console.log(chalk.red('\n✖ All files failed authentication. Cannot detect drift.'));
+          process.exit(1);
+        }
+      }
+
+      // Show other errors if any
+      if (result.errors && result.errors.length > 0) {
+        console.log(chalk.yellow(`Other errors: ${result.errors.length}`));
+        if (options.verbose) {
+          for (const err of result.errors.slice(0, 3)) {
+            console.log(chalk.dim(`  ${err.file}: ${err.error.substring(0, 60)}...`));
+          }
+        }
+      }
+
+      if (result.drifts.length === 0 && (!result.authFailures || result.authFailures.length === 0)) {
         console.log(chalk.green('\n✓ No drift detected!'));
         agent.close();
         return;
