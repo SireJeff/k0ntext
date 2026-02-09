@@ -38,7 +38,7 @@ interface ToolContext {
 export async function createServer(config: ServerConfig): Promise<McpServer> {
   const {
     projectRoot,
-    dbPath = '.ai-context.db',
+    dbPath = '.k0ntext.db',
     name = 'k0ntext',
     version = '1.0.0'
   } = config;
@@ -337,7 +337,7 @@ export async function startServer(config: ServerConfig): Promise<void> {
   
   console.error(`K0NTEXT MCP Server started`);
   console.error(`Project root: ${config.projectRoot}`);
-  console.error(`Database: ${config.dbPath || '.ai-context.db'}`);
+  console.error(`Database: ${config.dbPath || '.k0ntext.db'}`);
 }
 
 /**

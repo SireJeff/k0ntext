@@ -223,7 +223,7 @@ function createProgram(): Command {
   program
     .command('mcp')
     .description('Start the MCP server for AI tools to connect')
-    .option('--db <path>', 'Database file path', '.ai-context.db')
+    .option('--db <path>', 'Database file path', '.k0ntext.db')
     .action(async (options) => {
       const projectRoot = process.cwd();
       
