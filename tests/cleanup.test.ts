@@ -59,13 +59,13 @@ describe('CleanupAgent', () => {
     const result = await testCleanupAgent.analyze({ keep: keepFolders });
 
     // Verify that keep option is respected
-    // scanned = folders that passed the filter (would be removed)
-    // .cursor is filtered out due to keep option
-    // .vscode passes through and is counted in scanned
-    expect(result.scanned).toBe(1); // Only .vscode scanned (for removal)
+    // scanned = all tool folders found
+    // kept = folders preserved by keep option
+    // removed = folders marked for removal
+    expect(result.scanned).toBe(2); // Both .cursor and .vscode scanned
     expect(result.removed.length).toBe(1); // Only .vscode marked for removal
     expect(result.removed).toContain('.vscode (dry-run)');
-    expect(result.kept).toEqual([]); // kept array is empty (not tracked by implementation)
+    expect(result.kept).toEqual(['.cursor']); // .cursor is tracked as kept
   });
 
   test('should handle non-existent folders gracefully', async () => {
