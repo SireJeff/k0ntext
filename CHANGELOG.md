@@ -2,6 +2,88 @@
 
 All notable changes to the `k0ntext` package will be documented in this file.
 
+## [3.6.0] - 2026-02-10
+
+### 🚀 Database Migration System
+
+### Added
+
+#### Migration System
+- **`k0ntext migrate`** - New command group for database schema migrations
+  - `k0ntext migrate status` - Show migration status (current version, pending migrations)
+  - `k0ntext migrate up` - Apply pending migrations
+  - `k0ntext migrate rollback` - Rollback to previous database backup
+  - Dry-run mode with `--dry-run` flag
+  - Force mode with `--force` flag (skip dependency validation)
+  - Backup control with `--no-backup` flag
+
+#### Embeddings Refresh
+- **`k0ntext embeddings:refresh`** - New command to regenerate embeddings
+  - Validates embedding dimensions (1536 for OpenRouter text-embedding-3-small)
+  - Batch processing with `--batch-size` flag (default: 50)
+  - Force refresh with `--force` flag
+  - Verbose output with `-v, --verbose` flag
+
+#### Database Migration Infrastructure
+- **`src/db/migrations/`** - New module for database migration system
+  - `types.ts` - Migration type definitions
+  - `runner.ts` - Core migration execution engine
+  - `loader.ts` - Migration file discovery and loading
+  - `files/` - Migration files directory (SQL + TypeScript hybrids)
+  - First migration: `0014_add_schema_migrations_table.{sql,ts}`
+
+#### Database Client Enhancements
+- **`DatabaseClient.create()`** - New async factory method for proper migration support
+  - Replaces direct `new DatabaseClient()` constructor
+  - Automatically runs pending migrations on initialization
+- **`initSchema()`** - Now async, checks and runs migrations automatically
+- **`getRawDb()`** - Public method to access underlying better-sqlite3 database
+
+#### Backup Manager Extensions
+- **`src/cli/utils/db-backup-manager.ts`** - New database-specific backup manager
+  - `.k0ntext/db-backups/` directory for database backups
+  - Keeps last 5 migration backups (configurable)
+  - Backup metadata tracking
+
+#### Init Command Migration Detection
+- **`k0ntext init`** - Now checks for database migrations automatically
+  - Detects schema version mismatch
+  - Shows pending migrations with descriptions
+  - Interactive prompt to apply migrations
+  - Backup creation before migration
+  - Migration status reporting
+
+### Changed
+
+#### Database Schema
+- **SCHEMA_VERSION** - Updated from `1.3.0` to `1.4.0`
+- **New table: `schema_migrations`** - Tracks migration history
+  - `id`, `version`, `description`, `applied_at`, `checksum`, `duration_ms`, `success`
+  - Index on `version` for lookups
+- **Migration system** - Tables now support incremental schema updates
+
+### Fixed
+
+#### Migration System Fixes
+- **Duplicate `getRawDb()` method** - Removed duplicate method definition
+- **`fs.promises` usage** - Fixed to use direct `fs` methods from `fs/promises`
+- **Async constructor** - Added `skipInit` parameter to legacy constructor
+- **Property name mismatch** - Fixed `applied_at` vs `appliedAt` in migration status
+
+### Breaking Changes
+
+#### DatabaseClient Constructor
+- **`new DatabaseClient()`** - Now requires `skipInit` parameter for legacy usage
+- **Recommended:** Use `await DatabaseClient.create()` instead
+
+### Migration Path
+
+When upgrading from v3.5.0 to v3.6.0:
+1. Existing databases will be automatically migrated on first `k0ntext init` or `k0ntext migrate up`
+2. Backup created automatically before migration (`.k0ntext/db-backups/`)
+3. If migration fails, restore from backup with `k0ntext migrate rollback`
+4. No manual database deletion required
+
 ## [3.5.0] - 2026-02-09
 
 ### 🎉 Template Sync System Release

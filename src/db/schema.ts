@@ -5,7 +5,7 @@
  * Supports vector embeddings, knowledge graph, and sync state.
  */
 
-export const SCHEMA_VERSION = '1.3.0';
+export const SCHEMA_VERSION = '1.4.0';
 
 /**
  * Core database schema SQL

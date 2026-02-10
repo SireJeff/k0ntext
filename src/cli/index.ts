@@ -33,6 +33,8 @@ import { batchIndexCommand } from './commands/batch-index.js';
 import { versionCheckCommand } from './commands/version-check.js';
 import { restoreCommand } from './commands/restore.js';
 import { syncTemplatesCommand, templateStatusCommand } from './commands/sync-templates.js';
+import { migrateCommand } from './commands/migrate.js';
+import { embeddingsRefreshCommand } from './commands/embeddings-refresh.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -254,6 +256,79 @@ function createProgram(): Command {
           }
         }
 
+        // Check for database migrations
+        spinner.start('Checking database migrations...');
+
+        try {
+          const { MigrationRunner } = await import('../db/migrations/index.js');
+          const { DatabaseClient: DBClientClass } = await import('../db/client.js');
+
+          const db = await DBClientClass.create(targetDir);
+          const runner = new MigrationRunner(db, targetDir);
+
+          const migrationStatus = await runner.getStatus();
+
+          if (migrationStatus.needsMigration) {
+            spinner.stop();
+
+            console.log('');
+            console.log(chalk.yellow(`⚠ Database schema updates available: ${migrationStatus.currentVersion || 'none'} → ${migrationStatus.targetVersion}`));
+            console.log('');
+            console.log(chalk.bold('Pending migrations:'));
+            for (const migration of migrationStatus.pending) {
+              const breaks = migration.breaks ? chalk.red(' [breaking]') : '';
+              console.log(chalk.dim(`  • ${migration.version}: ${migration.description}${breaks}`));
+            }
+            console.log('');
+
+            const { confirm } = await import('@inquirer/prompts');
+            const shouldMigrate = await confirm({
+              message: 'Apply database migrations now?',
+              default: true
+            });
+
+            if (shouldMigrate) {
+              spinner.start('Applying migrations...');
+
+              const migrationResults = await runner.migrate({
+                backup: true,
+                onProgress: (current, total, migration) => {
+                  spinner.text = `Applying ${current}/${total}: ${migration.description}`;
+                }
+              });
+
+              const successful = migrationResults.filter(r => r.success).length;
+              const failed = migrationResults.filter(r => !r.success).length;
+
+              if (failed === 0) {
+                spinner.succeed(chalk.green(`Applied ${successful} migration(s)`));
+              } else {
+                spinner.warn(chalk.yellow(`Applied ${successful} migration(s), ${failed} failed`));
+                if (options.verbose) {
+                  for (const result of migrationResults) {
+                    if (!result.success) {
+                      console.log(chalk.red(`  ✗ ${result.version}: ${result.error}`));
+                    }
+                  }
+                }
+              }
+            } else {
+              spinner.start('Continuing...');
+              spinner.succeed('Database migrations skipped');
+              console.log(chalk.dim('\n  Run: k0ntext migrate up\n'));
+            }
+          } else {
+            spinner.succeed('Database schema up to date');
+          }
+
+          db.close();
+        } catch (error) {
+          spinner.warn(`Database migration check failed: ${error instanceof Error ? error.message : error}`);
+          if (options.verbose) {
+            console.warn(chalk.dim(`  ${error instanceof Error ? error.stack : error}`));
+          }
+        }
+
         // Check for outdated context files
         if (options.versionCheck !== false) {
           spinner.start('Checking context file versions...');
@@ -411,6 +486,10 @@ function createProgram(): Command {
   // ==================== Template Sync Commands ====================
   program.addCommand(syncTemplatesCommand);
   program.addCommand(templateStatusCommand);
+
+  // ==================== Migration Commands ====================
+  program.addCommand(migrateCommand);
+  program.addCommand(embeddingsRefreshCommand);
 
   // ==================== Index Command ====================
   program

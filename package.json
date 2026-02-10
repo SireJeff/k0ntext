@@ -1,6 +1,6 @@
 {
   "name": "k0ntext",
-  "version": "3.5.0",
+  "version": "3.6.0",
   "description": "Unified AI Context Engineering - Intelligent context for Claude, Copilot, Cline, and more with OpenRouter-powered initialization",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

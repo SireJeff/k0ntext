@@ -133,25 +133,57 @@ export class DatabaseClient {
   private db: Database.Database;
   private dbPath: string;
 
-  constructor(projectRoot: string, dbFileName = '.k0ntext.db') {
+  /**
+   * Create a new DatabaseClient with async initialization
+   * This is the recommended way to create a DatabaseClient as it handles migrations
+   */
+  static async create(projectRoot: string, dbFileName = '.k0ntext.db'): Promise<DatabaseClient> {
+    const instance = new DatabaseClient(projectRoot, dbFileName, true);
+    await instance.initSchema();
+    return instance;
+  }
+
+  /**
+   * Legacy synchronous constructor
+   * @deprecated Use DatabaseClient.create() instead for proper migration support
+   */
+  constructor(projectRoot: string, dbFileName = '.k0ntext.db', skipInit = false) {
     this.dbPath = path.join(projectRoot, dbFileName);
-    
+
     // Ensure directory exists
     const dbDir = path.dirname(this.dbPath);
     if (!fs.existsSync(dbDir)) {
       fs.mkdirSync(dbDir, { recursive: true });
     }
-    
+
     this.db = new Database(this.dbPath);
-    
+
     // Enable foreign keys
     this.db.pragma('foreign_keys = ON');
-    
+
     // Load sqlite-vec extension
     sqliteVec.load(this.db);
-    
-    // Initialize schema
-    this.initSchema();
+
+    // Only initialize schema if not using create() method
+    if (!skipInit) {
+      this.initSchemaSync();
+    }
+  }
+
+  /**
+   * Synchronous schema initialization for legacy constructor
+   */
+  private initSchemaSync(): void {
+    this.migrateLegacyDatabase();
+    this.db.exec(SCHEMA_SQL);
+    this.db.exec(VECTOR_SCHEMA_SQL);
+    this.db.exec(TEMPLATE_SCHEMA_SQL);
+
+    const stmt = this.db.prepare(`
+      INSERT OR REPLACE INTO schema_version (version, applied_at)
+      VALUES (?, datetime('now'))
+    `);
+    stmt.run(SCHEMA_VERSION);
   }
 
   /**
@@ -168,22 +200,40 @@ export class DatabaseClient {
   }
 
   /**
-   * Initialize database schema
+   * Initialize database schema with migration support
    */
-  private initSchema(): void {
+  private async initSchema(): Promise<void> {
     // Migrate legacy database first
     this.migrateLegacyDatabase();
 
-    // Create core tables
-    this.db.exec(SCHEMA_SQL);
+    // Check if database is new (no context_items table)
+    const isNewDatabase = !this.db.prepare(`
+      SELECT name FROM sqlite_master WHERE type='table' AND name='context_items'
+    `).get();
 
-    // Create vector table
-    this.db.exec(VECTOR_SCHEMA_SQL);
+    if (isNewDatabase) {
+      // New database - create all tables from schema
+      this.db.exec(SCHEMA_SQL);
+      this.db.exec(VECTOR_SCHEMA_SQL);
+      this.db.exec(TEMPLATE_SCHEMA_SQL);
+    } else {
+      // Existing database - run migrations
+      try {
+        const { MigrationRunner } = await import('./migrations/index.js');
+        const runner = new MigrationRunner(this, path.dirname(this.dbPath));
 
-    // Create template sync tables
-    this.db.exec(TEMPLATE_SCHEMA_SQL);
+        const status = await runner.getStatus();
+        if (status.needsMigration) {
+          console.log(`Database schema ${status.currentVersion} -> ${status.targetVersion}`);
+          await runner.migrate({ backup: true });
+        }
+      } catch (error) {
+        // Migration failed - log but don't crash
+        console.warn(`Migration check failed: ${error instanceof Error ? error.message : error}`);
+      }
+    }
 
-    // Record schema version
+    // Ensure schema_version is set
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO schema_version (version, applied_at)
       VALUES (?, datetime('now'))
