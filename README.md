@@ -157,18 +157,46 @@ K0ntext uses native SQLite extensions for high-performance vector search.
 - Reduce hallucination through precise references
 - Alternative to verbose documentation format
 
+### 🔢 Version Detection (v3.4.0)
+- **Automatic version checking** - Detects outdated context files
+- **Semantic version parsing** - Supports 5 version marker formats
+- **Update type indicators** - Major/minor/patch with emoji (🚨/✨/🔧)
+- **Database tracking** - Stores version history and check timestamps
+- **Integrated into init** - `k0ntext check` command and `--no-version-check` option
+
+### 📝 User Modification Handling (v3.4.0)
+- **SHA-256 hash detection** - Detects when users edit generated files
+- **Automatic backup creation** - Creates backups before overwriting modified files
+- **Dual backup strategy** - File-copy with git-stash fallback
+- **Interactive prompts** - Asks user before overwriting custom changes
+- **Restore system** - `k0ntext restore` command for backup recovery
+
+### 🎨 Template Engine Enhancement (v3.4.0)
+- **Handlebars integration** - Rich template-based content generation
+- **15 custom helpers** - join, first, truncate, slugify, formatDate, eq, ne, and, or, defaults, json, keys, values, length
+- **Rich project data** - Generated files include actual project metadata
+- **Graceful fallback** - Inline functions when templates unavailable
+
+### 🔄 Template Sync System (v3.5.0)
+- **Automatic `.claude/` sync** - Syncs commands/, agents/, schemas/, standards/, tools/, automation/ from package
+- **Hash-based change detection** - SHA-256 (16 char) for consistency with DatabaseClient
+- **File state classification** - identical, safe-update, conflict, new, deleted, user-only
+- **Auto-merge strategies** - Safe updates automatically applied, conflicts prompt user
+- **Interactive conflict resolution** - Show diff, keep-local, overwrite, or skip options
+- **Batch resolution** - Keep-all, overwrite-all, or individual for multiple conflicts
+- **Backup before overwrite** - Automatic backups to `.k0ntext/backups/`
+- **Archive removed files** - Moved to `.k0ntext/archive/` with timestamp
+- **Dual manifest tracking** - Database + file (`.claude/.k0ntext-manifest.json`)
+- **Init integration** - Runs automatically during `k0ntext init` (skip with `--no-template-sync`)
+
 ### 🤖 MCP Server
 - **Auto-Configuration** (v3.1.1) - MCP server automatically configured in `.claude/settings.json` on init
 - **10 Tools:** search_context, get_item, add_knowledge, analyze, get_tool_configs, query_graph, get_stats
 - **6 Prompts:** context-engineer, core-architect, api-developer, database-ops, integration-hub, deployment-ops
 - Real-time context access for AI assistants
 - Knowledge graph traversal
-- **10 Tools:** search_context, get_item, add_knowledge, analyze, get_tool_configs, query_graph, get_stats
-- **6 Prompts:** context-engineer, core-architect, api-developer, database-ops, integration-hub, deployment-ops
-- Real-time context access for AI assistants
-- Knowledge graph traversal
 
-### 🛠️ Complete CLI (18 Commands)
+### 🛠️ Complete CLI (22 Commands)
 - `init` - Initialize with intelligent analysis **(auto-configures MCP in v3.1.1)**
 - `generate` - Generate context files for all tools
 - `mcp` - Start MCP server
@@ -182,30 +210,15 @@ K0ntext uses native SQLite extensions for high-performance vector search.
 - `index` - Index codebase
 - `search` - Search indexed content
 - `stats` - View database statistics
+- **`check`** - Check if context files are outdated (v3.4.0)
+- **`restore`** - Restore AI tool config files from backups (v3.4.0)
+- **`sync-templates`** - Sync `.claude/` templates from package (v3.5.0)
+- **`template-status`** - Show template sync status (v3.5.0)
 - **`drift-detect`** - AI-powered documentation drift detection (v3.1.0)
 - **`cross-sync`** - Intelligent sync across all AI tools (v3.1.0)
 - **`hooks`** - Git hooks management (install/uninstall/status) (v3.1.0)
 - **`fact-check`** - Validate documentation accuracy (v3.1.0)
 - `generate --map` - Generate concise map-based context files (v3.1.0)
-- **CLI documentation in all templates** (v3.1.1) - Agent and command templates now include k0ntext CLI usage guidance
-- `init` - Initialize with intelligent analysis
-- `generate` - Generate context files for all tools
-- `mcp` - Start MCP server
-- `sync` - Sync across AI tools
-- `cleanup` - Clean up conflicting tool folders
-- `validate` - Validate context files
-- `export` - Export database
-- `import` - Import from exports
-- `performance` - Show performance metrics
-- `watch` - Auto-index file changes
-- `index` - Index codebase
-- `search` - Search indexed content
-- `stats` - View database statistics
-- **`drift-detect`** - AI-powered documentation drift detection
-- **`cross-sync`** - Intelligent sync across all AI tools
-- **`hooks`** - Git hooks management (install/uninstall/status)
-- **`fact-check`** - Validate documentation accuracy
-- `generate --map` - Generate concise map-based context files
 
 ### 📊 Smart Agents
 - **CleanupAgent** - Remove conflicting AI tool folders (.cursor, .windsurf, .cline, etc.)
@@ -218,6 +231,91 @@ K0ntext uses native SQLite extensions for high-performance vector search.
 - Embeddings support for semantic search
 - Knowledge graph relationships
 - Automatic schema migrations
+
+## 🆕 v3.5.0 - Template Sync System
+
+### Smart Template Management
+
+K0ntext v3.5.0 introduces a comprehensive template sync system that automatically keeps your `.claude/` directory up-to-date with the latest package templates while preserving your customizations.
+
+**Key Features:**
+- ✅ **Automatic sync on init** - Templates are synced during `k0ntext init`
+- ✅ **User modification detection** - Detects files you've customized
+- ✅ **Interactive conflict resolution** - Choose to keep your changes or use templates
+- ✅ **Hash-based comparison** - Efficient SHA-256 change detection
+- ✅ **Backup before overwrites** - Automatic backups to `.k0ntext/backups/`
+- ✅ **Dry-run mode** - Preview changes before applying them
+- ✅ **Selective sync** - Sync specific directories (commands, agents, etc.)
+
+### How It Works
+
+1. **First init** - Creates all 55 template files (agents, commands, schemas, standards, tools)
+2. **You modify files** - Your customizations are tracked
+3. **Re-run init** - Detects your modifications and prompts for resolution
+4. **Force sync** - Use `--force` to auto-overwrite with templates
+
+### User Modification Detection
+
+The system intelligently detects when you've modified template files:
+
+```bash
+# You customize a file
+echo "# My custom notes" >> .claude/commands/analytics.md
+
+# Re-run init - detects modification
+k0ntext init
+
+# Output:
+# ⚠ 1 conflict(s) detected:
+#   ⚠ commands/analytics.md [modified]
+#
+# File: commands/analytics.md
+# State: Modified in both template and locally
+#   ⚠ You have modified this file
+#  Template hash: 375ec9c90c168811
+#  Local hash: ee727b7a1a20a0c2
+# ? How would you like to resolve this?
+#   Show diff
+# ❯ Keep local version
+#   Overwrite with template
+#   Skip for now
+```
+
+### New Commands
+
+```bash
+# Sync templates and handle conflicts
+k0ntext sync-templates              # Interactive mode
+k0ntext sync-templates --dry-run     # Preview changes
+k0ntext sync-templates --force        # Auto-overwrite conflicts
+k0ntext sync-templates --verbose      # Show detailed diffs
+
+# Check sync status
+k0ntext template-status              # Quick status check
+k0ntext template-status --verbose    # Detailed file listings
+
+# Skip template sync during init
+k0ntext init --no-template-sync
+```
+
+### Bug Fixes in v3.5.0
+
+- ✅ **Fixed user modification detection** - Now detects changes made after initial sync
+- ✅ **Fixed force sync** - `--force` now actually overwrites conflict files
+- ✅ **Fixed path resolution** - Templates are correctly found from compiled JavaScript
+- ✅ **Fixed conflict tracking** - Resolved conflicts are properly excluded from counts
+
+### Template Files Synced
+
+| Directory | Files | Description |
+|-----------|-------|-------------|
+| `commands/` | 12 | Slash command definitions |
+| `agents/` | 6 | AI agent configurations |
+| `schemas/` | 14 | JSON schemas for validation |
+| `standards/` | 4 | Coding standards |
+| `tools/` | 3 | Tool-specific configurations |
+| `automation/` | 1 | Automation settings |
+| **Total** | **40** | **Excluded:** `context/`, `indexes/` (user-specific) |
 
 ## 📖 Complete CLI Reference
 
@@ -239,6 +337,8 @@ k0ntext init --no-intelligent
 
 **Options:**
 - `--no-intelligent` - Skip OpenRouter-powered analysis
+- `--no-version-check` - Skip version checking for outdated context files (v3.4.0)
+- `--no-template-sync` - Skip template synchronization (v3.5.0)
 - `-v, --verbose` - Show detailed output
 
 #### `k0ntext generate`
@@ -467,6 +567,100 @@ k0ntext stats | grep "Context Items"
 ```
 
 ### v3.1.0 New Commands
+
+#### `k0ntext check` (v3.4.0)
+Check if context files are outdated.
+
+```bash
+# Check all context files
+k0ntext check
+
+# Check with detailed output
+k0ntext check -v
+
+# Prompt to update outdated files
+k0ntext check --update
+
+# Force update without prompts
+k0ntext check --update --force
+```
+
+**Options:**
+- `--update` - Prompt to update outdated files
+- `--force` - Update without prompting
+- `-v, --verbose` - Show detailed output
+
+#### `k0ntext restore` (v3.4.0)
+Restore AI tool config files from backups.
+
+```bash
+# List available backups
+k0ntext restore --list
+
+# Interactive restore mode
+k0ntext restore
+
+# Restore from specific backup
+k0ntext restore --backup "AI_CONTEXT.md.2026-02-09T14.30.45.123Z.bak"
+
+# Restore for specific tool
+k0ntext restore --tool claude --list
+
+# Force restore without confirmation
+k0ntext restore --backup <path> --force
+```
+
+**Options:**
+- `--list` - List available backups
+- `--backup <path>` - Restore from specific backup path
+- `--tool <name>` - Filter by tool name
+- `--force` - Restore without confirmation
+
+#### `k0ntext sync-templates` (v3.5.0)
+Sync `.claude/` templates from package `templates/base/`.
+
+```bash
+# Sync all templates
+k0ntext sync-templates
+
+# Dry run to see what would change
+k0ntext sync-templates --dry-run
+
+# Sync specific subdirectories
+k0ntext sync-templates --subdirs commands,agents
+
+# Force overwrite all conflicts
+k0ntext sync-templates --force
+
+# Verbose output with diffs
+k0ntext sync-templates --verbose
+
+# Skip archiving removed files
+k0ntext sync-templates --no-archive
+```
+
+**Options:**
+- `--dry-run` - Show changes without applying
+- `--force` - Auto-overwrite conflicts without prompting
+- `--subdirs <dirs>` - Comma-separated subdirectories to sync (commands,agents,schemas,standards,tools,automation)
+- `-v, --verbose` - Show detailed output including diffs
+- `--no-archive` - Skip archiving removed files
+
+#### `k0ntext template-status` (v3.5.0)
+Show template sync status.
+
+```bash
+# Check sync status
+k0ntext template-status
+
+# Detailed status with file listings
+k0ntext template-status --verbose
+```
+
+**Options:**
+- `-v, --verbose` - Show detailed status with file listings
+
+### v3.1.0 New Commands (Legacy)
 
 #### `k0ntext drift-detect`
 AI-powered documentation drift detection using semantic analysis.
@@ -713,12 +907,16 @@ Each AI tool has its own configuration file path:
 ```
 k0ntext/
 ├── src/                    # TypeScript source
-│   ├── cli/                # CLI commands (18 commands)
+│   ├── cli/                # CLI commands (20 commands)
+│   │   ├── version/        # Version detection system (v3.4.0)
+│   │   ├── commands/       # Command implementations
+│   │   └── utils/          # File detector, backup manager (v3.4.0)
 │   ├── config/             # Centralized configuration (v3.1.0)
 │   ├── db/                 # SQLite database client
 │   ├── analyzer/           # Intelligent codebase analysis
 │   ├── embeddings/         # OpenRouter integration
 │   ├── agents/             # Smart agents (Cleanup, Performance, Drift, FactCheck)
+│   ├── template-engine/    # Handlebars template system (v3.4.0)
 │   └── mcp.ts              # MCP server implementation
 ├── agents/                 # Agent definitions
 ├── skills/                 # RPI workflow skills
@@ -740,8 +938,9 @@ The SQLite database contains:
 - **Context Items** - Workflows, agents, commands, code, docs
 - **Embeddings** - Vector embeddings for semantic search
 - **Relations** - Knowledge graph connections
-- **Sync State** - Change tracking for synchronization
+- **Sync State** - Change tracking for synchronization (with version tracking in v3.4.0)
 - **Tool Configs** - AI tool configurations
+- **Generated Files** - File tracking with hashes and backups (v3.4.0)
 
 ## 🚀 Development
 

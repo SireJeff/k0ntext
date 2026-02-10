@@ -74,3 +74,44 @@ This agent integrates with:
 - Pipeline reliability checks
 - Infrastructure consistency validation
 - Deployment strategy verification
+
+---
+
+## k0ntext CLI Commands
+
+This agent integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext hooks` | Git hooks management - for automation during deployment workflows |
+| `k0ntext validate` | Before committing deployments - validates context file integrity |
+| `k0ntext export` | Export database - backup context before major deployments |
+| `k0ntext import` | Import context - restore context after rollback |
+
+### Command Examples
+
+```bash
+# Install git hooks for automated validation
+k0ntext hooks install
+
+# Validate deployment configuration
+k0ntext validate
+
+# Export context before deployment
+k0ntext export --file backup-before-deploy.json
+
+# Import context after rollback
+k0ntext import --file backup-before-deploy.json
+
+# Search for deployment patterns
+k0ntext search "deployment pipeline"
+```
+
+### Workflow Integration
+
+When managing deployments:
+1. **Before deployment:** Run `k0ntext export` to backup current context
+2. **During setup:** Use `k0ntext hooks install` for automated validation
+3. **After changes:** Run `k0ntext validate` to ensure configuration integrity
+4. **On rollback:** Use `k0ntext import` to restore previous context state
+5. **For patterns:** Search `k0ntext search <pattern>` to find deployment configurations

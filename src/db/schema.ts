@@ -5,7 +5,7 @@
  * Supports vector embeddings, knowledge graph, and sync state.
  */
 
-export const SCHEMA_VERSION = '1.0.0';
+export const SCHEMA_VERSION = '1.3.0';
 
 /**
  * Core database schema SQL
@@ -99,12 +99,35 @@ CREATE TABLE IF NOT EXISTS sync_state (
   last_sync TEXT NOT NULL DEFAULT (datetime('now')),
   file_path TEXT,
   status TEXT DEFAULT 'synced' CHECK (status IN ('synced', 'pending', 'conflict', 'error')),
-  metadata JSON
+  metadata JSON,
+  k0ntext_version TEXT,
+  user_modified INTEGER DEFAULT 0,
+  last_checked TEXT
 );
 
 -- Indexes for sync_state
 CREATE INDEX IF NOT EXISTS idx_sync_state_tool ON sync_state(tool);
 CREATE INDEX IF NOT EXISTS idx_sync_state_status ON sync_state(status);
+CREATE INDEX IF NOT EXISTS idx_sync_state_version ON sync_state(k0ntext_version);
+CREATE INDEX IF NOT EXISTS idx_sync_state_user_modified ON sync_state(user_modified);
+
+-- Generated files tracking for modification detection and backup management
+CREATE TABLE IF NOT EXISTS generated_files (
+  id TEXT PRIMARY KEY,
+  tool TEXT NOT NULL,
+  file_path TEXT NOT NULL,
+  content_hash TEXT NOT NULL,
+  backup_path TEXT,
+  generated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  last_verified_at TEXT,
+  user_modified INTEGER DEFAULT 0,
+  metadata JSON
+);
+
+-- Indexes for generated_files
+CREATE INDEX IF NOT EXISTS idx_generated_files_tool ON generated_files(tool);
+CREATE INDEX IF NOT EXISTS idx_generated_files_hash ON generated_files(content_hash);
+CREATE INDEX IF NOT EXISTS idx_generated_files_path ON generated_files(file_path);
 
 -- Embedding queue for async processing
 CREATE TABLE IF NOT EXISTS embedding_queue (
@@ -239,3 +262,87 @@ export const AI_TOOL_FOLDERS: Record<AITool, string[]> = {
   cursor: ['.cursor', '.cursorrules'],
   gemini: ['.gemini']
 };
+
+/**
+ * Template sync schema SQL
+ * Tracks template versions and file states for .claude/ directory sync
+ */
+export const TEMPLATE_SCHEMA_SQL = `
+-- Template manifests tracking (dual storage: DB + file)
+CREATE TABLE IF NOT EXISTS template_manifests (
+  id TEXT PRIMARY KEY,
+  k0ntext_version TEXT NOT NULL,
+  template_version TEXT NOT NULL,
+  manifest TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Index for template manifests
+CREATE INDEX IF NOT EXISTS idx_template_manifests_version ON template_manifests(template_version);
+
+-- Template file version tracking
+CREATE TABLE IF NOT EXISTS template_files (
+  id TEXT PRIMARY KEY,
+  relative_path TEXT NOT NULL UNIQUE,
+  template_hash TEXT NOT NULL,
+  template_version TEXT NOT NULL,
+  user_modified INTEGER DEFAULT 0,
+  last_synced_at TEXT,
+  synced_at TEXT NOT NULL DEFAULT (datetime('now')),
+  original_hash TEXT,
+  metadata JSON
+);
+
+-- Indexes for template files
+CREATE INDEX IF NOT EXISTS idx_template_files_path ON template_files(relative_path);
+CREATE INDEX IF NOT EXISTS idx_template_files_version ON template_files(template_version);
+CREATE INDEX IF NOT EXISTS idx_template_files_user_modified ON template_files(user_modified);
+CREATE INDEX IF NOT EXISTS idx_template_files_hash ON template_files(template_hash);
+`;
+
+/**
+ * Template manifest record from database
+ */
+export interface TemplateManifestRecord {
+  id: string;
+  k0ntextVersion: string;
+  templateVersion: string;
+  manifest: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Template file record from database
+ */
+export interface TemplateFileRecord {
+  id: string;
+  relativePath: string;
+  templateHash: string;
+  templateVersion: string;
+  userModified: boolean;
+  lastSyncedAt?: string;
+  syncedAt: string;
+  originalHash?: string;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Template subdirectories (synced from package)
+ */
+export const TEMPLATE_SUBDIRS = [
+  'commands',
+  'agents',
+  'schemas',
+  'standards',
+  'tools',
+  'automation'
+] as const;
+
+export type TemplateSubdir = typeof TEMPLATE_SUBDIRS[number];
+
+/**
+ * Excluded template subdirectories (user-specific)
+ */
+export const EXCLUDED_TEMPLATE_SUBDIRS = ['context', 'indexes'] as const;

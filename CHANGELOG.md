@@ -2,6 +2,364 @@
 
 All notable changes to the `k0ntext` package will be documented in this file.
 
+## [3.5.0] - 2026-02-09
+
+### 🎉 Template Sync System Release
+
+### Added
+
+#### Template Sync System
+- **`k0ntext sync-templates`** - New command to sync `.claude/` templates from package `templates/base/`
+  - Automatically syncs commands/, agents/, schemas/, standards/, tools/, automation/ from package
+  - Excludes context/ and indexes/ (user-specific directories)
+  - Hash-based change detection using SHA-256 (16 char slice)
+  - Auto-merge for safe updates (template changed, file not modified by user)
+  - Interactive conflict resolution with prompts
+  - Backup creation before overwrites
+  - Archival of removed files to `.k0ntext/archive/`
+  - Dual manifest storage: Database (`.k0ntext.db`) + File (`.claude/.k0ntext-manifest.json`)
+  - Dry-run mode with `--dry-run` flag
+  - Force mode with `--force` flag (skip prompts, overwrite conflicts)
+  - Verbose mode with `-v, --verbose` flag
+  - Selective sync with `--subdirs` flag
+
+- **`k0ntext template-status`** - New command to show template sync status
+  - Displays current template version vs package version
+  - Shows user-modified files count
+  - Verbose mode with detailed file listings
+
+#### Clean Architecture Implementation
+- **`src/template-sync/`** - New module with 10 focused components:
+  - `types.ts` - All type definitions (20+ interfaces)
+  - `hasher.ts` - Hash utilities (SHA-256, 16 char slice)
+  - `scanner.ts` - Directory scanning with exclude patterns
+  - `manifest.ts` - Dual manifest management (DB + file)
+  - `comparator.ts` - File comparison and state detection
+  - `merger.ts` - Auto-merge strategies with diff generation
+  - `conflict-resolver.ts` - Interactive prompts with @inquirer/prompts
+  - `engine.ts` - Main sync orchestrator
+  - `index.ts` - Module exports
+
+#### Database Schema Updates
+- **SCHEMA_VERSION** - Updated from `1.2.0` to `1.3.0`
+- **New table: `template_manifests`** - Stores manifest JSON with version tracking
+  - `id`, `k0ntext_version`, `template_version`, `manifest`, `created_at`, `updated_at`
+- **New table: `template_files`** - Tracks individual template file versions
+  - `id`, `relative_path`, `template_hash`, `template_version`, `user_modified`, `last_synced_at`, `synced_at`, `original_hash`, `metadata`
+- **New indexes**:
+  - `idx_template_manifests_version` on `template_manifests(template_version)`
+  - `idx_template_files_path` on `template_files(relative_path)`
+  - `idx_template_files_version` on `template_files(template_version)`
+  - `idx_template_files_user_modified` on `template_files(user_modified)`
+  - `idx_template_files_hash` on `template_files(template_hash)`
+
+#### Init Command Integration
+- **Automatic template sync** - Runs during `k0ntext init`
+  - Checks if template sync is needed
+  - Syncs templates from package to `.claude/`
+  - Shows sync summary (updated, created, conflicts)
+  - Can be skipped with `--no-template-sync` flag
+
+#### New CLI Commands (2)
+1. **`k0ntext sync-templates`** - Sync `.claude/` templates from package
+   - `--dry-run` - Show changes without applying
+   - `--force` - Auto-overwrite conflicts without prompting
+   - `--subdirs <dirs>` - Comma-separated subdirectories to sync
+   - `-v, --verbose` - Show detailed output including diffs
+   - `--no-archive` - Skip archiving removed files
+
+2. **`k0ntext template-status`** - Show template sync status
+   - `-v, --verbose` - Show detailed status with file listings
+
+#### New Options
+- **`k0ntext init --no-template-sync`** - Skip template synchronization during initialization
+
+### New Files Created (13)
+1. `src/template-sync/types.ts` - Type definitions (20+ interfaces)
+2. `src/template-sync/hasher.ts` - Hash utilities
+3. `src/template-sync/scanner.ts` - Directory scanning
+4. `src/template-sync/manifest.ts` - Manifest management
+5. `src/template-sync/comparator.ts` - File comparison
+6. `src/template-sync/merger.ts` - Auto-merge strategies
+7. `src/template-sync/conflict-resolver.ts` - Conflict resolution prompts
+8. `src/template-sync/engine.ts` - Main sync orchestrator
+9. `src/template-sync/index.ts` - Module exports
+10. `src/cli/commands/sync-templates.ts` - CLI commands
+
+### Modified Files (3)
+1. **`src/db/schema.ts`** - Added template_manifests and template_files tables, SCHEMA_VERSION 1.3.0
+2. **`src/db/client.ts`** - Applied TEMPLATE_SCHEMA_SQL in initSchema()
+3. **`src/cli/index.ts`** - Added sync-templates and template-status commands, init integration
+
+### Template Sync Features
+- **Hash-based detection** - SHA-256 (16 char) for consistency with DatabaseClient
+- **File state classification** - identical, safe-update, conflict, new, deleted, user-only
+- **Auto-merge strategies** - Safe updates automatically applied, conflicts prompt user
+- **Conflict resolution** - Interactive prompts (show-diff, keep-local, overwrite, skip)
+- **Batch resolution** - For multiple conflicts: keep-all, overwrite-all, or individual
+- **Backup before overwrite** - Automatic backups to `.k0ntext/backups/`
+- **Archive removed files** - Moved to `.k0ntext/archive/` with timestamp
+- **Dual manifest tracking** - Database + file (`.claude/.k0ntext-manifest.json`)
+- **Version tracking** - Tracks k0ntext version and template version
+- **User modification detection** - Preserves user changes, prompts before overwrite
+- **Selective sync** - Can sync specific subdirectories (commands, agents, etc.)
+
+### Success Metrics
+
+| Metric | Before | After | Status |
+|--------|--------|-------|--------|
+| Template sync | ❌ None | ✅ Full | ✅ Complete |
+| `.claude/` initialization | ❌ Manual | ✅ Automatic | ✅ Complete |
+| User modification detection | ❌ None | ✅ Hash-based | ✅ Complete |
+| Conflict resolution | ❌ None | ✅ Interactive | ✅ Complete |
+| CLI commands | 20 | 22 | ✅ +2 |
+| Database schema | 1.2.0 | 1.3.0 | ✅ Migrated |
+| Template-sync module files | 0 | 10 | ✅ Created |
+
+### Usage Examples
+
+```bash
+# Sync all templates
+k0ntext sync-templates
+
+# Dry run to see what would change
+k0ntext sync-templates --dry-run
+
+# Sync specific subdirectories
+k0ntext sync-templates --subdirs commands,agents
+
+# Force overwrite all conflicts
+k0ntext sync-templates --force
+
+# Verbose output with diffs
+k0ntext sync-templates --verbose
+
+# Check sync status
+k0ntext template-status
+
+# Detailed status with file listings
+k0ntext template-status --verbose
+
+# Skip template sync during init
+k0ntext init --no-template-sync
+```
+
+### Fixed
+
+#### Template Sync Bug Fixes
+- **User modification detection** - Fixed `needsSync()` to detect user modifications made after initial sync
+  - Previously only checked package version changes
+  - Now performs full comparison to detect any file changes
+  - Properly flags conflicts when files differ from manifest
+
+- **Path resolution** - Fixed template path resolution in `sync-templates` command
+  - Corrected path from `../../templates/base` to `../../../templates/base`
+  - Ensures templates are found from compiled `dist/cli/commands/` location
+  - Prevents "0 files found" issue and incorrect archiving behavior
+
+- **Force sync** - Fixed `--force` flag to actually apply file overwrites
+  - Previously set resolutions but never executed them
+  - Now properly overwrites conflict files when force is specified
+  - Resolutions are correctly tracked and excluded from conflict counts
+
+- **Conflict detection** - Enhanced comparator to detect post-manifest modifications
+  - Files modified after manifest creation are now properly flagged
+  - `userModified` flag is set when local hash differs from manifest hash
+  - Ensures users are prompted about their customizations
+
+### Breaking Changes
+- None - fully backward compatible with v3.4.0
+
+---
+
+## [3.4.0] - 2026-02-09
+
+### 🎉 Config Sync & Template Enhancement Release
+
+### Added
+
+#### Version Detection System
+- **`k0ntext check`** - New command to check if context files are outdated
+  - Detects version markers in existing files (`*Generated by k0ntext vX.Y.Z*`)
+  - Compares against current package version
+  - Shows update type (major/minor/patch) with emoji indicators
+  - Integrates into `init` command with `--no-version-check` option
+- **`src/cli/version/`** - New module with parser, comparator, checker, and prompt utilities
+- Version tracking in database with `k0ntext_version`, `user_modified`, `last_checked` columns
+
+#### User Modification Handling
+- **Automatic change detection** - SHA-256 hash comparison to detect user edits
+- **Backup creation** - Creates backups before overwriting modified files
+  - **File-copy strategy** - Direct file backup to `.k0ntext/backups/`
+  - **Git stash fallback** - Uses git stash when file-copy fails
+- **Interactive prompts** - Asks user before overwriting modified files
+- **`src/cli/utils/file-detector.ts`** - FileModificationDetector with path normalization
+- **`src/cli/utils/backup-manager.ts`** - BackupManager with dual backup strategies
+- **`src/cli/utils/modification-prompt.ts`** - Interactive prompts for modified files
+
+#### Backup & Restore System
+- **`k0ntext restore`** - New command to restore AI tool config files from backups
+  - `--list` - List available backups
+  - `--backup <path>` - Restore from specific backup path
+  - `--tool <name>` - Filter by tool name
+  - `--force` - Restore without confirmation
+  - Interactive mode with backup selection
+- **`src/cli/commands/restore.ts`** - Complete restore command implementation
+
+#### Template Engine Enhancement
+- **Handlebars integration** - Rich template-based content generation
+  - **`src/template-engine/engine.ts`** - TemplateEngine with caching and partials
+  - **`src/template-engine/helpers.ts`** - 15 custom Handlebars helpers (join, first, truncate, slugify, formatDate, eq, ne, and, or, defaults, json, keys, values, length)
+  - **`src/template-engine/data-transformer.ts`** - Build rich context from database
+  - **`src/template-engine/types.ts`** - Template data model
+- **Fallback support** - Graceful fallback to inline functions when templates unavailable
+- **Rich project data** - Generated files now include actual project metadata instead of placeholders
+
+#### Database Schema Updates
+- **SCHEMA_VERSION** - Updated from `1.0.0` to `1.2.0`
+- **New table: `generated_files`** - Tracks all generated files with:
+  - `id`, `tool`, `file_path`, `content_hash`, `backup_path`
+  - `generated_at`, `last_verified_at`, `user_modified`, `metadata` (JSON)
+- **New columns in `sync_state`**:
+  - `k0ntext_version` - Tracks k0ntext version used for generation
+  - `user_modified` - Boolean flag for user modifications
+  - `last_checked` - Timestamp of last version check
+- **New indexes**:
+  - `idx_sync_state_version` on `sync_state(k0ntext_version)`
+  - `idx_sync_state_user_modified` on `sync_state(user_modified)`
+  - `idx_generated_files_tool` on `generated_files(tool)`
+  - `idx_generated_files_hash` on `generated_files(content_hash)`
+
+#### Enhanced Generation Flow
+- **Version tracking after generation** - Stores version and hash in database
+- **Modification detection in `generate`** - Detects edited files before overwriting
+- **User prompts** - Interactive prompts for handling modified files
+- **Backup before overwrite** - Automatic backup creation before regenerating
+
+### New CLI Commands (2)
+1. **`k0ntext check`** - Check if context files are outdated
+   - `--update` - Prompt to update outdated files
+   - `--force` - Update without prompting
+   - `-v, --verbose` - Show detailed output
+2. **`k0ntext restore`** - Restore AI tool config files from backups
+   - `--list` - List available backups
+   - `--backup <path>` - Restore from specific backup
+   - `--tool <name>` - Filter by tool name
+   - `--force` - Restore without confirmation
+
+### New Options
+- **`k0ntext init --no-version-check`** - Skip version checking during initialization
+
+### New Files Created (17)
+1. `src/cli/version/types.ts` - Version detection type definitions
+2. `src/cli/version/parser.ts` - Version string parsing (5 patterns supported)
+3. `src/cli/version/comparator.ts` - Semver comparison utilities
+4. `src/cli/version/checker.ts` - Single file and batch checking
+5. `src/cli/version/prompt.ts` - Interactive prompts for version updates
+6. `src/cli/version/index.ts` - Module exports
+7. `src/cli/commands/version-check.ts` - `k0ntext check` command
+8. `src/cli/utils/file-detector.ts` - File modification detector
+9. `src/cli/utils/backup-manager.ts` - Backup management
+10. `src/cli/utils/modification-prompt.ts` - Modification handling prompts
+11. `src/cli/commands/restore.ts` - `k0ntext restore` command
+12. `src/template-engine/types.ts` - Template data model
+13. `src/template-engine/helpers.ts` - Custom Handlebars helpers
+14. `src/template-engine/data-transformer.ts` - Build rich context from DB
+15. `src/template-engine/engine.ts` - Template engine with caching
+16. `src/template-engine/index.ts` - Module exports
+17. `templates/handlebars/` - Handlebars template directory
+
+### Modified Files (5)
+1. **`src/db/schema.ts`** - Added generated_files table, sync_state columns, indexes
+2. **`src/db/client.ts`** - Made `hashContent()` public, added version tracking methods
+3. **`src/cli/generate.ts`** - Integrated template engine, modification detection, version tracking
+4. **`src/cli/index.ts`** - Added `check` and `restore` commands, `--no-version-check` option
+5. **`package.json`** - Added `handlebars@^4.7.0` dependency
+
+### New Unit Tests (74)
+1. **`tests/version-detection.test.ts`** - 48 tests covering:
+   - Version parsing (5 formats)
+   - Version comparison (major, minor, patch)
+   - Database operations
+   - Checker integration
+2. **`tests/modification-detection.test.ts`** - 26 tests covering:
+   - FileModificationDetector (checkFile, checkAll, getModifiedFiles)
+   - BackupManager (createBackup, restoreFromBackup, listBackups, cleanupOldBackups)
+   - Git stash backup integration
+   - Edge cases (concurrent modifications, special characters, empty files, large files)
+
+### Test Coverage
+- **Before**: 82 tests
+- **After**: 156 tests
+- **New**: 74 tests
+- **All tests passing**: ✅
+
+### Breaking Changes
+- None - fully backward compatible with v3.3.1
+
+### Version Marker Formats Supported
+1. `*Generated by k0ntext v3.3.1*` - K0ntext format
+2. `> **Version:** 3.3.1` - Bold format
+3. `> Version: 3.3.1` - Simple format
+4. `"generator_version": "3.3.1"` - JSON format
+5. `<!-- Version: 3.3.1 -->` - HTML comment format
+
+### Backup File Naming
+- File-copy backups: `{filename}.{timestamp}.bak`
+  - Example: `AI_CONTEXT.md.2026-02-09T14.30.45.123Z.bak`
+- Git stash backups: `git-stash:stash@{n}`
+
+### Template Engine Features
+- **15 Custom Helpers**: join, first, truncate, slugify, formatDate, eq, ne, and, or, defaults, json, keys, values, length, default
+- **Data Source**: Database (context items, tech stack, architecture, commands, workflows, gotchas)
+- **Output**: Rich 2-5KB files vs previous 26-273 bytes
+- **Fallback**: Inline functions when template unavailable or `--map` format
+
+### Success Metrics
+
+| Metric | Before | After | Status |
+|--------|--------|-------|--------|
+| Version detection | ❌ None | ✅ Full | ✅ Complete |
+| User modification handling | ❌ None | ✅ Full | ✅ Complete |
+| Backup before overwrite | ❌ None | ✅ Dual strategy | ✅ Complete |
+| Template engine | ❌ Inline only | ✅ Handlebars | ✅ Complete |
+| CLI commands | 18 | 20 | ✅ +2 |
+| Unit tests | 82 | 156 | ✅ +74 |
+| Database schema | 1.0.0 | 1.2.0 | ✅ Migrated |
+
+### Usage Examples
+
+```bash
+# Check for outdated context files
+k0ntext check
+
+# Check with detailed output
+k0ntext check -v
+
+# Prompt to update outdated files
+k0ntext check --update
+
+# Force update without prompts
+k0ntext check --update --force
+
+# List available backups
+k0ntext restore --list
+
+# Restore from specific backup
+k0ntext restore --backup "AI_CONTEXT.md.2026-02-09T14.30.45.123Z.bak"
+
+# Restore for specific tool
+k0ntext restore --tool claude --list
+
+# Interactive restore mode
+k0ntext restore
+
+# Skip version checking during init
+k0ntext init --no-version-check
+```
+
+---
+
 ## [3.3.1] - 2026-02-09
 
 ### 🎨 Enhanced TUI Panels for REPL Shell

@@ -13,6 +13,7 @@ import fs from 'fs';
 import {
   SCHEMA_SQL,
   VECTOR_SCHEMA_SQL,
+  TEMPLATE_SCHEMA_SQL,
   SCHEMA_VERSION,
   type ContextType,
   type RelationType,
@@ -71,6 +72,9 @@ export interface SyncState {
   filePath?: string;
   status: SyncStatus;
   metadata?: Record<string, unknown>;
+  k0ntextVersion?: string;
+  userModified?: number;
+  lastChecked?: string;
 }
 
 /**
@@ -84,6 +88,33 @@ export interface AIToolConfig {
   contentHash?: string;
   lastSync: string;
   status: SyncStatus;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Version tracking record
+ */
+export interface VersionTracking {
+  tool: string;
+  k0ntextVersion: string;
+  userModified?: boolean;
+  lastChecked?: string;
+  filePath?: string;
+  contentHash?: string;
+}
+
+/**
+ * Generated file record
+ */
+export interface GeneratedFile {
+  id: string;
+  tool: string;
+  filePath: string;
+  contentHash: string;
+  backupPath?: string;
+  generatedAt: string;
+  lastVerifiedAt?: string;
+  userModified: boolean;
   metadata?: Record<string, unknown>;
 }
 
@@ -148,6 +179,9 @@ export class DatabaseClient {
 
     // Create vector table
     this.db.exec(VECTOR_SCHEMA_SQL);
+
+    // Create template sync tables
+    this.db.exec(TEMPLATE_SCHEMA_SQL);
 
     // Record schema version
     const stmt = this.db.prepare(`
@@ -221,9 +255,9 @@ export class DatabaseClient {
   }
 
   /**
-   * Generate content hash for deduplication
+   * Generate content hash for deduplication (public for modification detection)
    */
-  private hashContent(content: string): string {
+  public hashContent(content: string): string {
     return createHash('sha256').update(content).digest('hex').slice(0, 16);
   }
 
@@ -672,7 +706,7 @@ export class DatabaseClient {
   getSyncState(tool: string): SyncState[] {
     const stmt = this.db.prepare('SELECT * FROM sync_state WHERE tool = ?');
     const rows = stmt.all(tool) as Record<string, unknown>[];
-    
+
     return rows.map(row => ({
       id: row.id as string,
       tool: row.tool as string,
@@ -680,6 +714,189 @@ export class DatabaseClient {
       lastSync: row.last_sync as string,
       filePath: row.file_path as string | undefined,
       status: row.status as SyncStatus,
+      metadata: row.metadata ? JSON.parse(row.metadata as string) : undefined,
+      k0ntextVersion: row.k0ntext_version as string | undefined,
+      userModified: row.user_modified as number | undefined,
+      lastChecked: row.last_checked as string | undefined
+    }));
+  }
+
+  // ==================== Version Tracking ====================
+
+  /**
+   * Get all version tracking records
+   */
+  getAllVersionTracking(): VersionTracking[] {
+    const stmt = this.db.prepare(`
+      SELECT tool, k0ntext_version, user_modified, last_checked, file_path, content_hash
+      FROM sync_state
+      WHERE k0ntext_version IS NOT NULL
+    `);
+    const rows = stmt.all() as Record<string, unknown>[];
+
+    return rows.map(row => ({
+      tool: row.tool as string,
+      k0ntextVersion: row.k0ntext_version as string,
+      userModified: Boolean(row.user_modified as number),
+      lastChecked: row.last_checked as string | undefined,
+      filePath: row.file_path as string | undefined,
+      contentHash: row.content_hash as string | undefined
+    }));
+  }
+
+  /**
+   * Update version tracking for a tool
+   */
+  updateVersionTracking(tracking: VersionTracking): void {
+    // Find the sync state record for this tool (or create a new one)
+    const id = `${tracking.tool}:version-tracking`;
+
+    const stmt = this.db.prepare(`
+      INSERT INTO sync_state (id, tool, k0ntext_version, user_modified, last_checked, file_path, content_hash, last_sync, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), 'synced')
+      ON CONFLICT(id) DO UPDATE SET
+        k0ntext_version = excluded.k0ntext_version,
+        user_modified = excluded.user_modified,
+        last_checked = excluded.last_checked,
+        file_path = excluded.file_path,
+        content_hash = excluded.content_hash,
+        last_sync = datetime('now')
+    `);
+
+    stmt.run(
+      id,
+      tracking.tool,
+      tracking.k0ntextVersion,
+      tracking.userModified ? 1 : 0,
+      tracking.lastChecked || new Date().toISOString(),
+      tracking.filePath || null,
+      tracking.contentHash || null
+    );
+  }
+
+  /**
+   * Get version tracking for a specific tool
+   */
+  getVersionTracking(tool: string): VersionTracking | null {
+    const stmt = this.db.prepare(`
+      SELECT tool, k0ntext_version, user_modified, last_checked, file_path, content_hash
+      FROM sync_state
+      WHERE tool = ? AND k0ntext_version IS NOT NULL
+      LIMIT 1
+    `);
+    const row = stmt.get(tool) as Record<string, unknown> | undefined;
+
+    if (!row) return null;
+
+    return {
+      tool: row.tool as string,
+      k0ntextVersion: row.k0ntext_version as string,
+      userModified: Boolean(row.user_modified as number),
+      lastChecked: row.last_checked as string | undefined,
+      filePath: row.file_path as string | undefined,
+      contentHash: row.content_hash as string | undefined
+    };
+  }
+
+  // ==================== Generated Files Tracking ====================
+
+  /**
+   * Upsert a generated file record
+   */
+  upsertGeneratedFile(record: {
+    tool: string;
+    filePath: string;
+    contentHash: string;
+    backupPath?: string;
+    metadata?: Record<string, unknown>;
+  }): GeneratedFile {
+    const id = `${record.tool}:${record.filePath}`;
+
+    const stmt = this.db.prepare(`
+      INSERT INTO generated_files (id, tool, file_path, content_hash, backup_path, metadata)
+      VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        content_hash = excluded.content_hash,
+        backup_path = excluded.backup_path,
+        metadata = excluded.metadata,
+        last_verified_at = datetime('now')
+      RETURNING *
+    `);
+
+    const row = stmt.get(
+      id,
+      record.tool,
+      record.filePath,
+      record.contentHash,
+      record.backupPath || null,
+      record.metadata ? JSON.stringify(record.metadata) : null
+    ) as Record<string, unknown>;
+
+    return {
+      id: row.id as string,
+      tool: row.tool as string,
+      filePath: row.file_path as string,
+      contentHash: row.content_hash as string,
+      backupPath: row.backup_path as string | undefined,
+      generatedAt: row.generated_at as string,
+      lastVerifiedAt: row.last_verified_at as string | undefined,
+      userModified: Boolean(row.user_modified as number),
+      metadata: row.metadata ? JSON.parse(row.metadata as string) : undefined
+    };
+  }
+
+  /**
+   * Get generated file info by tool and path
+   */
+  getGeneratedFileInfo(tool: string, filePath: string): GeneratedFile | null {
+    const id = `${tool}:${filePath}`;
+    const stmt = this.db.prepare('SELECT * FROM generated_files WHERE id = ?');
+    const row = stmt.get(id) as Record<string, unknown> | undefined;
+
+    if (!row) return null;
+
+    return {
+      id: row.id as string,
+      tool: row.tool as string,
+      filePath: row.file_path as string,
+      contentHash: row.content_hash as string,
+      backupPath: row.backup_path as string | undefined,
+      generatedAt: row.generated_at as string,
+      lastVerifiedAt: row.last_verified_at as string | undefined,
+      userModified: Boolean(row.user_modified as number),
+      metadata: row.metadata ? JSON.parse(row.metadata as string) : undefined
+    };
+  }
+
+  /**
+   * Mark a generated file as user modified
+   */
+  markUserModified(tool: string, filePath: string): void {
+    const id = `${tool}:${filePath}`;
+    const stmt = this.db.prepare(`
+      UPDATE generated_files
+      SET user_modified = 1, last_verified_at = datetime('now')
+      WHERE id = ?
+    `);
+    stmt.run(id);
+  }
+
+  /**
+   * Get all generated files for a tool
+   */
+  getGeneratedFiles(tool: string): GeneratedFile[] {
+    const stmt = this.db.prepare('SELECT * FROM generated_files WHERE tool = ?');
+    const rows = stmt.all(tool) as Record<string, unknown>[];
+
+    return rows.map(row => ({
+      id: row.id as string,
+      tool: row.tool as string,
+      filePath: row.file_path as string,
+      contentHash: row.content_hash as string,
+      backupPath: row.backup_path as string | undefined,
+      generatedAt: row.generated_at as string,
+      lastVerifiedAt: row.last_verified_at as string | undefined,
+      userModified: Boolean(row.user_modified as number),
       metadata: row.metadata ? JSON.parse(row.metadata as string) : undefined
     }));
   }

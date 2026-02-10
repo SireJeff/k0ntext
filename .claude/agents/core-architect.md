@@ -74,3 +74,44 @@ This agent integrates with:
 - Architecture consistency checks
 - State machine validation
 - Dependency consistency verification
+
+---
+
+## k0ntext CLI Commands
+
+This agent integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext init` | First-time project setup - analyzes architecture during initialization |
+| `k0ntext generate` | After architectural changes - regenerates context for all AI tools |
+| `k0ntext drift-detect` | When code may have diverged from architecture docs - AI-powered drift detection |
+| `k0ntext cross-sync` | After drift detected - intelligent cross-tool synchronization |
+| `k0ntext search <query>` | Finding related architecture decisions - search indexed content |
+
+### Command Examples
+
+```bash
+# Initialize with architecture analysis
+k0ntext init
+
+# Detect documentation drift
+k0ntext drift-detect
+
+# Cross-sync after detecting drift
+k0ntext cross-sync
+
+# Search for architecture patterns
+k0ntext search "authentication flow"
+
+# Generate contexts after architecture changes
+k0ntext generate --tools claude,cursor
+```
+
+### Workflow Integration
+
+When designing architecture:
+1. **Before design:** Run `k0ntext search <pattern>` to find existing architecture patterns
+2. **During design:** Reference discovered workflows and patterns
+3. **After changes:** Use `k0ntext drift-detect` to identify documentation that needs updating
+4. **Before commit:** Run `k0ntext cross-sync` to propagate changes across all AI tools

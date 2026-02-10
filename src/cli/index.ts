@@ -16,6 +16,7 @@ import { fileURLToPath } from 'url';
 
 import { createIntelligentAnalyzer } from '../analyzer/intelligent-analyzer.js';
 import { hasOpenRouterKey } from '../embeddings/openrouter.js';
+import type { DatabaseClient } from '../db/client.js';
 import { generateCommand } from './generate.js';
 import { syncCommand } from './sync.js';
 import { cleanupCommand } from './commands/cleanup.js';
@@ -29,6 +30,9 @@ import { crossSyncCommand } from './commands/cross-sync.js';
 import { hooksCommand } from './commands/hooks.js';
 import { factCheckCommand } from './commands/fact-check.js';
 import { batchIndexCommand } from './commands/batch-index.js';
+import { versionCheckCommand } from './commands/version-check.js';
+import { restoreCommand } from './commands/restore.js';
+import { syncTemplatesCommand, templateStatusCommand } from './commands/sync-templates.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -145,6 +149,8 @@ function createProgram(): Command {
     .description('Initialize AI context for a project with intelligent analysis')
     .argument('[project-name]', 'Name of the project (defaults to current directory)')
     .option('--no-intelligent', 'Skip OpenRouter-powered intelligent analysis')
+    .option('--no-version-check', 'Skip checking for outdated context files')
+    .option('--no-template-sync', 'Skip template synchronization')
     .action(async (projectName, options) => {
       showBanner();
       
@@ -203,6 +209,125 @@ function createProgram(): Command {
         spinner.start('Configuring MCP server...');
         await configureMcpServer(targetDir);
         spinner.succeed('MCP server configured');
+
+        // Sync templates from package
+        if (options.templateSync !== false) {
+          spinner.start('Checking template sync...');
+
+          try {
+            const { TemplateSyncEngine } = await import('../template-sync/index.js');
+            const { DatabaseClient: DBClientClass } = await import('../db/client.js');
+
+            const db = new DBClientClass(targetDir);
+            const templateRoot = path.join(__dirname, '../../templates/base');
+            const engine = new TemplateSyncEngine(db, targetDir, templateRoot);
+
+            // Check if sync is needed
+            const needsSync = await engine.needsSync();
+
+            if (needsSync) {
+              spinner.text = 'Syncing templates from package...';
+
+              const syncResult = await engine.sync({
+                dryRun: false,
+                force: false,
+                verbose: options.verbose
+              });
+
+              if (syncResult.conflicts.length === 0) {
+                spinner.succeed(chalk.green(`Templates synced (${syncResult.updated} updated, ${syncResult.created} created)`));
+              } else {
+                spinner.warn(chalk.yellow(`Templates synced with ${syncResult.conflicts.length} conflict(s)`));
+                console.log(chalk.dim(`  Run 'k0ntext sync-templates' to resolve conflicts`));
+              }
+            } else {
+              spinner.succeed('Templates already up to date');
+            }
+
+            db.close();
+          } catch (error) {
+            spinner.stop();
+            // Template sync is optional, don't fail on error
+            if (options.verbose) {
+              console.warn(chalk.dim(`Template sync skipped: ${error instanceof Error ? error.message : error}`));
+            }
+          }
+        }
+
+        // Check for outdated context files
+        if (options.versionCheck !== false) {
+          spinner.start('Checking context file versions...');
+
+          try {
+            const { checkContextFiles, showVersionSummary, promptRegeneration } = await import('./version/index.js');
+            const { DatabaseClient: DBClientClass } = await import('../db/client.js');
+
+            let db: DatabaseClient | undefined;
+            try {
+              db = new DBClientClass(targetDir);
+            } catch {
+              // Database might not exist yet
+            }
+
+            const result = await checkContextFiles({
+              projectRoot: targetDir,
+              currentVersion: packageJson.version,
+              checkModifications: !!db
+            }, db);
+
+            spinner.stop();
+
+            if (result.outdated.length > 0) {
+              showVersionSummary(result);
+              console.log('');
+
+              const promptResult = await promptRegeneration(result.outdated);
+
+              if (promptResult.choice !== 'skip') {
+                let filesToRegenerate = result.outdated;
+
+                if (promptResult.choice === 'select' && promptResult.selectedTools) {
+                  filesToRegenerate = result.outdated.filter(f =>
+                    promptResult.selectedTools?.includes(f.tool)
+                  );
+                }
+
+                if (!promptResult.includeModified) {
+                  filesToRegenerate = filesToRegenerate.filter(f => !f.userModified);
+                }
+
+                if (filesToRegenerate.length > 0 && db) {
+                  spinner.start('Regenerating context files...');
+
+                  const { generateForTool } = await import('./generate.js');
+
+                  for (const file of filesToRegenerate) {
+                    spinner.text = `Regenerating ${file.tool} context...`;
+                    try {
+                      await generateForTool(file.tool, db, true, false, { verbose: options.verbose });
+                    } catch (error) {
+                      spinner.warn(chalk.yellow(`Failed to regenerate ${file.tool}`));
+                    }
+                  }
+
+                  spinner.succeed(chalk.green(`Regenerated ${filesToRegenerate.length} file(s)`));
+                }
+              }
+            } else {
+              spinner.stop();
+            }
+
+            if (db) {
+              db.close();
+            }
+          } catch (error) {
+            spinner.stop();
+            // Version check is optional, don't fail on error
+            if (options.verbose) {
+              console.warn(chalk.dim(`Version check skipped: ${error instanceof Error ? error.message : error}`));
+            }
+          }
+        }
 
         console.log(`\n${chalk.bold('Next Steps:')}`);
         console.log(`  ${chalk.cyan('1.')} Run ${chalk.white('k0ntext stats')} to view database statistics`);
@@ -276,6 +401,16 @@ function createProgram(): Command {
 
   // ==================== Fact-Check Command ====================
   program.addCommand(factCheckCommand);
+
+  // ==================== Version Check Command ====================
+  program.addCommand(versionCheckCommand);
+
+  // ==================== Restore Command ====================
+  program.addCommand(restoreCommand);
+
+  // ==================== Template Sync Commands ====================
+  program.addCommand(syncTemplatesCommand);
+  program.addCommand(templateStatusCommand);
 
   // ==================== Index Command ====================
   program

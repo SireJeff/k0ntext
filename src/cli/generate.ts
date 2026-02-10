@@ -47,7 +47,7 @@ export const generateCommand = new Command('generate')
 
       for (const tool of tools) {
         try {
-          const toolPath = await generateForTool(tool, db, options.force, options.map);
+          const toolPath = await generateForTool(tool, db, options.force, options.map, { verbose: options.verbose });
           if (toolPath) {
             generated.push(tool);
             spinner.text = `Generated ${tool} context`;
@@ -84,11 +84,12 @@ export const generateCommand = new Command('generate')
     }
   });
 
-async function generateForTool(
+export async function generateForTool(
   tool: string,
   db: DatabaseClient,
   force: boolean,
-  useMapFormat: boolean
+  useMapFormat: boolean,
+  options: { verbose?: boolean; projectRoot?: string } = {}
 ): Promise<string | null> {
   const toolConfigs: Record<string, { path: string; template: string }> = {
     claude: { path: 'AI_CONTEXT.md', template: 'claude' },
@@ -122,7 +123,8 @@ async function generateForTool(
   const contextItems = db.getAllItems();
 
   // Generate content based on tool and format
-  const content = generateContent(tool, contextItems, useMapFormat);
+  const projectRoot = options.projectRoot || process.cwd();
+  const content = await generateContent(tool, contextItems, useMapFormat, db, projectRoot);
 
   // Ensure directory exists
   const dir = path.dirname(config.path);
@@ -131,11 +133,82 @@ async function generateForTool(
   // Write file
   await fs.writeFile(config.path, content, 'utf-8');
 
+  // Track version and file metadata in database
+  try {
+    const contentHash = db.hashContent(content);
+
+    // Update version tracking in sync_state
+    db.updateVersionTracking({
+      tool,
+      k0ntextVersion: K0NTEXT_VERSION,
+      userModified: false,
+      lastChecked: new Date().toISOString(),
+      filePath: config.path,
+      contentHash
+    });
+
+    // Track in generated_files for modification detection
+    db.upsertGeneratedFile({
+      tool,
+      filePath: config.path,
+      contentHash,
+      metadata: {
+        format: useMapFormat ? 'map' : 'full',
+        generatedAt: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    // Version tracking is optional, don't fail on error
+    // This can happen if database schema is not updated yet
+    if (options.verbose) {
+      console.warn(chalk.dim(`Version tracking skipped: ${error instanceof Error ? error.message : error}`));
+    }
+  }
+
   return config.path;
 }
 
-function generateContent(tool: string, contextItems: Array<any>, useMapFormat: boolean): string {
-  // Basic content generation - in production this would use templates
+async function generateContent(
+  tool: string,
+  contextItems: Array<any>,
+  useMapFormat: boolean,
+  db: DatabaseClient,
+  projectRoot: string
+): Promise<string> {
+  // For map format, use inline functions (faster, simpler)
+  if (useMapFormat) {
+    return generateContentInline(tool, contextItems, useMapFormat);
+  }
+
+  // For full format, try to use template engine
+  try {
+    const { createTemplateEngine } = await import('../template-engine/index.js');
+    const engine = createTemplateEngine(K0NTEXT_VERSION);
+
+    // Check if template exists for this tool
+    const hasTemplate = await engine.hasTemplate(tool);
+
+    if (hasTemplate) {
+      const result = await engine.render(
+        { template: tool, usePartials: true },
+        db,
+        projectRoot
+      );
+      return result.content;
+    }
+  } catch (error) {
+    // Template engine failed, fall back to inline generation
+    if (process.env.K0NTEXT_DEBUG) {
+      console.warn(chalk.dim(`Template engine failed for ${tool}, using fallback: ${error instanceof Error ? error.message : error}`));
+    }
+  }
+
+  // Fallback to inline generation
+  return generateContentInline(tool, contextItems, useMapFormat);
+}
+
+function generateContentInline(tool: string, contextItems: Array<any>, useMapFormat: boolean): string {
+  // Basic content generation - fallback when templates are unavailable
   const projectName = contextItems.find(i => i.type === 'config' && i.name === 'project')?.content?.name || 'Project';
   const description = contextItems.find(i => i.type === 'config' && i.name === 'project')?.content?.description || '';
 

@@ -74,3 +74,40 @@ This agent integrates with:
 - Integration security checks
 - Authentication mechanism validation
 - Rate limiting configuration
+
+---
+
+## k0ntext CLI Commands
+
+This agent integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext sync` | After manual context changes - synchronize context across AI tools |
+| `k0ntext cross-sync` | After drift detected - intelligent cross-tool synchronization |
+| `k0ntext validate` | Before committing integrations - validates context file integrity |
+
+### Command Examples
+
+```bash
+# Sync context across all AI tools
+k0ntext sync
+
+# Intelligent cross-tool sync
+k0ntext cross-sync
+
+# Validate integration documentation
+k0ntext validate
+
+# Search for existing integrations
+k0ntext search "webhook"
+```
+
+### Workflow Integration
+
+When working with integrations:
+1. **Before adding:** Run `k0ntext search <service>` to find existing integration patterns
+2. **During setup:** Reference indexed webhook handlers and auth flows
+3. **After changes:** Use `k0ntext sync` to propagate changes to all AI tools
+4. **Before commit:** Run `k0ntext cross-sync` to ensure consistency across tools
+5. **For verification:** Use `k0ntext validate` to check documentation integrity

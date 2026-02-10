@@ -74,3 +74,40 @@ This agent integrates with:
 - API contract consistency
 - Endpoint security checks
 - Response schema validation
+
+---
+
+## k0ntext CLI Commands
+
+This agent integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext generate` | After API changes - regenerates API documentation for all AI tools |
+| `k0ntext drift-detect` | When API may have diverged from docs - AI-powered drift detection |
+| `k0ntext fact-check` | Validate API documentation accuracy - quality assurance for API specs |
+
+### Command Examples
+
+```bash
+# Generate contexts after API changes
+k0ntext generate --tools claude,cursor
+
+# Detect API documentation drift
+k0ntext drift-detect
+
+# Fact-check API endpoint documentation
+k0ntext fact-check
+
+# Search for existing API patterns
+k0ntext search "API endpoint"
+```
+
+### Workflow Integration
+
+When developing APIs:
+1. **Before changes:** Run `k0ntext search <resource>` to find existing endpoint patterns
+2. **During development:** Reference indexed API contracts and examples
+3. **After changes:** Use `k0ntext generate` to update all AI tool contexts
+4. **Before commit:** Run `k0ntext drift-detect` to identify documentation gaps
+5. **For QA:** Use `k0ntext fact-check` to validate documentation accuracy

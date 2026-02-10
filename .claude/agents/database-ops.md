@@ -74,3 +74,41 @@ This agent integrates with:
 - Schema consistency checks
 - Migration validation
 - Query performance benchmarks
+
+---
+
+## k0ntext CLI Commands
+
+This agent integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext index` | After adding new tables/migrations - indexes database files for search |
+| `k0ntext search <query>` | Finding database-related code - search across indexed schema and migrations |
+| `k0ntext stats` | Check indexing status - view database items, embeddings, and file counts |
+| `k0ntext validate` | Before committing migrations - validates context file integrity |
+
+### Command Examples
+
+```bash
+# Index database-related files
+k0ntext index --code
+
+# Search for database patterns
+k0ntext search "user table schema"
+k0ntext search "migration"
+
+# View indexing statistics
+k0ntext stats
+
+# Validate context files
+k0ntext validate
+```
+
+### Workflow Integration
+
+When working with database operations:
+1. **Before changes:** Run `k0ntext search <table>` to find existing schema references
+2. **During design:** Reference indexed migrations and models
+3. **After migrations:** Use `k0ntext index` to update the search index
+4. **Before commit:** Run `k0ntext validate` to ensure documentation consistency

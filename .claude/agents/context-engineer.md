@@ -1,8 +1,8 @@
 ---
 name: context-engineer
-version: "2.0.0"
+version: "1.0.0"
 displayName: "Context Engineer"
-description: "Universal initialization agent that transforms the context engineering system for any codebase, supporting all AI tools"
+description: "Initialization agent that transforms the template context engineering system for any codebase"
 category: "initialization"
 complexity: "very-high"
 context_budget: "~80K tokens (40%)"
@@ -13,16 +13,6 @@ capabilities:
   - "documentation-generation"
   - "system-validation"
   - "agent-creation"
-  - "cross-tool-sync"
-  - "universal-context-generation"
-supported_tools:
-  - "claude"
-  - "copilot"
-  - "cline"
-  - "antigravity"
-  - "windsurf"
-  - "aider"
-  - "continue"
 workflows:
   - "initialization"
   - "all-workflows"
@@ -32,18 +22,14 @@ dependencies:
   commands: []
 hooks:
   pre_invoke: null
-  post_invoke: "sync:state"
+  post_invoke: null
 examples:
   - invocation: '@context-engineer "Initialize context engineering for this repository"'
-    description: "Full initialization from template for all AI tools"
-  - invocation: '@context-engineer "Initialize for Claude and Copilot only"'
-    description: "Initialize for specific AI tools"
+    description: "Full initialization from template"
   - invocation: '@context-engineer "Document workflow: [name]"'
     description: "Create documentation for a specific workflow"
   - invocation: '@context-engineer "Refresh workflow: [name]"'
     description: "Update existing workflow documentation"
-  - invocation: '@context-engineer "Sync all tool contexts"'
-    description: "Synchronize contexts across all AI tools"
   - invocation: '@context-engineer "Audit and refresh all workflows"'
     description: "Full documentation refresh"
 ---
@@ -53,15 +39,6 @@ examples:
 ## Overview
 
 The **Context Engineer** is a sophisticated initialization agent that transforms the template context engineering system for any codebase. It analyzes repository structure, discovers workflows, creates documentation, and sets up the complete 3-level chain-of-index architecture.
-
-**Universal AI Tool Support:** This agent generates and maintains context for all supported AI coding assistants:
-- **Claude Code** - Full workflow documentation with line numbers, 3-level chain-of-index
-- **GitHub Copilot** - Concise instructions in `.github/copilot-instructions.md`
-- **Cline** - Rule-based format in `.clinerules`
-- **Antigravity** - Agent directory in `.agent/`
-- **Windsurf** - Project rules in `.windsurfrules`
-- **Aider** - YAML configuration in `.aider.conf.yml`
-- **Continue** - JSON configuration in `.continue/`
 
 ---
 
@@ -77,18 +54,6 @@ The **Context Engineer** is a sophisticated initialization agent that transforms
 | **Workflow Count** | 8-15 major workflows | Merge if <50 lines |
 | **Line Number Tolerance** | ±10 lines | Update quarterly |
 
-### Tool-Specific Context Budgets
-
-| Tool | Max Context | Recommended | Format |
-|------|-------------|-------------|--------|
-| Claude Code | 200k | 80k (40%) | Markdown with line refs |
-| GitHub Copilot | 8k | 4k | Concise instructions |
-| Cline | 16k | 8k | Rule-based |
-| Antigravity | Variable | 10k | Agent directory |
-| Windsurf | 16k | 8k | Project rules |
-| Aider | Model-dependent | 4k | YAML config |
-| Continue | Variable | 8k | JSON config |
-
 ---
 
 ## Invocation
@@ -99,16 +64,8 @@ The **Context Engineer** is a sophisticated initialization agent that transforms
 
 **Aliases:**
 ```bash
-@context-engineer "Set up AI context for this codebase"
-@context-engineer "Initialize for all AI tools"
+@context-engineer "Set up .claude for this codebase"
 @context-engineer "Transform template for [project-name]"
-```
-
-**Tool-Specific Initialization:**
-```bash
-@context-engineer "Initialize for Claude and Copilot only"
-@context-engineer "Generate Aider config"
-@context-engineer "Set up Cline rules"
 ```
 
 ---
@@ -206,13 +163,13 @@ The **Context Engineer** is a sophisticated initialization agent that transforms
 
 ---
 
-### Phase 3: Universal Context Population (30 minutes, ~40k tokens)
+### Phase 3: Template Population (30 minutes, ~40k tokens)
 
-**Goal:** Generate context files for ALL supported AI tools
+**Goal:** Fill in all template placeholders
 
 **Actions:**
 
-1. **Populate Primary Context (AI_CONTEXT.md / CLAUDE.md)**
+1. **Populate AI_CONTEXT.md**
    ```
    Replace placeholders:
    - {{PROJECT_NAME}} → Actual project name
@@ -223,51 +180,10 @@ The **Context Engineer** is a sophisticated initialization agent that transforms
    - All other {{PLACEHOLDER}} values
    ```
 
-2. **Generate Tool-Specific Contexts**
-   ```
-   For each supported AI tool, generate appropriate format:
-   
-   Claude Code (.claude/):
-   - Full workflow documentation
-   - 3-level chain-of-index architecture
-   - Agent and command definitions
-   - Line-number precision references
-   
-   GitHub Copilot (.github/copilot-instructions.md):
-   - Concise project overview
-   - Key conventions and patterns
-   - Focus on code completion hints
-   
-   Cline (.clinerules):
-   - Rule-based instructions
-   - File pattern matching
-   - Task-specific guidelines
-   
-   Antigravity (.agent/):
-   - Agent directory structure
-   - Context files
-   - Tool configuration
-   
-   Windsurf (.windsurfrules):
-   - Project rules format
-   - Language-specific guidelines
-   - Context optimization
-   
-   Aider (.aider.conf.yml):
-   - YAML configuration
-   - Model preferences
-   - Git and testing integration
-   
-   Continue (.continue/):
-   - JSON configuration
-   - Custom commands
-   - Provider settings
-   ```
-
-3. **Create Workflow Files**
+2. **Create Workflow Files**
    For each discovered workflow:
    ```
-   Create: .claude/context/workflows/[name].md
+   Create: .ai-context/context/workflows/[name].md
    Include:
    - Overview (from discovery)
    - Entry points with file:line
@@ -278,7 +194,7 @@ The **Context Engineer** is a sophisticated initialization agent that transforms
    - Known gotchas (if found)
    ```
 
-4. **Populate Index Files**
+3. **Populate Index Files**
    ```
    Update:
    - WORKFLOW_INDEX.md with all workflows
@@ -286,7 +202,7 @@ The **Context Engineer** is a sophisticated initialization agent that transforms
    - Category indexes with proper routing
    ```
 
-5. **Create Additional Agents (if needed)**
+4. **Create Additional Agents (if needed)**
    Based on discovered domains, create specialized agents:
    ```
    Pattern:
@@ -295,16 +211,7 @@ The **Context Engineer** is a sophisticated initialization agent that transforms
    - Include RPI phase behaviors
    ```
 
-6. **Initialize Cross-Tool Sync**
-   ```bash
-   # Set up sync state tracking
-   npx ai-context sync:state
-   
-   # Verify all tools are in sync
-   npx ai-context sync:check
-   ```
-
-**Output:** Fully populated context for all AI tools
+**Output:** Fully populated .ai-context/ directory
 
 ---
 
@@ -377,10 +284,10 @@ The **Context Engineer** is a sophisticated initialization agent that transforms
 
 2. **Create .gitkeep Files**
    ```
-   .claude/research/active/.gitkeep
-   .claude/research/completed/.gitkeep
-   .claude/plans/active/.gitkeep
-   .claude/plans/completed/.gitkeep
+   .ai-context/research/active/.gitkeep
+   .ai-context/research/completed/.gitkeep
+   .ai-context/plans/active/.gitkeep
+   .ai-context/plans/completed/.gitkeep
    ```
 
 3. **Recommend Next Steps**
@@ -485,7 +392,7 @@ Step 6: Find exit points
 
 ```
 If initialization fails:
-1. Save progress to .claude/INIT_PROGRESS.md
+1. Save progress to .ai-context/INIT_PROGRESS.md
 2. Note where failure occurred
 3. Provide resume instructions
 4. Human can run @context-engineer "resume"
@@ -497,7 +404,7 @@ If initialization fails:
 
 ### Initialization Complete When:
 
-- [ ] CLAUDE.md fully populated (no {{PLACEHOLDER}} remaining)
+- [ ] AI_CONTEXT.md fully populated (no {{PLACEHOLDER}} remaining)
 - [ ] 8-15 workflow files created
 - [ ] WORKFLOW_INDEX.md complete
 - [ ] CODE_TO_WORKFLOW_MAP.md populated
@@ -542,52 +449,6 @@ If initialization fails:
 
 ---
 
-## Cross-Tool Synchronization
-
-The Context Engineer integrates with the cross-tool sync system to maintain consistency across all AI tools.
-
-### Sync Commands
-
-| Command | Purpose | When to Use |
-|---------|---------|-------------|
-| `sync:check` | Check if contexts are in sync | Before commits, after changes |
-| `sync:state` | Update state tracking only | After commits (automatic via hooks) |
-| `sync:all` | Full regeneration from codebase | Major refactoring, new features |
-| `sync:from <tool>` | Propagate from specific tool | After editing one tool's context |
-
-### Automatic Sync via Git Hooks
-
-```bash
-# Install git hooks
-npx ai-context hooks:install
-
-# Hooks behavior:
-# pre-commit: Warns if contexts are out of sync
-# post-commit: Updates sync state (no file regeneration)
-```
-
-### Manual Sync Workflow
-
-```bash
-# 1. Check current sync status
-npx ai-context sync:check
-
-# 2. If out of sync, regenerate all
-npx ai-context sync:all
-
-# 3. Or propagate from a specific tool
-npx ai-context sync:from claude
-```
-
-### Sync Best Practices
-
-1. **Single Source of Truth:** Make edits in Claude Code context first, then sync
-2. **Avoid Parallel Edits:** Don't edit multiple tool contexts simultaneously
-3. **Regular Checks:** Run `sync:check` before major commits
-4. **After Refactoring:** Always run `sync:all` after code restructuring
-
----
-
 ## Integration with RPI Workflow
 
 After initialization, use the RPI workflow for all development:
@@ -609,18 +470,6 @@ After initialization, use the RPI workflow for all development:
 **Tech Stack:** Python 3.11, FastAPI, PostgreSQL, Redis
 **Total Files:** 156 (.py files)
 **Total LOC:** 24,350
-
-### AI Tools Configured (7)
-
-| Tool | Output | Status |
-|------|--------|--------|
-| Claude Code | .claude/ | ✓ Full |
-| GitHub Copilot | .github/copilot-instructions.md | ✓ Generated |
-| Cline | .clinerules | ✓ Generated |
-| Antigravity | .agent/ | ✓ Generated |
-| Windsurf | .windsurfrules | ✓ Generated |
-| Aider | .aider.conf.yml | ✓ Generated |
-| Continue | .continue/ | ✓ Generated |
 
 ### Workflows Created (12)
 
@@ -651,16 +500,55 @@ After initialization, use the RPI workflow for all development:
 - Line accuracy: 73% ✅
 - Link validity: 100% ✅
 - Section completeness: 100% ✅
-- Cross-tool sync: ✅ All in sync
 
 ### Next Steps
 
 1. Review workflows/user_authentication.md for accuracy
 2. Add project-specific gotchas to KNOWN_GOTCHAS.md
 3. Customize agent descriptions for your team
-4. Install git hooks: `npx ai-context hooks:install`
-5. Run /rpi-research on your next feature
+4. Run /rpi-research on your next feature
 ```
+
+---
+
+## k0ntext CLI Commands
+
+This agent integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext init` | First-time project setup - initializes AI context with intelligent analysis |
+| `k0ntext generate` | After making architectural changes - regenerates context files for all AI tools |
+| `k0ntext validate` | Before committing changes - validates context file structure and completeness |
+| `k0ntext index` | After adding new files - indexes codebase content into the database for search |
+| `k0ntext stats` | Check database and indexing status - shows context items, embeddings, and database path |
+
+### Command Examples
+
+```bash
+# Initialize a new project with intelligent analysis
+k0ntext init
+
+# Generate contexts for specific AI tools
+k0ntext generate --tools claude,cursor
+
+# Validate context files
+k0ntext validate
+
+# Index new documentation files
+k0ntext index --docs
+
+# View database statistics
+k0ntext stats
+```
+
+### Workflow Integration
+
+When using this agent:
+1. **Before initialization:** Run `k0ntext init` to establish baseline context
+2. **During template population:** Use `k0ntext index` to discover all project files
+3. **After modifications:** Run `k0ntext generate` to propagate changes to all AI tools
+4. **Before commit:** Use `k0ntext validate` to ensure context integrity
 
 ---
 
@@ -668,7 +556,6 @@ After initialization, use the RPI workflow for all development:
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 2.0.0 | 2026-02-02 | Universal AI tool support, cross-tool sync |
 | 1.0.0 | {{DATE}} | Initial template release |
 
 ---
@@ -676,5 +563,4 @@ After initialization, use the RPI workflow for all development:
 **Agent Type:** Initialization
 **Complexity:** Very High
 **Context Usage:** Up to 80k tokens (40%)
-**Supported Tools:** Claude, Copilot, Cline, Antigravity, Windsurf, Aider, Continue
 **Human Review:** Recommended after initialization
