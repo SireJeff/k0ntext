@@ -8,6 +8,7 @@ import { input, confirm, select, checkbox } from '@inquirer/prompts';
 import chalk from 'chalk';
 import { ProjectType } from '../core/session.js';
 import { K0NTEXT_THEME } from '../tui/theme.js';
+import { stripBOM } from '../../../utils/encoding.js';
 
 /**
  * Wizard configuration result
@@ -66,7 +67,9 @@ export class InitWizard {
 
   constructor(projectRoot: string) {
     this.projectRoot = projectRoot;
-    this.hasExistingKey = !!process.env.OPENROUTER_API_KEY;
+    // Strip UTF-8 BOM from env var if present (Windows editors sometimes add this)
+    const cleanKey = process.env.OPENROUTER_API_KEY ? stripBOM(process.env.OPENROUTER_API_KEY) : '';
+    this.hasExistingKey = cleanKey.length > 0;
   }
 
   /**
@@ -146,7 +149,9 @@ for your specific needs.
       });
 
       if (useExisting) {
-        return process.env.OPENROUTER_API_KEY!;
+        // Strip UTF-8 BOM from env var if present (Windows editors sometimes add this)
+        const envKey = process.env.OPENROUTER_API_KEY || '';
+        return stripBOM(envKey);
       }
     }
 
@@ -158,7 +163,9 @@ for your specific needs.
       message: 'Enter your OpenRouter API key (or press Enter to skip):',
       validate: (value: string) => {
         if (!value) return true; // Allow skipping
-        if (value.startsWith('sk-or-v1-')) return true;
+        // Strip BOM before validation
+        const cleanValue = stripBOM(value);
+        if (cleanValue.startsWith('sk-or-v1-')) return true;
         return 'Invalid API key format. Should start with "sk-or-v1-"';
       }
     });
@@ -174,7 +181,8 @@ for your specific needs.
       }
     }
 
-    return apiKey || '';
+    // Strip BOM from user input before returning
+    return stripBOM(apiKey || '');
   }
 
   /**
