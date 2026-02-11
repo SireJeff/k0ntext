@@ -11,6 +11,7 @@ import { confirm } from '@inquirer/prompts';
 import { createIntelligentAnalyzer } from '../../analyzer/intelligent-analyzer.js';
 import { hasOpenRouterKey } from '../../embeddings/openrouter.js';
 import { DatabaseClient } from '../../db/client.js';
+import { estimateTokens } from '../../utils/chunking.js';
 
 /**
  * Embeddings refresh command
@@ -105,7 +106,9 @@ export const embeddingsRefreshCommand = new Command('embeddings:refresh')
         for (const item of batch) {
           if (options.verbose) {
             spinner.stop();
-            console.log(chalk.dim(`  Embedding: ${item.name}`));
+            const tokenEstimate = estimateTokens(item.content);
+            const chunkInfo = tokenEstimate > 8000 ? chalk.yellow(` (${Math.ceil(tokenEstimate / 8000)} chunks)`) : '';
+            console.log(chalk.dim(`  Embedding: ${item.name}${chunkInfo}`));
             spinner.start();
           }
 

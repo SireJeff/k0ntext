@@ -10,6 +10,7 @@ import path from 'path';
 import { glob } from 'glob';
 import { OpenRouterClient, createOpenRouterClient, hasOpenRouterKey } from '../embeddings/openrouter.js';
 import { AI_TOOLS, AI_TOOL_FOLDERS, type AITool } from '../db/schema.js';
+import { estimateTokens, chunkForEmbedding } from '../utils/chunking.js';
 
 /**
  * Discovery result for a file
@@ -588,12 +589,68 @@ Return ONLY valid JSON, no markdown formatting.
 
   /**
    * Generate embedding for a single text string (e.g., search query)
+   *
+   * Automatically chunks large texts (>8K tokens) to fit within API limits.
+   * For chunked texts, returns the average of all chunk embeddings.
    */
   async embedText(text: string): Promise<number[]> {
     if (!this.client) {
       throw new Error('OpenRouter client not available for embeddings');
     }
-    return this.client.embed(text);
+
+    // Check if text needs chunking (8K token limit for OpenRouter)
+    const tokenEstimate = estimateTokens(text);
+
+    if (tokenEstimate <= 8000) {
+      // Text is small enough, embed directly
+      return this.client.embed(text);
+    }
+
+    // Text is too large, chunk it and embed each chunk
+    const chunks = chunkForEmbedding(text);
+
+    if (chunks.length === 1) {
+      return this.client.embed(chunks[0]);
+    }
+
+    // Embed all chunks
+    const embeddings: number[][] = [];
+    for (const chunk of chunks) {
+      const embedding = await this.client.embed(chunk);
+      embeddings.push(embedding);
+    }
+
+    // Return the average embedding across all chunks
+    return this.averageEmbeddings(embeddings);
+  }
+
+  /**
+   * Average multiple embeddings into a single vector
+   */
+  private averageEmbeddings(embeddings: number[][]): number[] {
+    if (embeddings.length === 0) {
+      throw new Error('Cannot average empty embeddings array');
+    }
+
+    if (embeddings.length === 1) {
+      return embeddings[0];
+    }
+
+    const dimension = embeddings[0].length;
+    const averaged = new Array(dimension).fill(0);
+
+    for (const embedding of embeddings) {
+      for (let i = 0; i < dimension; i++) {
+        averaged[i] += embedding[i];
+      }
+    }
+
+    // Divide by count to get average
+    for (let i = 0; i < dimension; i++) {
+      averaged[i] /= embeddings.length;
+    }
+
+    return averaged;
   }
 
   /**
