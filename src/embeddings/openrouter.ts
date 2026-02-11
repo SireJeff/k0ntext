@@ -1,12 +1,13 @@
 /**
  * OpenRouter Client
- * 
+ *
  * Client for OpenRouter API supporting both embeddings and chat completions.
  * Used for intelligent initialization and context understanding.
  */
 
 import { createHash } from 'crypto';
 import { K0NTEXT_MODELS, MODEL_CONFIG, getPrimaryChatModel, getEmbeddingModel } from '../config/models.js';
+import { stripBOM } from '../utils/encoding.js';
 
 /**
  * OpenRouter API endpoints
@@ -185,7 +186,8 @@ export class OpenRouterClient {
       throw new Error('OPENROUTER_API_KEY is required');
     }
 
-    this.apiKey = config.apiKey;
+    // Strip UTF-8 BOM if present (Windows editors sometimes add this to .env files)
+    this.apiKey = stripBOM(config.apiKey);
     this.embeddingModel = config.embeddingModel || DEFAULT_EMBEDDING_MODEL;
     this.chatModel = config.chatModel || DEFAULT_CHAT_MODEL;
     this.siteUrl = config.siteUrl || 'https://github.com/SireJeff/claude-context-engineering-template';
@@ -582,8 +584,11 @@ export function createOpenRouterClient(): OpenRouterClient {
     );
   }
 
+  // Strip UTF-8 BOM from API key (Windows editors sometimes add this to .env files)
+  const cleanApiKey = stripBOM(apiKey);
+
   return new OpenRouterClient({
-    apiKey,
+    apiKey: cleanApiKey,
     // Use centralized models from config, allow env override for testing
     embeddingModel: process.env.OPENROUTER_EMBEDDING_MODEL || getEmbeddingModel(),
     chatModel: process.env.OPENROUTER_CHAT_MODEL || getPrimaryChatModel()
@@ -594,7 +599,8 @@ export function createOpenRouterClient(): OpenRouterClient {
  * Check if OpenRouter API key is available
  */
 export function hasOpenRouterKey(): boolean {
-  return !!process.env.OPENROUTER_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  return !!apiKey && stripBOM(apiKey).length > 0;
 }
 
 /**
