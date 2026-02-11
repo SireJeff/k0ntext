@@ -18,6 +18,14 @@ import { MigrationRunner } from '../../db/migrations/index.js';
  */
 export const migrateCommand = new Command('migrate')
   .description('Manage database schema migrations')
+  .action(() => {
+    // Default action: show help if no subcommand specified
+    console.log('\nAvailable subcommands:\n');
+    console.log('  k0ntext migrate status    Show migration status');
+    console.log('  k0ntext migrate up        Apply pending migrations');
+    console.log('  k0ntext migrate rollback   Rollback to a previous backup\n');
+    console.log('Run "k0ntext migrate <subcommand> --help" for more information.\n');
+  })
 
   // Status subcommand
   .command('status')
