@@ -2,6 +2,73 @@
 
 All notable changes to the `k0ntext` package will be documented in this file.
 
+## [3.7.0] - 2026-02-11
+
+### 🐛 Bug Fixes & Improvements
+
+### Fixed
+
+#### UTF-8 BOM Handling
+- **`src/utils/encoding.ts`** - New utility module for UTF-8 BOM handling
+  - `stripBOM()` - Strip UTF-8 Byte Order Mark (EF BB BF / U+FEFF) from strings
+  - `hasBOM()` - Detect if a string has a UTF-8 BOM
+- **`src/embeddings/openrouter.ts`** - BOM stripping in OpenRouter client
+  - Applied in `createOpenRouterClient()` when reading environment variable
+  - Applied in `OpenRouterClient` constructor
+  - Updated `hasOpenRouterKey()` to handle BOM-prefixed keys
+- **`src/cli/repl/init/wizard.ts`** - BOM stripping in init wizard
+  - Applied when checking for existing API key
+  - Applied when returning environment variable value
+  - Applied to user input before validation
+- **Windows .env files** - Fixed issue where UTF-8 BOM from Windows editors broke OpenRouter API key detection
+
+#### Text Chunking for Large Embeddings
+- **`src/utils/chunking.ts`** - New text chunking utility module
+  - `estimateTokens()` - Rough token estimation (1 token ≈ 4 characters)
+  - `chunkText()` - Split text into chunks with word boundary detection
+  - `chunkForEmbedding()` - Convenience function for embeddings (8K token limit)
+  - Overlap support for context preservation across chunks
+  - Safety limits to prevent infinite loops
+- **`src/analyzer/intelligent-analyzer.ts`** - Auto-chunking for large texts
+  - `embedText()` now automatically chunks texts >8K tokens
+  - Chunks are embedded individually and averaged
+  - `averageEmbeddings()` helper merges chunk embeddings
+- **`src/cli/commands/embeddings-refresh.ts`** - Verbose chunking info
+  - Shows chunk count when processing large files with `--verbose`
+- **Files >8K tokens** - Fixed issue where large documentation files failed to embed with token limit errors
+
+#### Database Schema Version Tracking
+- **Migration 0015** - Add version tracking columns to `sync_state` table
+  - `k0ntext_version` - Track package version when sync occurred
+  - `user_modified` - Flag for user-edited synced files
+  - `last_checked` - Timestamp for version checking (ISO 8601 format)
+  - Indexes on `k0ntext_version` and `user_modified` for efficient queries
+- **SCHEMA_VERSION** - Updated from `1.4.0` to `1.5.0`
+
+#### CLI Improvements
+- **`k0ntext migrate`** - Fixed visibility in help output
+  - Added default action handler showing available subcommands
+  - Now properly visible in `k0ntext --help` output
+
+### Added
+
+#### Tests
+- **`tests/embeddings/openrouter.test.ts`** - 11 tests for BOM handling
+  - Tests for BOM stripping, empty keys, missing keys
+  - Tests for OpenRouterClient creation with/without BOM
+- **`tests/utils/chunking.test.ts`** - 15 tests for chunking utility
+  - Tests for token estimation, chunking, word boundaries
+  - Tests for overlap, edge cases, and large texts
+- **Total test count** - 182 tests (up from 156 in v3.6.0)
+
+### Migration Path
+
+When upgrading from v3.6.0 to v3.7.0:
+1. Run `k0ntext migrate up` to apply migration 0015 (adds version tracking columns)
+2. Or use `k0ntext init` which will automatically detect and apply pending migrations
+3. Existing databases will be augmented (no data loss)
+4. UTF-8 BOM issues in .env files will be automatically handled
+
 ## [3.6.0] - 2026-02-10
 
 ### 🚀 Database Migration System
