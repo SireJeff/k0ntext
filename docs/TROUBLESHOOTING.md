@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-Common issues and solutions for Claude Context Engineering.
+Common issues and solutions for K0ntext (v3.8.0).
 
 ---
 
@@ -9,17 +9,14 @@ Common issues and solutions for Claude Context Engineering.
 Run diagnostics to automatically detect issues:
 
 ```bash
-# Using the unified package
+# Check database and indexing status
 k0ntext stats
 
-# Or using the legacy tools (deprecated)
-npx .k0ntext/tools/bin/claude-context.js diagnose
-```
+# Validate context files
+k0ntext validate
 
-To attempt auto-fix:
-
-```bash
-npx .k0ntext/tools/bin/claude-context.js diagnose --fix
+# Check for documentation drift
+k0ntext drift-detect
 ```
 
 ---
@@ -41,12 +38,12 @@ npx .k0ntext/tools/bin/claude-context.js diagnose --fix
 ### TSG-001: CLI Tools Won't Install
 
 **Symptoms:**
-- `npm install` fails in `.k0ntext/tools/`
+- `npm install -g k0ntext` fails
 - Missing dependencies errors
 
 **Diagnosis:**
 ```bash
-node --version  # Should be 16+
+node --version  # Should be 18+
 npm --version   # Should be 8+
 ```
 
@@ -62,13 +59,10 @@ nvm use 18
 **B. Clear npm cache**
 ```bash
 npm cache clean --force
-cd .k0ntext/tools && rm -rf node_modules && npm install
+npm install -g k0ntext
 ```
 
-**C. Use yarn instead**
-```bash
-cd .k0ntext/tools && yarn install
-```
+**C. Windows users** - Use Node.js LTS (v18, v20, v22) for pre-built SQLite binaries. Non-LTS versions may require Visual Studio Build Tools.
 
 ---
 
@@ -76,20 +70,18 @@ cd .k0ntext/tools && yarn install
 
 **Symptoms:**
 - "AI_CONTEXT.md not found" errors
-- Missing `.k0ntext/` directory
+- Missing `.claude/` directory
 
 **Solutions:**
 
-**A. Verify copy was complete**
+**A. Re-initialize project**
 ```bash
-ls -la .k0ntext/
-# Should contain: agents/, commands/, context/, indexes/, settings.json, README.md
+k0ntext init
 ```
 
-**B. Re-copy from template**
+**B. Sync templates manually**
 ```bash
-cp -r /path/to/template/.claude ./.claude
-cp /path/to/template/AI_CONTEXT.md ./AI_CONTEXT.md
+k0ntext sync-templates
 ```
 
 ---
@@ -181,7 +173,7 @@ The agent should merge related workflows. If not:
 
 **A. Resume initialization**
 ```bash
-npx .k0ntext/tools/bin/claude-context.js init --resume
+k0ntext init
 # Or in Claude Code:
 @context-engineer "Resume initialization"
 ```
@@ -189,7 +181,7 @@ npx .k0ntext/tools/bin/claude-context.js init --resume
 **B. Start fresh**
 ```bash
 rm .k0ntext/INIT_PROGRESS.json
-@context-engineer "Initialize context engineering for this repository"
+k0ntext init
 ```
 
 ---
@@ -261,18 +253,18 @@ Search for the specific function: [function name] in [file pattern]
 
 **Diagnosis:**
 ```bash
-npx .k0ntext/tools/bin/claude-context.js validate --schema
+k0ntext validate --strict
 ```
 
 **Solutions:**
 
-**A. Auto-fix with defaults**
+**A. Auto-fix with validation**
 ```bash
-npx .k0ntext/tools/bin/claude-context.js diagnose --fix
+k0ntext validate --fix
 ```
 
 **B. Manual fix**
-Compare your `settings.json` with the schema in `.k0ntext/schemas/settings.schema.json`.
+Compare your `settings.json` with the schema in `.claude/schemas/settings.schema.json`.
 
 ---
 
@@ -284,7 +276,7 @@ Compare your `settings.json` with the schema in `.k0ntext/schemas/settings.schem
 
 **Diagnosis:**
 ```bash
-npx .k0ntext/tools/bin/claude-context.js validate --links
+k0ntext validate
 ```
 
 **Solutions:**
@@ -293,7 +285,7 @@ npx .k0ntext/tools/bin/claude-context.js validate --links
 After refactoring, update documentation:
 ```bash
 # Find all references to old path
-grep -r "old/path" .k0ntext/
+grep -r "old/path" .claude/
 # Update to new path
 ```
 
@@ -312,7 +304,7 @@ grep -r "old/path" .k0ntext/
 
 **Diagnosis:**
 ```bash
-npx .k0ntext/tools/bin/claude-context.js validate --lines --threshold 60
+k0ntext validate
 ```
 
 **Solutions:**
@@ -340,7 +332,7 @@ Line numbers within ±10 lines are acceptable. Focus on function names as anchor
 
 **Diagnosis:**
 ```bash
-npx .k0ntext/tools/bin/claude-context.js validate --placeholders
+k0ntext validate
 ```
 
 **Solutions:**
@@ -367,7 +359,7 @@ Search and replace remaining placeholders in AI_CONTEXT.md with actual values.
 
 **A. Check agent exists**
 ```bash
-ls .k0ntext/agents/
+ls .claude/agents/
 ```
 
 **B. Use correct invocation**
@@ -391,7 +383,7 @@ ls .k0ntext/agents/
 
 **A. Check command exists**
 ```bash
-ls .k0ntext/commands/
+ls .claude/commands/
 ```
 
 **B. Verify command is registered**
@@ -420,12 +412,9 @@ Check `settings.json` includes the command:
 @context-engineer "Initialize focusing on src/ directory only"
 ```
 
-**B. Increase timeout**
-Edit `settings.json`:
-```json
-"rpi_workflow": {
-  "research_timeout_minutes": 60
-}
+**B. Skip intelligent analysis**
+```bash
+k0ntext init --no-intelligent
 ```
 
 ---
@@ -438,13 +427,9 @@ Edit `settings.json`:
 
 **Solutions:**
 
-**A. Validate specific checks only**
+**A. Use quick validation**
 ```bash
-# Just schema
-npx .k0ntext/tools/bin/claude-context.js validate --schema
-
-# Just structure
-npx .k0ntext/tools/bin/claude-context.js validate --structure
+k0ntext validate
 ```
 
 **B. Skip external link checking**
@@ -462,19 +447,20 @@ Ensure this is disabled (default):
 ### TSG-060: MCP Server Won't Start
 
 **Symptoms:**
-- `mcp:start` exits immediately
+- `k0ntext mcp` exits immediately
 - "Database not found" or "Missing OPENROUTER_API_KEY"
 
 **Diagnosis:**
 ```bash
-npx k0ntext mcp:status
+k0ntext stats
 ```
 
 **Solutions:**
 
 **A. Initialize the database first**
 ```bash
-npx k0ntext mcp:init
+k0ntext init
+k0ntext index
 ```
 
 **B. Set the OpenRouter API key**
@@ -482,9 +468,9 @@ npx k0ntext mcp:init
 export OPENROUTER_API_KEY="your-api-key-here"
 ```
 
-**C. Start the server again**
+**C. Start the server**
 ```bash
-npx k0ntext mcp:start
+k0ntext mcp
 ```
 
 ---
@@ -492,25 +478,21 @@ npx k0ntext mcp:start
 ### TSG-061: MCP Sync Exports Missing
 
 **Symptoms:**
-- `mcp:sync` finishes without generating files
+- Sync finishes without generating files
 - Output files remain unchanged
-
-**Diagnosis:**
-```bash
-npx k0ntext mcp:sync --status
-```
 
 **Solutions:**
 
-**A. Force overwrite managed files**
+**A. Force sync**
 ```bash
-npx k0ntext mcp:sync --force
+k0ntext sync --force
 ```
 
 **B. Recreate database index**
 ```bash
 rm -f .k0ntext.db
-npx k0ntext mcp:init
+k0ntext init
+k0ntext index
 ```
 
 **C. Ensure database exists**
@@ -519,8 +501,6 @@ ls -la .k0ntext.db
 ```
 
 ---
-
-## New Error Codes (v3.0.0)
 
 ### TSG-062: Generate Command Failed
 
@@ -566,19 +546,18 @@ k0ntext sync --from claude
 
 ---
 
-### TSG-064: MCP Server Not Starting
+### TSG-064: MCP Server Build Issues
 
 **Error:** `MCP server failed to start`
 
 **Diagnosis:**
-1. Verify build: `cd packages/ai-context && npm run build`
-2. Check port availability
+1. Verify build: `npm run build`
+2. Check that database file exists
 3. Verify OpenRouter API key
 
 **Solution:**
 ```bash
 # Rebuild
-cd packages/ai-context
 npm run build
 
 # Test MCP server
@@ -591,21 +570,17 @@ npm run start:mcp
 
 If your issue isn't listed:
 
-1. **Run full diagnostics:**
+1. **Run diagnostics:**
    ```bash
-   npx .k0ntext/tools/bin/claude-context.js diagnose --verbose
+   k0ntext stats
+   k0ntext validate -v
    ```
 
-2. **Check logs:**
-   ```bash
-   cat .k0ntext/logs/claude.log
-   ```
-
-3. **Report an issue:**
+2. **Report an issue:**
    https://github.com/SireJeff/k0ntext/issues
 
 Include:
 - Error message
-- Diagnostic output
+- Diagnostic output (`k0ntext stats`)
 - Tech stack
 - Steps to reproduce

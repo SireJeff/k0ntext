@@ -1,4 +1,4 @@
-# CLAUDE.md - Universal AI Context Engineering Template
+# CLAUDE.md - K0ntext AI Context Engineering
 
 This file provides guidance to Claude Code when working with code in this repository.
 
@@ -6,15 +6,16 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## Project Identity
 
-**Platform:** Universal AI Context Engineering - CLI tools and templates for Claude Code, GitHub Copilot, Cline, Antigravity, Cursor, Gemini, and more
+**Platform:** Universal AI Context Engineering - CLI tools and templates for Claude Code, GitHub Copilot, Cline, Antigravity, Cursor, Windsurf, Aider, Continue, and Gemini
 **Domain:** https://github.com/SireJeff/k0ntext
-**Tech Stack:** Node.js, TypeScript, Vitest, npm
-**Status:** Active (v3.1.0)
+**Tech Stack:** Node.js, TypeScript, Vitest, npm, SQLite, OpenRouter
+**Status:** Active (v3.8.0)
 
 **Quick Reference:**
 - **API:** MCP Server for AI tools
 - **Repo:** https://github.com/SireJeff/k0ntext
 - **Deploy:** npm registry
+- **Package:** `k0ntext` on npm
 
 ---
 
@@ -29,15 +30,16 @@ npm test
 
 ### Testing
 ```bash
-npm test                           # All tests
+npm test                           # All tests (watch mode)
 npm run test:run                   # Run once (no watch)
 ```
 
 ### Database
 ```bash
 # SQLite database at .k0ntext.db
-npx k0ntext stats               # View database stats
-npx k0ntext index               # Index codebase
+k0ntext stats                     # View database stats
+k0ntext index                     # Index codebase
+k0ntext migrate up                # Run database migrations
 ```
 
 ### Deployment
@@ -45,25 +47,27 @@ npx k0ntext index               # Index codebase
 npm publish --access public        # Publish to npm
 ```
 
-### New Package Commands
+### CLI Commands
 ```bash
-npx k0ntext init                           # Initialize with intelligent analysis
-npx k0ntext init --no-intelligent          # Skip OpenRouter analysis
-npx k0ntext generate                       # Generate context for all AI tools
-npx k0ntext mcp                            # Start MCP server
-npx k0ntext sync                           # Sync across AI tools
-npx k0ntext index                          # Index codebase into database
-npx k0ntext search <query>                 # Semantic search
-npx k0ntext stats                          # Database statistics
-```
-
-### Legacy Cross-Tool Sync
-```bash
-npx create-ai-context sync:check              # Check if contexts are synchronized
-npx create-ai-context sync:all                # Sync all tools from codebase
-npx create-ai-context sync:from <tool>        # Propagate from specific tool
-npx create-ai-context sync:resolve            # Resolve conflicts
-npx create-ai-context hooks:install           # Install git hooks
+k0ntext init                       # Initialize with intelligent analysis
+k0ntext init --no-intelligent      # Skip OpenRouter analysis
+k0ntext generate                   # Generate context for all AI tools
+k0ntext mcp                        # Start MCP server
+k0ntext sync                       # Sync across AI tools
+k0ntext index                      # Index codebase into database
+k0ntext search <query>             # Semantic search
+k0ntext stats                      # Database statistics
+k0ntext check                      # Check if context files are outdated
+k0ntext restore                    # Restore AI tool configs from backups
+k0ntext cleanup                    # Clean up other AI tool folders
+k0ntext drift-detect               # AI-powered drift detection
+k0ntext cross-sync                 # Sync across all AI tools
+k0ntext hooks install              # Install git hooks
+k0ntext fact-check                 # Validate documentation accuracy
+k0ntext sync-templates             # Sync .claude/ templates from package
+k0ntext template-status            # Show template sync status
+k0ntext snapshot                   # Create database snapshots
+k0ntext snapshot restore           # Restore from snapshot
 ```
 
 ---
@@ -74,12 +78,10 @@ npx create-ai-context hooks:install           # Install git hooks
 **Example:** "Refactor the static analyzer to support a new framework"
 
 **Chain:**
-1. Start: [.claude/indexes/workflows/CATEGORY_INDEX.md](./.claude/indexes/workflows/CATEGORY_INDEX.md)
-2. Find: Relevant category
-3. Load: Domain index
-4. Detail: Workflow file
-5. Code: [.claude/indexes/code/CATEGORY_INDEX.md](./.claude/indexes/code/CATEGORY_INDEX.md)
-6. Implement: Use appropriate specialized agent
+1. Start: Review `src/analyzer/` directory
+2. Find: Relevant source modules
+3. Check: Template files in `templates/base/` for context structure
+4. Implement: Use appropriate specialized agent
 
 **Context Budget:** ~40k tokens (20% of 200k window)
 
@@ -102,7 +104,7 @@ npx create-ai-context hooks:install           # Install git hooks
 **Example:** "Add support for a new AI tool adapter"
 
 **Chain:**
-1. Start: [.claude/indexes/routing/CATEGORY_INDEX.md](./.claude/indexes/routing/CATEGORY_INDEX.md)
+1. Start: Review `src/cli/` and `templates/` directories
 2. Research: /rpi-research
 3. Plan: /rpi-plan
 4. Implement: /rpi-implement
@@ -117,7 +119,7 @@ npx create-ai-context hooks:install           # Install git hooks
 
 **Environment variables:**
 ```bash
-grep -r "process.env" lib/
+grep -r "process.env" src/
 ```
 
 **Hardcoded URLs/domains:**
@@ -129,27 +131,26 @@ grep -r "https://" src/ --include="*.ts" --include="*.js"
 
 ### Finding Business Logic
 
-**New Package Core Files (TypeScript):**
+**Core Files (TypeScript):**
 - `src/analyzer/intelligent-analyzer.ts` - Intelligent codebase analysis
 - `src/db/client.ts` - SQLite database operations
 - `src/embeddings/openrouter.ts` - OpenRouter API integration
 - `src/mcp.ts` - MCP server implementation
-- `src/cli/index.ts` - CLI commands
-
-**Legacy Package Core Files (JavaScript):**
-- `lib/static-analyzer.js` - Codebase analysis
-- `lib/template-populator.js` - Template generation
-- `lib/detector.js` - Tech stack detection
-- `lib/doc-discovery.js` - Existing docs detection
-- `lib/drift-checker.js` - Documentation drift
-- `lib/smart-merge.js` - Merge strategies
-- `lib/cross-tool-sync/sync-manager.js` - Cross-tool sync logic
+- `src/cli/index.ts` - CLI commands and REPL shell
+- `src/config/models.ts` - Centralized model configuration
+- `src/template-engine/` - Handlebars template system
+- `src/template-sync/` - Template synchronization system
+- `src/agent-system/` - TodoListManager, TimestampTracker
+- `src/services/` - SnapshotManager and services
+- `src/utils/chunking.ts` - Text chunking for large file embeddings
+- `src/utils/encoding.ts` - UTF-8 BOM handling
 
 ---
 
 ### Finding Database Schema
 
 **Models:** `src/db/schema.ts`
+**Migrations:** `src/db/migrations/`
 **Database:** SQLite at `.k0ntext.db`
 
 ---
@@ -167,43 +168,41 @@ grep -r "https://" src/ --include="*.ts" --include="*.js"
 
 ```
 k0ntext/
-├── bin/                    # CLI entry point
+├── bin/                    # CLI entry point (k0ntext.js)
 ├── src/                    # TypeScript source
-│   ├── cli/                # CLI commands
-│   ├── db/                 # SQLite database client
-│   ├── embeddings/         # OpenRouter integration
+│   ├── agent-system/       # TodoListManager, TimestampTracker
+│   ├── agents/             # Smart agents (Cleanup, Performance, Drift, FactCheck)
 │   ├── analyzer/           # Intelligent codebase analysis
+│   ├── cli/                # CLI commands, REPL shell, utilities
+│   ├── config/             # Centralized model configuration
+│   ├── db/                 # SQLite database client + migrations
+│   ├── embeddings/         # OpenRouter integration
+│   ├── services/           # SnapshotManager and services
+│   ├── template-engine/    # Handlebars template system
+│   ├── template-sync/      # Template synchronization
+│   ├── utils/              # Utilities (chunking, encoding)
 │   └── mcp.ts              # MCP server
-├── agents/                 # Agent definitions
+├── agents/                 # Agent definitions (distributed with package)
 ├── skills/                 # RPI workflow skills
-├── templates/              # Output templates
+├── templates/              # Output templates + base templates for .claude/
+│   ├── base/               # Templates synced to user .claude/ directories
+│   └── map/                # Map-based context templates
 ├── tests/                  # Vitest tests
 ├── docs/                   # Documentation
 └── .claude/                # Claude Code development context
+    ├── agents/             # Agent definitions
+    ├── commands/           # Command definitions
+    └── schemas/            # JSON schemas
 ```
 
----
-
-## Index Directory
-
-**3-Level Chain:** CLAUDE.md → Category (5) → Domain (15) → Detail (53)
-
-**Level 1 - Categories:** [.claude/indexes/*/CATEGORY_INDEX.md](./.claude/indexes/)
-- Workflows, Code, Search, Agents, Routing
-
-**Level 2 - Domains:** [.claude/indexes/workflows/*.md](./.claude/indexes/workflows/)
-- 5 workflow domains, 4 code domains
-
-**Level 3 - Details:** [.claude/context/workflows/](./.claude/context/workflows/), [.claude/agents/](./.claude/agents/), [.claude/commands/](./.claude/commands/)
-- 8 workflows, 6 agents, 11 commands
+> **Note:** Template index files (indexes/, context/, workflows/) exist in `templates/base/` and are synced to user projects via `k0ntext init` and `k0ntext sync-templates`. They are not present in the repository's own `.claude/` directory.
 
 ---
 
 ## Critical Constants
 
 ### Domain & URLs
-- npm package (new): `k0ntext`
-- npm package (legacy): `create-universal-ai-context`
+- npm package: `k0ntext`
 - GitHub: `SireJeff/k0ntext`
 
 ### Business Constants
@@ -211,28 +210,27 @@ k0ntext/
 - Node.js minimum: 18.0.0
 - Database file: `.k0ntext.db`
 - Sync state stored in: `.k0ntext/sync-state.json`
-- Git hooks location: `.claude/automation/hooks/`
 - OpenRouter API key: `OPENROUTER_API_KEY` environment variable
 
 ---
 
 ## Quick Reference
 
-**Understanding:** [ARCHITECTURE_SNAPSHOT.md](./.claude/context/ARCHITECTURE_SNAPSHOT.md), [workflows/CATEGORY_INDEX.md](./.claude/indexes/workflows/CATEGORY_INDEX.md), [KNOWN_GOTCHAS.md](./.claude/context/KNOWN_GOTCHAS.md)
+**Understanding:** Review `src/` source modules, check `templates/base/` for context structure
 
-**Implementing:** [workflows/*.md](./.claude/context/workflows/), [CODE_TO_WORKFLOW_MAP.md](./.claude/context/CODE_TO_WORKFLOW_MAP.md)
+**Implementing:** Check existing patterns in `src/cli/commands/`, follow TypeScript conventions
 
-**Debugging:** Check Vitest output, review src/ modules
+**Debugging:** Check Vitest output (`npm run test:run`), review src/ modules
 
 ---
 
 ## Agent & Command Routing
 
 **Agents:** @context-engineer (setup), @core-architect (design), @api-developer (endpoints), @database-ops (schema), @integration-hub (external), @deployment-ops (CI/CD)
-**Full matrix:** [.claude/indexes/agents/CAPABILITY_MATRIX.md](./.claude/indexes/agents/CAPABILITY_MATRIX.md)
+**Agent definitions:** [.claude/agents/](./.claude/agents/)
 
 **Commands:** /rpi-research, /rpi-plan, /rpi-implement, /context-optimize, /verify-docs-current, /validate-all, /help, /collab, /analytics
-**All commands:** [.claude/commands/](./.claude/commands/)
+**Command definitions:** [.claude/commands/](./.claude/commands/)
 
 ---
 
@@ -247,18 +245,18 @@ k0ntext/
 - Version must be bumped before npm publish
 - CI/CD publishes automatically on GitHub release
 
-**Full gotchas:** [.claude/context/KNOWN_GOTCHAS.md](./.claude/context/KNOWN_GOTCHAS.md)
+### Database
+- Migrations are in `src/db/migrations/files/`
+- Schema version tracked in `src/db/schema.ts`
+- Run `k0ntext migrate up` to apply pending migrations
 
 ---
 
 ## Documentation System
 
-**Navigation:** 3-level chain (CLAUDE.md → Category → Domain → Detail)
-**Self-maintaining:** CODE_TO_WORKFLOW_MAP.md guides updates after code changes
+**Navigation:** CLAUDE.md serves as the primary entry point for Claude Code
 **Validation:** Run /verify-docs-current [file_path] after modifications
-**RPI Workflow:** /rpi-research → /rpi-plan → /rpi-implement
-
-**See:** [.claude/RPI_WORKFLOW_PLAN.md](./.claude/RPI_WORKFLOW_PLAN.md), [.claude/README.md](./.claude/README.md)
+**RPI Workflow:** /rpi-research -> /rpi-plan -> /rpi-implement
 
 ---
 
@@ -272,7 +270,7 @@ k0ntext/
 
 ## Key Constraints
 
-**Migrations:** N/A
+**Migrations:** SQLite migrations in `src/db/migrations/files/`
 **Testing:** All PRs must pass Vitest tests
 **Security:** No secrets in templates, validate user input paths
 
@@ -280,9 +278,8 @@ k0ntext/
 
 ## Maintenance
 
-**After changes:** Check CODE_TO_WORKFLOW_MAP.md → Update workflows → Run /verify-docs-current
-**Docs hub:** [.claude/README.md](./.claude/README.md)
-**RPI:** [.claude/RPI_WORKFLOW_PLAN.md](./.claude/RPI_WORKFLOW_PLAN.md)
+**After changes:** Update relevant documentation -> Run tests -> Update CHANGELOG.md
+**Docs:** `docs/` directory (QUICKSTART.md, MCP_QUICKSTART.md, TROUBLESHOOTING.md)
 
 ---
 
@@ -293,5 +290,4 @@ k0ntext/
 
 ---
 
-**Version:** 3.1.0 | **Last Updated:** 2026-02-07 | **Context Target:** 200k
-**Architecture:** 3-Level Chain-of-Index | **Index Files:** 20
+**Version:** 3.8.0 | **Last Updated:** 2026-02-11 | **Context Target:** 200k

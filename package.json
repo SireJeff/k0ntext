@@ -52,7 +52,13 @@
     "embeddings",
     "semantic-search",
     "sqlite",
-    "vector-database"
+    "vector-database",
+    "ai-coding",
+    "developer-tools",
+    "context-management",
+    "gemini",
+    "code-context",
+    "continue"
   ],
   "author": "SireJeff",
   "license": "MIT",
