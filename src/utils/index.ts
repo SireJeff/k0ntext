@@ -5,3 +5,4 @@
  */
 
 export * from './encoding.js';
+export * from './chunking.js';
