@@ -32,6 +32,13 @@ import { factCheckCommand } from './commands/fact-check.js';
 import { batchIndexCommand } from './commands/batch-index.js';
 import { versionCheckCommand } from './commands/version-check.js';
 import { restoreCommand } from './commands/restore.js';
+import {
+  snapshotCreateCommand,
+  snapshotRestoreCommand,
+  snapshotListCommand,
+  snapshotDiffCommand,
+  snapshotDeleteCommand
+} from './commands/snapshot.js';
 import { syncTemplatesCommand, templateStatusCommand } from './commands/sync-templates.js';
 import { migrateCommand } from './commands/migrate.js';
 import { embeddingsRefreshCommand } from './commands/embeddings-refresh.js';
@@ -482,6 +489,13 @@ function createProgram(): Command {
 
   // ==================== Restore Command ====================
   program.addCommand(restoreCommand);
+
+  // ==================== Snapshot Commands ====================
+  program.addCommand(snapshotCreateCommand);
+  program.addCommand(snapshotRestoreCommand);
+  program.addCommand(snapshotListCommand);
+  program.addCommand(snapshotDiffCommand);
+  program.addCommand(snapshotDeleteCommand);
 
   // ==================== Template Sync Commands ====================
   program.addCommand(syncTemplatesCommand);

@@ -771,6 +771,75 @@ export class DatabaseClient {
     }));
   }
 
+  // ==================== TodoList Management ====================
+  /**
+   * Insert a new todo session
+   */
+  insertTodoSession(id: string, name: string, metadata?: Record<string, unknown>): void {
+    const stmt = this.db.prepare(
+      'INSERT INTO todo_sessions (id, name, created_at, updated_at, parent_session, metadata) VALUES (?, ?, datetime(\'now\'), datetime(\'now\'), ?, ?)'
+    );
+    stmt.run(id, name, metadata || null);
+  }
+
+  /**
+   * Insert a new todo task
+   */
+  insertTodoTask(sessionId: string, taskId: string, subject: string, description: string, status: string, dependencies: string | null, assignedTo: string | null): void {
+    const stmt = this.db.prepare(
+      'INSERT INTO todo_tasks (id, session_id, subject, description, status, dependencies, assigned_to, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime(\'now\'))'
+    );
+    stmt.run(taskId, sessionId, subject, description, status, dependencies, assignedTo);
+  }
+
+  /**
+   * Get a todo session by ID
+   */
+  getTodoSession(sessionId: string): Record<string, unknown> | null {
+    const stmt = this.db.prepare('SELECT * FROM todo_sessions WHERE id = ?');
+    return stmt.get(sessionId) || null;
+  }
+
+  /**
+   * Get all tasks for a todo session
+   */
+  getTodoTasks(sessionId: string): Record<string, unknown>[] {
+    const stmt = this.db.prepare('SELECT * FROM todo_tasks WHERE session_id = ? ORDER BY created_at ASC');
+    return stmt.all(sessionId) || [];
+  }
+
+  /**
+   * Update a todo task
+   */
+  updateTodoTask(taskId: string, updates: { status?: string; subject?: string; description?: string; completedAt?: string }): void {
+    const parts: string[] = [];
+    const values: (string | number)[] = [];
+
+    if (updates.status !== undefined) {
+      parts.push('status = ?');
+      values.push(updates.status);
+    }
+    if (updates.subject !== undefined) {
+      parts.push('subject = ?');
+      values.push(updates.subject);
+    }
+    if (updates.description !== undefined) {
+      parts.push('description = ?');
+      values.push(updates.description);
+    }
+    if (updates.completedAt !== undefined) {
+      parts.push('completed_at = ?');
+      values.push(updates.completedAt);
+    }
+
+    if (parts.length === 0) return;
+
+    const stmt = this.db.prepare(`
+      UPDATE todo_tasks SET ${parts.join(', ')} WHERE id = ?
+    `);
+    stmt.run(...values, taskId);
+  }
+
   // ==================== Version Tracking ====================
 
   /**
@@ -1217,3 +1286,130 @@ export class DatabaseClient {
     this.db.close();
   }
 }
+
+  // ==================== TodoList Management ====================
+
+  public async createTodoSession(name: string, metadata?: Record<string, unknown>): Promise<string> {
+    const id = generateId();
+    const now = new Date().toISOString();
+
+    await this.db.insertTodoSession(id, name, { metadata: { createdAt: now } });
+    return id;
+  }
+
+  public async createTodoTask(sessionId: string, task: Task): Promise<string> {
+    const taskId = generateId();
+    const now = new Date().toISOString();
+
+    await this.db.insertTodoTask(sessionId, taskId, task.subject, task.description || '', {
+      status: 'pending',
+      dependencies: task.dependencies ? JSON.stringify(task.dependencies) : null
+    });
+    return taskId;
+  }
+
+  public async updateTodoTask(sessionId: string, taskId: string, updates: Partial<Task>): Promise<void> {
+    const updateData: any = {};
+    if (updates.status) updateData.status = updates.status;
+    if (updates.subject) updateData.subject = updates.subject;
+    if (updates.description) updateData.description = updates.description;
+    if (updates.completedAt) updateData.completedAt = new Date().toISOString();
+
+    await this.db.updateTodoTask(taskId, updateData);
+  }
+
+  public async getTodoSession(sessionId: string): Promise<TodoSession | null> {
+    const session = await this.db.getTodoSession(sessionId);
+    if (!session) return null;
+
+    const tasks = await this.db.getTodoTasks(sessionId);
+    return { ...session, tasks };
+  }
+
+  public async exportMarkdown(sessionId: string): Promise<string> {
+    const todoList = await this.getTodoSession(sessionId);
+    if (!todoList) return '';
+
+    let md = `# Session Todo: ${todoList.name}\n\n`;
+    md += `**Session ID:** ${todoList.id}\n`;
+    md += `**Created:** ${todoList.createdAt}\n`;
+    md += `**Status:** ${todoList.tasks.some(t => t.status === 'in-progress') ? 'In Progress' : 'Active'}\n\n`;
+    md += `## Tasks\n\n`;
+
+    const statusMap = { pending: '[ ]', 'in-progress': '[~]', done: '[x]', blocked: '[-]', cancelled: '[-]' };
+
+    for (const task of todoList.tasks) {
+      const status = statusMap[task.status] || '[?]';
+      md += `${status} ${task.id}: ${task.subject}\n`;
+      if (task.description) {
+        md += `  - ${task.description}\n`;
+      }
+    }
+
+    return md;
+  }
+
+  public async importFromMarkdown(content: string): Promise<TodoList> {
+    // Parse markdown format
+    const lines = content.split('\n');
+    // Extract session info and tasks
+    // Create new session with parsed data
+  }
+
+  public async archiveSession(sessionId: string): Promise<void> {
+    // Move session from active/ to completed/
+    // Add completion timestamp
+  }
+
+  // ==================== Timestamp Tracking ====================
+
+  public async recordTimestamp(path: string): Promise<void> {
+    const stats = await fs.stat(path);
+    const content = await fs.readFile(path, 'utf-8');
+    const hash = this.hashContent(content);
+
+    const timestamp: FileTimestamp = {
+      path,
+      modifiedTime: stats.mtime.toISOString(),
+      size: stats.size,
+      hash,
+      gitCommit: await this.getGitCommit(path)
+    };
+
+    await this.db.recordTimestamp(path, timestamp);
+  }
+
+  public async getChangedFiles(since: Date): Promise<ChangedFile[]> {
+    const allTimestamps = await this.db.getAllTimestamps();
+    return allTimestamps.filter(t => new Date(t.modifiedTime) > since);
+  }
+
+  public async compareTimestamps(file1: string, file2: string): Promise<TimestampDiff> {
+    const t1 = await this.getFileTimestamp(file1);
+    const t2 = await this.getFileTimestamp(file2);
+
+    if (!t1 || !t2) {
+      return { file1: t1, file2: t2, areIdentical: false, diff: [] };
+    }
+
+    const areIdentical = t1.hash === t2.hash;
+    const isModified = t1.modifiedTime !== t2.modifiedTime;
+
+    return {
+      file1: t1,
+      file2: t2,
+      areIdentical,
+      file1Newer: t1.modifiedTime > t2.modifiedTime,
+      diff: areIdentical ? [] : this.generateDiff(t1.path, t2.path)
+    };
+  }
+
+  public async syncTimestampsFromGit(): Promise<void> {
+    // Get latest commits and update timestamps
+    const commits = await this.getGitLog();
+    for (const commit of commits) {
+      for (const file of commit.files) {
+        await this.recordTimestamp(file.path);
+      }
+    }
+  }

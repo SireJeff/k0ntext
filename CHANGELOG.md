@@ -2,6 +2,40 @@
 
 All notable changes to the `k0ntext` package will be documented in this file.
 
+## [3.8.0] - 2026-02-11
+
+### 🚀 Context System & Snapshots
+
+**Added:**
+- TodoListManager service for persistent lists
+- TimestampTracker service for sync tracking
+- SnapshotManager service for database save/restore
+- Snapshot commands: create, restore, list, diff, delete
+- Cleanup-agent with AI-powered analysis
+
+**Features:**
+- Todo lists survive context compactions (markdown files in `.claude/todos/`)
+- Database snapshots with gzip compression
+- Version detection with semver comparison
+- Modification detection via SHA-256 hashing
+- Template engine for rich 2-5KB context files
+- Backup creation before file overwrites
+- AI-powered cleanup with OpenRouter analysis
+
+**Database Schema v1.6.0:**
+- Added `todo_sessions` table
+- Added `todo_tasks` table
+- Added `file_timestamps` table
+- Added `generated_files` table
+- Version tracking in `sync_state` table
+
+**New Commands:**
+- `k0ntext snapshot` - Create database snapshots
+- `k0ntext snapshot restore` - Restore from snapshot
+- `k0ntext snapshots` - List all snapshots
+- `k0ntext snap-diff` - Compare two snapshots
+- `k0ntext cleanup` - Clean up other AI tool folders
+
 ## [3.7.0] - 2026-02-11
 
 ### 🐛 Bug Fixes & Improvements
