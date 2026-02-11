@@ -81,7 +81,7 @@ your-project/
 ## Next Steps
 
 1. **Configure Claude Desktop with MCP** → [MCP Quick Start](MCP_QUICKSTART.md)
-2. **Learn about cross-tool sync** → [Migration Guide](MIGRATE_TO_UNIFIED.md)
+2. **Learn about cross-tool sync** → [Migration Guide](ARCHIVE/MIGRATE_TO_UNIFIED.md)
 3. **Troubleshoot issues** → [Troubleshooting](TROUBLESHOOTING.md)
 
 ## How It Works

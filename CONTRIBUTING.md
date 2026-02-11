@@ -1,28 +1,30 @@
-# Contributing to Universal AI Context Engineering Template
+# Contributing to K0ntext
 
 We love contributions! Whether you're fixing a bug, improving documentation, or adding new features, we want your input. Here's how you can contribute:
 
 ## Getting Started
 
 ### Prerequisites
-- Basic knowledge of Markdown
+- Node.js 18+ (required)
+- Basic knowledge of TypeScript
 - Familiarity with the context engineering concepts described in the README
 - Git knowledge (for submitting changes)
-- Node.js 18+ (for CLI tooling contributions)
 
 ### Setting Up
 1. Fork the repository
-2. Create a new branch for your changes: `git checkout -b feature/your-feature`
-3. Make your changes
-4. Submit a pull request
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/k0ntext.git`
+3. Install dependencies: `cd k0ntext && npm install`
+4. Build the project: `npm run build`
+5. Run tests: `npm run test:run`
+6. Create a new branch for your changes: `git checkout -b feature/your-feature`
 
 ## Contribution Guidelines
 
 ### Code Contributions
 - **Small, focused changes**: Prefer small, atomic changes that solve one problem
-- **Testing**: If applicable, include tests for new functionality
+- **Testing**: Include tests for new functionality (Vitest)
 - **Documentation**: Update documentation when adding or changing functionality
-- **Style**: Follow the existing code style and formatting
+- **Style**: Follow the existing TypeScript code style and formatting
 
 ### Documentation Contributions
 - **Clarity**: Write clear, concise documentation
@@ -30,60 +32,42 @@ We love contributions! Whether you're fixing a bug, improving documentation, or 
 - **Completeness**: Ensure all features and usage patterns are documented
 - **Cross-Tool Sync**: Document new sync features in README and CHANGELOG
 - **CLI Commands**: Update help text and examples for new commands
-- **Symlink Architecture**: Document symlink behavior and fallback modes
 
-### CLI Tooling Contributions
-For changes to `.ai-context/tools/`:
-- Follow existing code patterns in `lib/`
-- Add appropriate error handling using `lib/errors.js` classes
-- Update schemas in `.ai-context/schemas/` if adding new structures
-- Run `npx k0ntext validate --all` before submitting
-
-### npm Package Contributions
-For changes to `packages/create-ai-context/`:
-- Run tests: `cd packages/create-ai-context && npm test`
-- Ensure coverage: `npm run test:coverage`
-- Update package README if adding features
-- Follow existing code patterns in `lib/`
-
-### Symlink Architecture Contributions
-For changes to `lib/adapters/claude.js` (symlink generation):
-- Test symlink creation on Windows, macOS, and Linux
-- Verify fallback to copy mode when symlinks aren't supported
-- Update `.claude/README.md` if symlink structure changes
-- Run E2E tests: `npm test -- tests/e2e/`
-- Run integration tests: `npm test -- tests/integration/`
+### CLI & Source Contributions
+For changes to `src/`:
+- Follow existing TypeScript patterns
+- Add appropriate error handling
+- Update schemas in `templates/base/schemas/` if adding new structures
+- Run `k0ntext validate` before submitting
 
 ### Cross-Tool Sync Contributions
-For changes to `lib/cross-tool-sync/`:
+For changes to sync or template systems:
 - Ensure file hashing works correctly (SHA-256)
 - Test with all conflict resolution strategies
 - Verify git hooks installation
 - Test sync state persistence
-- Run: `npm test -- tests/unit/cross-tool-sync.test.js`
 
 ### Quality Standards
-- Review the [Quality Checklist](.ai-context/standards/QUALITY_CHECKLIST.md)
-- For extensions, follow the [Extension Guidelines](.ai-context/standards/EXTENSION_GUIDELINES.md)
+- Review the quality checklist in `templates/base/standards/`
+- For extensions, follow the extension guidelines in `templates/base/standards/`
 
 ## Areas Looking for Contributors
 
 ### New AI Tool Support
-We're looking for contributors to add support for:
-- **Cursor** - Have their context format? Help us integrate
-- **Windsurf** - Know their API? Contribute an adapter
-- **Aider** - Want to add support? PRs welcome
-- **Continue** - Help build the universal standard
+We're always looking to improve support for AI coding tools. Current supported tools:
+- Claude Code, GitHub Copilot, Cursor, Windsurf, Cline, Aider, Continue, Antigravity, Gemini
 
-See `lib/adapters/` for examples of existing adapters.
+Know of a new AI tool that needs context files? Help us integrate it! See `src/` for existing patterns.
 
-### Carbon Efficiency
-- Implement token usage tracking
-- Build carbon footprint calculator
-- Add energy-aware context optimization
+### Improvements Wanted
+- Better semantic search algorithms
+- Additional MCP server tools
+- Performance optimizations for large codebases
+- Improved template system
+- Better Windows compatibility
 
 ### Documentation
-- Improve cross-tool sync documentation
+- Improve troubleshooting guides
 - Write tutorials for specific use cases
 - Create video demos
 
@@ -98,27 +82,33 @@ When creating an issue, please provide:
 ## Pull Request Process
 
 1. **Update the README** if you change functionality that users need to know about
-2. **Add tests** if you add new functionality
+2. **Add tests** if you add new functionality (182+ tests and counting)
 3. **Update documentation** if you change existing functionality
 4. **Update CHANGELOG.md** with your changes
-5. **Ensure tests pass** (all 453+ tests)
+5. **Ensure tests pass**: `npm run test:run`
 6. **Submit your PR** with a clear description of changes
 
 ## Development Workflow
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/claude-context-engineering-template.git
-cd claude-context-engineering-template
+git clone https://github.com/YOUR_USERNAME/k0ntext.git
+cd k0ntext
 
 # Install dependencies
-cd packages/create-ai-context && npm install
+npm install
+
+# Build
+npm run build
 
 # Run tests
+npm run test:run
+
+# Run tests in watch mode
 npm test
 
-# Run with coverage
-npm run test:coverage
+# Lint code
+npm run lint
 
 # Link for local testing
 npm link
@@ -131,7 +121,7 @@ This project adheres to the [Code of Conduct](CODE_OF_CONDUCT.md). By participat
 
 ## Vision
 
-We're building toward the **Universal AI Context Standard** — an open specification that all AI coding tools can adopt for efficient, carbon-aware context management. Every contribution brings us closer to that goal.
+We're building toward the **Universal AI Context Standard** -- an open specification that all AI coding tools can adopt for efficient context management. Every contribution brings us closer to that goal.
 
 ## Contact
 
@@ -139,4 +129,4 @@ For questions or discussions, please open an issue or reach out to the maintaine
 
 ---
 
-**Version:** 2.4.0 | **Last Updated:** 2026-01-31
+**Version:** 3.8.0 | **Last Updated:** 2026-02-11
