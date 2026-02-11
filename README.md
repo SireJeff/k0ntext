@@ -317,6 +317,47 @@ k0ntext init --no-template-sync
 | `automation/` | 1 | Automation settings |
 | **Total** | **40** | **Excluded:** `context/`, `indexes/` (user-specific) |
 
+---
+
+## 🆕 v3.7.0 - Bug Fixes & Improvements
+
+### Critical Fixes
+
+- ✅ **UTF-8 BOM handling** - Fixed OpenRouter API key detection on Windows when `.env` files have UTF-8 Byte Order Mark
+- ✅ **Large file embeddings** - Files >8K tokens now automatically chunk for embedding generation
+- ✅ **Database version tracking** - New migration (0015) adds version tracking to `sync_state` table
+- ✅ **Migrate command visibility** - Fixed `k0ntext migrate` command visibility in help output
+
+### What's Fixed
+
+| Issue | Fix |
+|-------|-----|
+| **Windows .env BOM** | Strip UTF-8 BOM (EF BB BF) from environment variables before using API keys |
+| **Large docs failing** | Auto-chunk files >8K tokens with 100-token overlap for context preservation |
+| **Migrate not showing** | Added default action handler to show subcommands |
+
+### New Features
+
+- **Text chunking utility** (`src/utils/chunking.ts`) - Split large texts intelligently with word boundary detection
+- **BOM stripping utility** (`src/utils/encoding.ts`) - Handle UTF-8 BOM in environment files
+
+### Database Migration
+
+Run `k0ntext migrate up` to apply migration 0015:
+```bash
+k0ntext migrate up
+```
+
+This adds `k0ntext_version`, `user_modified`, and `last_checked` columns to the `sync_state` table for better version tracking.
+
+### Upgrade
+
+```bash
+npm install -g k0ntext@latest
+```
+
+---
+
 ## 📖 Complete CLI Reference
 
 ### Core Commands
