@@ -18,11 +18,13 @@
 ## Table of Contents
 
 - [Quick Start](#quick-start)
+- [Packages](#packages)
 - [Zero-to-Hero Workflow](#zero-to-hero-workflow)
 - [Windows Support](#windows-support)
 - [Features Overview](#features-overview)
 - [Latest Release](#latest-release-v380)
-- [v3.8.0 Release](#latest-release-v380) - Context System, Snapshots, & Bug Fixes
+- [v3.8.0 Release](#release-v380) - Context System, Snapshots, & Bug Fixes
+- [v3.8.1 Release](#release-v381) - Banner, License & Documentation Updates
 - [Complete CLI Reference](#complete-cli-reference)
 - [MCP Server Usage](#mcp-server-usage)
 - [Supported AI Tools](#supported-ai-tools)
@@ -226,15 +228,31 @@ K0ntext uses native SQLite extensions for high-performance vector search.
 
 ---
 
-## Latest Release (v3.8.0)
+## Releases
 
+### [v3.8.0 Release](#release-v380) - 2026-02-11
+
+**📦 New Features**
 - **Database Snapshots** -- Create, restore, diff, and delete database snapshots with gzip compression
 - **Persistent Todo Lists** -- TodoListManager service with markdown files that survive context compactions
 - **AI-Powered Cleanup** -- CleanupAgent with OpenRouter-powered analysis for intelligent folder cleanup
-- **Timestamp Tracking** -- TimestampTracker service for precise sync tracking
+- **Timestamp Tracking** -- TimestampTracker service for precise file synchronization tracking
 - **Database Schema v1.6.0** -- New tables for todo sessions, tasks, file timestamps, and generated files
 
+**🐛 Bug Fixes**
+- Fixed type guard errors in `TimestampTracker` and `TodoListManager` services
+- Fixed import paths for `SnapshotManager` types in CLI commands
+- Added missing `description` property to `SnapshotListEntry` interface
+- Fixed snapshot command type annotations for map callbacks
+
 See [CHANGELOG.md](CHANGELOG.md) for full release history.
+
+### [v3.8.1 Release](#release-v381) - 2026-02-12
+
+**📚 Documentation Updates**
+- Created comprehensive `packages.md` documenting all included components
+- Declared `MIT License` explicitly in package.json
+- Added project banner image to README header
 
 ---
 
