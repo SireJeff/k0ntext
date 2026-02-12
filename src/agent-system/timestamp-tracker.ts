@@ -127,17 +127,17 @@ export class TimestampTracker {
       const relativePath = this.toRelativePath(filePath);
       const row = this.db.prepare(
         'SELECT * FROM file_timestamps WHERE path = ?'
-      ).get(relativePath);
+      ).get(relativePath) as Record<string, unknown> | undefined;
 
       if (!row) return null;
 
       return {
-        path: row.path,
-        modifiedTime: row.modified_time,
-        size: row.size,
-        hash: row.hash,
-        lastChecked: row.last_checked,
-        gitCommit: row.git_commit
+        path: typeof row.path === 'string' ? row.path : relativePath,
+        modifiedTime: typeof row.modified_time === 'string' ? row.modified_time : '',
+        size: typeof row.size === 'number' ? row.size : 0,
+        hash: typeof row.hash === 'string' ? row.hash : '',
+        lastChecked: typeof row.last_checked === 'string' ? row.last_checked : '',
+        gitCommit: typeof row.git_commit === 'string' ? row.git_commit : undefined
       };
     } catch (error) {
       if (this.verbose) {
@@ -296,16 +296,19 @@ export class TimestampTracker {
     try {
       const rows = this.db.prepare(
         'SELECT * FROM file_timestamps ORDER BY last_checked DESC'
-      ).all();
+      ).all() as unknown[];
 
-      return rows.map((row: any) => ({
-        path: row.path,
-        modifiedTime: row.modified_time,
-        size: row.size,
-        hash: row.hash,
-        lastChecked: row.last_checked,
-        gitCommit: row.git_commit
-      }));
+      return rows.map((row: unknown) => {
+        const r = row as Record<string, unknown>;
+        return {
+          path: typeof r.path === 'string' ? r.path : '',
+          modifiedTime: typeof r.modified_time === 'string' ? r.modified_time : '',
+          size: typeof r.size === 'number' ? r.size : 0,
+          hash: typeof r.hash === 'string' ? r.hash : '',
+          lastChecked: typeof r.last_checked === 'string' ? r.last_checked : '',
+          gitCommit: typeof r.git_commit === 'string' ? r.git_commit : undefined
+        };
+      });
     } catch (error) {
       if (this.verbose) {
         console.warn('Failed to get all timestamps:', error);
@@ -326,16 +329,19 @@ export class TimestampTracker {
 
       const rows = this.db.prepare(
         'SELECT * FROM file_timestamps WHERE last_checked < ? ORDER BY last_checked ASC'
-      ).all(cutoff);
+      ).all(cutoff) as unknown[];
 
-      return rows.map((row: any) => ({
-        path: row.path,
-        modifiedTime: row.modified_time,
-        size: row.size,
-        hash: row.hash,
-        lastChecked: row.last_checked,
-        gitCommit: row.git_commit
-      }));
+      return rows.map((row: unknown) => {
+        const r = row as Record<string, unknown>;
+        return {
+          path: typeof r.path === 'string' ? r.path : '',
+          modifiedTime: typeof r.modified_time === 'string' ? r.modified_time : '',
+          size: typeof r.size === 'number' ? r.size : 0,
+          hash: typeof r.hash === 'string' ? r.hash : '',
+          lastChecked: typeof r.last_checked === 'string' ? r.last_checked : '',
+          gitCommit: typeof r.git_commit === 'string' ? r.git_commit : undefined
+        };
+      });
     } catch (error) {
       if (this.verbose) {
         console.warn('Failed to get stale timestamps:', error);

@@ -14,6 +14,7 @@ import { confirm, input, select } from '@inquirer/prompts';
 import type { DatabaseClient } from '../../db/client.js';
 import { SnapshotManager } from '../../services/snapshot-manager.js';
 import type { SnapshotMetadata, SnapshotListEntry, SnapshotDiffResult } from '../../services/snapshot-manager.js';
+import { compareVersions, needsUpdate, getUpdateType } from '../version/comparator.js';
 
 /**
  * Format bytes for display
@@ -56,7 +57,7 @@ function formatDate(isoString: string): string {
  * Format snapshot metadata for display
  */
 function formatSnapshot(snapshot: SnapshotMetadata): string {
-  const tags = snapshot.tags ? snapshot.tags.map(t => chalk.cyan(`#${t}`)).join(' ') : '';
+  const tags = snapshot.tags ? snapshot.tags.map((t: string) => chalk.cyan(`#${t}`)).join(' ') : '';
   const tagStr = tags ? ` ${tags}` : '';
   const auto = snapshot.automatic ? chalk.dim('[auto]') : '';
 

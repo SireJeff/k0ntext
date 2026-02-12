@@ -612,35 +612,44 @@ All tasks for "${session.name}" completed at ${session.updatedAt}.
    */
   private getSessionFromDatabase(sessionId: string): TodoSession | null {
     try {
-      const session = this.db.prepare(
+      const sessionRow = this.db.prepare(
         'SELECT * FROM todo_sessions WHERE id = ?'
-      ).get(sessionId);
+      ).get(sessionId) as Record<string, unknown> | undefined;
 
-      if (!session) return null;
+      if (!sessionRow) return null;
 
-      const tasks = this.db.prepare(
+      const session = sessionRow;
+
+      const tasksRows = this.db.prepare(
         'SELECT * FROM todo_tasks WHERE session_id = ? ORDER BY created_at ASC'
-      ).all(sessionId);
+      ).all(sessionId) as unknown[];
 
       return {
-        id: session.id,
-        name: session.name,
-        status: session.status as TodoSession['status'],
-        createdAt: session.created_at,
-        updatedAt: session.updated_at,
-        parentSession: session.parent_session,
-        metadata: typeof session.metadata === 'string' ? JSON.parse(session.metadata) : session.metadata,
-        tasks: tasks.map((t: any) => ({
-          id: t.id,
-          subject: t.subject,
-          description: t.description || undefined,
-          status: t.status,
-          dependencies: typeof t.dependencies === 'string' ? JSON.parse(t.dependencies) : t.dependencies,
-          assignedTo: t.assigned_to || undefined,
-          createdAt: t.created_at,
-          updatedAt: t.updated_at,
-          completedAt: t.completed_at || undefined
-        }))
+        id: typeof session.id === 'string' ? session.id : sessionId,
+        name: typeof session.name === 'string' ? session.name : 'Unknown',
+        status: (typeof session.status === 'string' && ['active', 'completed', 'archived'].includes(session.status))
+          ? session.status as TodoSession['status'] : 'active',
+        createdAt: typeof session.created_at === 'string' ? session.created_at : new Date().toISOString(),
+        updatedAt: typeof session.updated_at === 'string' ? session.updated_at : new Date().toISOString(),
+        parentSession: typeof session.parent_session === 'string' ? session.parent_session : undefined,
+        metadata: typeof session.metadata === 'string' ? JSON.parse(session.metadata) :
+                     (session.metadata && typeof session.metadata === 'object') ? session.metadata as Record<string, unknown> : undefined,
+        tasks: tasksRows.map((t: unknown) => {
+          const task = t as Record<string, unknown>;
+          return {
+            id: typeof task.id === 'string' ? task.id : this.generateTaskId(),
+            subject: typeof task.subject === 'string' ? task.subject : '',
+            description: typeof task.description === 'string' ? task.description : undefined,
+            status: (typeof task.status === 'string' && ['pending', 'in-progress', 'completed', 'blocked', 'cancelled'].includes(task.status))
+              ? task.status as TodoTask['status'] : 'pending',
+            dependencies: typeof task.dependencies === 'string' ? JSON.parse(task.dependencies) :
+                           (task.dependencies && Array.isArray(task.dependencies)) ? task.dependencies as string[] : undefined,
+            assignedTo: typeof task.assigned_to === 'string' ? task.assigned_to : undefined,
+            createdAt: typeof task.created_at === 'string' ? task.created_at : new Date().toISOString(),
+            updatedAt: typeof task.updated_at === 'string' ? task.updated_at : new Date().toISOString(),
+            completedAt: typeof task.completed_at === 'string' ? task.completed_at : undefined
+          };
+        })
       };
     } catch (error) {
       if (this.verbose) {

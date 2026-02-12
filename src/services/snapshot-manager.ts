@@ -79,6 +79,8 @@ export interface SnapshotListEntry {
   id: string;
   /** Snapshot name */
   name: string;
+  /** Snapshot description */
+  description?: string;
   /** When snapshot was created */
   createdAt: string;
   /** Snapshot size in bytes */

@@ -104,3 +104,4 @@ export function formatUpdateType(type: UpdateType, from: string, to: string): st
 export function isValidVersion(version: string): boolean {
   return /^\d+\.\d+\.\d+/.test(version);
 }
+export const version = '3.8.0';
