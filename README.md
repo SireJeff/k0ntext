@@ -18,21 +18,17 @@
 ## Table of Contents
 
 - [Quick Start](#quick-start)
-- [Packages](#packages)
 - [Zero-to-Hero Workflow](#zero-to-hero-workflow)
 - [Windows Support](#windows-support)
 - [Features Overview](#features-overview)
-- [Latest Release](#latest-release-v380)
-- [v3.8.0 Release](#release-v380) - Context System, Snapshots, & Bug Fixes
-- [v3.8.1 Release](#release-v381) - Banner, License & Documentation Updates
+- [Releases](#releases)
 - [Complete CLI Reference](#complete-cli-reference)
 - [MCP Server Usage](#mcp-server-usage)
 - [Supported AI Tools](#supported-ai-tools)
 - [Configuration](#configuration)
 - [Architecture](#architecture)
 - [Development](#development)
-- [Performance Monitoring](#performance-monitoring)
-- [Troubleshooting](#troubleshooting)
+- [Documentation](#documentation)
 - [Community](#community)
 
 ---
@@ -53,9 +49,13 @@ k0ntext generate
 k0ntext mcp
 ```
 
+---
+
 ## Zero-to-Hero Workflow
 
-### New Project Setup
+<details>
+<summary><b>New Project Setup</b></summary>
+
 ```bash
 # 1. Initialize with intelligent analysis
 k0ntext init --intelligent
@@ -70,7 +70,11 @@ k0ntext generate
 k0ntext mcp
 ```
 
-### Existing Project Setup
+</details>
+
+<details>
+<summary><b>Existing Project Setup</b></summary>
+
 ```bash
 # 1. Check existing context
 k0ntext stats
@@ -85,6 +89,10 @@ k0ntext generate --force
 k0ntext validate --strict
 ```
 
+</details>
+
+---
+
 ## Windows Support
 
 K0ntext uses native SQLite extensions for high-performance vector search.
@@ -94,7 +102,10 @@ K0ntext uses native SQLite extensions for high-performance vector search.
 - **Instant install:** These versions install without extra tools
 - **Non-LTS versions (v23/v24):** May require [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) to compile the database driver
 
-## Features Overview
+---
+
+<details>
+<summary><b>🚀 Features Overview</b></summary>
 
 ### Interactive REPL Shell
 - **Auto-start**: Running `k0ntext` with no arguments launches the interactive shell
@@ -226,9 +237,12 @@ K0ntext uses native SQLite extensions for high-performance vector search.
 - Knowledge graph relationships
 - Automatic schema migrations
 
+</details>
+
 ---
 
-## Releases
+<details>
+<summary><b>📦 Releases</b></summary>
 
 ### [v3.8.0 Release](#release-v380) - 2026-02-11
 
@@ -254,9 +268,12 @@ See [CHANGELOG.md](CHANGELOG.md) for full release history.
 - Declared `MIT License` explicitly in package.json
 - Added project banner image to README header
 
+</details>
+
 ---
 
-## Complete CLI Reference
+<details>
+<summary><b>⚙️ Complete CLI Reference</b></summary>
 
 ### Core Commands
 
@@ -697,7 +714,12 @@ K0NTEXT_SKIP_HOOKS=1 git commit -m "message"
 git commit --no-verify -m "message"
 ```
 
-## MCP Server Usage
+</details>
+
+---
+
+<details>
+<summary><b>🔌 MCP Server Usage</b></summary>
 
 ### Auto-Configuration
 
@@ -767,6 +789,10 @@ await add_knowledge({
 });
 ```
 
+</details>
+
+---
+
 ## Supported AI Tools
 
 ### Fully Supported
@@ -787,6 +813,8 @@ await add_knowledge({
 - **@database-ops** -- Database operations
 - **@integration-hub** -- External integrations
 - **@deployment-ops** -- CI/CD and deployment
+
+---
 
 ## Configuration
 
@@ -815,7 +843,10 @@ Each AI tool has its own configuration file path:
 - Antigravity: `.agent/README.md`
 - Gemini: `.gemini/config.md`
 
-## Architecture
+---
+
+<details>
+<summary><b>🏗️ Architecture</b></summary>
 
 ### System Components
 
@@ -866,7 +897,12 @@ The SQLite database contains:
 - **File Timestamps** -- Sync tracking timestamps
 - **Snapshots** -- Database snapshot metadata
 
-## Development
+</details>
+
+---
+
+<details>
+<summary><b>💻 Development</b></summary>
 
 ### Build and Test
 
@@ -916,6 +952,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 - `templates/` -- Context templates
 - `.claude/` -- Claude Code development context
 
+</details>
+
+---
+
 ## Performance Monitoring
 
 The PerformanceMonitorAgent provides insights into:
@@ -932,7 +972,10 @@ k0ntext performance
 k0ntext performance --json
 ```
 
-## Troubleshooting
+---
+
+<details>
+<summary><b>🔧 Troubleshooting</b></summary>
 
 ### Common Issues
 
@@ -971,11 +1014,25 @@ k0ntext generate -v
 
 See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for the full troubleshooting guide.
 
+</details>
+
+---
+
+## Documentation
+
+- **[User Guide](./docs/USER_GUIDE.md)** - Comprehensive guide to k0ntext features, slash commands, agents, and RPI workflow
+- **[Quick Start](./docs/QUICKSTART.md)** - Getting started with k0ntext in 5 minutes
+- **[MCP Guide](./docs/MCP_QUICKSTART.md)** - Model Context Protocol server setup
+- **[Troubleshooting](./docs/TROUBLESHOOTING.md)** - Common issues and solutions
+
+---
+
 ## Community
 
 - **GitHub Issues:** [Report bugs and request features](https://github.com/SireJeff/k0ntext/issues)
 - **Discussions:** [Join community discussions](https://github.com/SireJeff/k0ntext/discussions)
-- **Documentation:** [Full docs](./docs/)
+
+---
 
 ## License
 
