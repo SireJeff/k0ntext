@@ -16,6 +16,7 @@
     "skills/",
     "docs/"
   ],
+  "license": "MIT",
   "publishConfig": {
     "access": "public"
   },

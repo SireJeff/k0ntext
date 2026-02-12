@@ -18,6 +18,7 @@
 - [Windows Support](#windows-support)
 - [Features Overview](#features-overview)
 - [Latest Release](#latest-release-v380)
+- [v3.8.0 Release](#latest-release-v380) - Context System, Snapshots, & Bug Fixes
 - [Complete CLI Reference](#complete-cli-reference)
 - [MCP Server Usage](#mcp-server-usage)
 - [Supported AI Tools](#supported-ai-tools)
