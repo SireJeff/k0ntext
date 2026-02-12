@@ -1,6 +1,6 @@
 <div align="center">
 
-![K0ntext Banner](./banner.png)
+![K0ntext Banner](./assets/banner.png)
 
 **Universal AI context engineering for Claude, GitHub Copilot, Cline, Cursor, Windsurf, Aider, Continue, Antigravity, and Gemini with OpenRouter-powered intelligent analysis.**
 
