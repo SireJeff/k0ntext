@@ -1,5 +1,5 @@
 {
-  "name": "k0ntext",
+  "name": "@SireJeff/k0ntext",
   "version": "3.8.1",
   "description": "Unified AI Context Engineering - Intelligent context for Claude, Copilot, Cline, and more with OpenRouter-powered initialization",
   "main": "dist/index.js",
@@ -18,6 +18,7 @@
   ],
   "license": "MIT",
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
   "scripts": {

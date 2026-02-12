@@ -84,6 +84,7 @@ coverage/
 # Environment files with secrets
 .env.local
 .env.*.local
+.npmrc
 
 # RPI plan files (user-specific working documents)
 .claude/plans/**/*.md
