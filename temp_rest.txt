@@ -1,0 +1,563 @@
+      RETURNING *
+    `);
+
+    const row = stmt.get(
+      id,
+      record.tool,
+      record.filePath,
+      record.contentHash,
+      record.backupPath || null,
+      record.metadata ? JSON.stringify(record.metadata) : null
+    ) as Record<string, unknown>;
+
+    return {
+      id: row.id as string,
+      tool: row.tool as string,
+      filePath: row.file_path as string,
+      contentHash: row.content_hash as string,
+      backupPath: row.backup_path as string | undefined,
+      generatedAt: row.generated_at as string,
+      lastVerifiedAt: row.last_verified_at as string | undefined,
+      userModified: Boolean(row.user_modified as number),
+      metadata: row.metadata ? JSON.parse(row.metadata as string) : undefined
+    };
+  }
+
+  /**
+   * Get generated file info by tool and path
+   */
+  getGeneratedFileInfo(tool: string, filePath: string): GeneratedFile | null {
+    const id = `${tool}:${filePath}`;
+    const stmt = this.db.prepare('SELECT * FROM generated_files WHERE id = ?');
+    const row = stmt.get(id) as Record<string, unknown> | undefined;
+
+    if (!row) return null;
+
+    return {
+      id: row.id as string,
+      tool: row.tool as string,
+      filePath: row.file_path as string,
+      contentHash: row.content_hash as string,
+      backupPath: row.backup_path as string | undefined,
+      generatedAt: row.generated_at as string,
+      lastVerifiedAt: row.last_verified_at as string | undefined,
+      userModified: Boolean(row.user_modified as number),
+      metadata: row.metadata ? JSON.parse(row.metadata as string) : undefined
+    };
+  }
+
+  /**
+   * Mark a generated file as user modified
+   */
+  markUserModified(tool: string, filePath: string): void {
+    const id = `${tool}:${filePath}`;
+    const stmt = this.db.prepare(`
+      UPDATE generated_files
+      SET user_modified = 1, last_verified_at = datetime('now')
+      WHERE id = ?
+    `);
+    stmt.run(id);
+  }
+
+  /**
+   * Get all generated files for a tool
+   */
+  getGeneratedFiles(tool: string): GeneratedFile[] {
+    const stmt = this.db.prepare('SELECT * FROM generated_files WHERE tool = ?');
+    const rows = stmt.all(tool) as Record<string, unknown>[];
+
+    return rows.map(row => ({
+      id: row.id as string,
+      tool: row.tool as string,
+      filePath: row.file_path as string,
+      contentHash: row.content_hash as string,
+      backupPath: row.backup_path as string | undefined,
+      generatedAt: row.generated_at as string,
+      lastVerifiedAt: row.last_verified_at as string | undefined,
+      userModified: Boolean(row.user_modified as number),
+      metadata: row.metadata ? JSON.parse(row.metadata as string) : undefined
+    }));
+  }
+
+  // ==================== Embeddings ====================
+
+  /**
+   * Store an embedding
+   */
+  storeEmbedding(contextId: string, embedding: number[]): void {
+    // Delete existing embedding first (virtual tables don't support UPSERT)
+    this.deleteEmbedding(contextId);
+
+    const stmt = this.db.prepare(`
+      INSERT INTO embeddings (context_id, embedding)
+      VALUES (?, ?)
+    `);
+
+    // Convert to blob for sqlite-vec
+    const buffer = new Float32Array(embedding);
+    stmt.run(contextId, Buffer.from(buffer.buffer));
+  }
+
+  /**
+   * Search by embedding similarity
+   */
+  searchByEmbedding(queryEmbedding: number[], limit = 10): SearchResult[] {
+    const buffer = new Float32Array(queryEmbedding);
+
+    const stmt = this.db.prepare(`
+      SELECT
+        e.context_id,
+        e.embedding,
+        ci.*,
+        vec_distance_cosine(e.embedding, ?) as distance
+      FROM embeddings e
+      JOIN context_items ci ON e.context_id = ci.id
+      ORDER BY distance
+      LIMIT ?
+    `);
+
+    const rows = stmt.all(Buffer.from(buffer.buffer), limit) as Record<string, unknown>[];
+
+    return rows.map(row => ({
+      item: this.rowToItem(row),
+      similarity: 1 - (row.distance as number || 0) // Convert distance to similarity
+    }));
+  }
+
+  /**
+   * Hybrid search combining vector and text search
+   */
+  hybridSearch(
+    query: string,
+    queryEmbedding: number[] | null,
+    options: {
+      limit?: number;
+      type?: ContextType;
+      vectorWeight?: number; // 0-1, higher = more weight on semantic
+    } = {}
+  ): SearchResult[] {
+    const {
+      limit = 10,
+      type,
+      vectorWeight = 0.7
+    } = options;
+
+    const textResults = this.searchText(query, type);
+    const semanticResults = queryEmbedding ? this.searchByEmbedding(queryEmbedding, limit * 2) : [];
+
+    // Combine and score
+    const combinedScores = new Map<string, number>();
+
+    // Score text results (inverse of position)
+    for (let i = 0; i < textResults.length; i++) {
+      const score = (1 - i / textResults.length) * (1 - vectorWeight);
+      combinedScores.set(textResults[i].id, (combinedScores.get(textResults[i].id) || 0) + score);
+    }
+
+    // Score semantic results
+    for (const result of semanticResults) {
+      const score = result.similarity * vectorWeight;
+      combinedScores.set(result.item.id, (combinedScores.get(result.item.id) || 0) + score);
+    }
+
+    // Sort by combined score
+    const results = Array.from(combinedScores.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([id]) => this.getItem(id)!)
+      .filter(item => item !== null);
+
+    return results.map(item => ({
+      item,
+      similarity: combinedScores.get(item.id) || 0
+    }));
+  }
+
+  /**
+   * Delete an embedding
+   */
+  deleteEmbedding(contextId: string): boolean {
+    const stmt = this.db.prepare('DELETE FROM embeddings WHERE context_id = ?');
+    const result = stmt.run(contextId);
+    return result.changes > 0;
+  }
+
+  /**
+   * Insert or update an embedding for a file by path
+   */
+  insertEmbedding(filePath: string, embedding: number[]): void {
+    const itemId = this.getItemIdByPath(filePath);
+
+    if (!itemId) {
+      throw new Error(`Cannot insert embedding: no item found for path ${filePath}`);
+    }
+
+    this.storeEmbedding(itemId, embedding);
+  }
+
+  /**
+   * Get item ID by file path
+   */
+  private getItemIdByPath(filePath: string): string | null {
+    const stmt = this.db.prepare('SELECT id FROM context_items WHERE file_path = ? LIMIT 1');
+    const row = stmt.get(filePath) as { id: string } | undefined;
+    return row?.id || null;
+  }
+
+  // ==================== Analytics ====================
+
+  /**
+   * Log a usage event
+   */
+  logUsage(toolName: string, query?: string, resultCount?: number, latencyMs?: number): void {
+    const stmt = this.db.prepare(`
+      INSERT INTO usage_analytics (tool_name, query, result_count, latency_ms)
+      VALUES (?, ?, ?, ?)
+    `);
+    
+    stmt.run(toolName, query || null, resultCount ?? null, latencyMs ?? null);
+  }
+
+  /**
+   * Get usage statistics
+   */
+  getUsageStats(days = 30): { toolName: string; count: number; avgLatency: number }[] {
+    const stmt = this.db.prepare(`
+      SELECT 
+        tool_name,
+        COUNT(*) as count,
+        AVG(latency_ms) as avg_latency
+      FROM usage_analytics
+      WHERE timestamp > datetime('now', '-' || ? || ' days')
+      GROUP BY tool_name
+      ORDER BY count DESC
+    `);
+    
+    const rows = stmt.all(days) as Record<string, unknown>[];
+    
+    return rows.map(row => ({
+      toolName: row.tool_name as string,
+      count: row.count as number,
+      avgLatency: row.avg_latency as number
+    }));
+  }
+
+  // ==================== Utility ====================
+
+  /**
+   * Get database path
+   */
+  getPath(): string {
+    return this.dbPath;
+  }
+
+  /**
+   * Get database statistics
+   */
+  getStats(): {
+    items: number;
+    relations: number;
+    commits: number;
+    embeddings: number;
+    toolConfigs: number;
+    path: string;
+  } {
+    const itemCount = (this.db.prepare('SELECT COUNT(*) as count FROM context_items').get() as { count: number }).count;
+    const relationCount = (this.db.prepare('SELECT COUNT(*) as count FROM knowledge_graph').get() as { count: number }).count;
+    const commitCount = (this.db.prepare('SELECT COUNT(*) as count FROM git_commits').get() as { count: number }).count;
+    const toolConfigCount = (this.db.prepare('SELECT COUNT(*) as count FROM ai_tool_configs').get() as { count: number }).count;
+
+    let embeddingCount = 0;
+    try {
+      embeddingCount = (this.db.prepare('SELECT COUNT(*) as count FROM embeddings').get() as { count: number }).count;
+    } catch {
+      // Vector table might not exist yet
+    }
+
+    return {
+      items: itemCount,
+      relations: relationCount,
+      commits: commitCount,
+      embeddings: embeddingCount,
+      toolConfigs: toolConfigCount,
+      path: this.dbPath
+    };
+  }
+
+  /**
+   * Get raw database instance (for advanced operations)
+   */
+  getRawDb(): Database.Database {
+    return this.db;
+  }
+
+  /**
+   * Vacuum database to reclaim space
+   */
+  vacuum(): void {
+    this.db.exec('VACUUM');
+  }
+
+  /**
+   * Reindex database for optimization
+   */
+  reindex(): void {
+    this.db.exec('REINDEX');
+  }
+
+  /**
+   * Backup database to specified path
+   */
+  backup(backupPath: string): void {
+    try {
+      // Ensure backup directory exists
+      const backupDir = path.dirname(backupPath);
+      if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir, { recursive: true });
+      }
+
+      // Close the database before copying to ensure consistency
+      this.db.close();
+      fs.copyFileSync(this.dbPath, backupPath);
+      // Reopen the database
+      this.db = new Database(this.dbPath);
+      this.db.pragma('foreign_keys = ON');
+      sqliteVec.load(this.db);
+
+      console.log(`Database backed up to: ${backupPath}`);
+    } catch (error) {
+      // Try to reopen database if copy failed
+      try {
+        this.db = new Database(this.dbPath);
+        this.db.pragma('foreign_keys = ON');
+        sqliteVec.load(this.db);
+      } catch {
+        // Ignore reopen errors
+      }
+      throw new Error(`Failed to backup database: ${error instanceof Error ? error.message : error}`);
+    }
+  }
+
+  /**
+   * Close database connection
+   */
+  close(): void {
+    this.db.close();
+  }
+
+  /**
+   * Prepare a SQL statement
+   * Exposes the underlying Database.prepare() method for external use
+   */
+  prepare(sql: string): Database.Statement {
+    return this.db.prepare(sql);
+  }
+
+  // ==================== TodoList Management ====================
+
+  public async createTodoSession(name: string, metadata?: Record<string, unknown>): Promise<string> {
+    const id = this.generateId();
+    const now = new Date().toISOString();
+
+    this.db.prepare(`
+      INSERT INTO todo_sessions (id, name, metadata, created_at)
+      VALUES (?, ?, ?, ?)
+    `).run(id, name, JSON.stringify({ ...metadata, createdAt: now }), now);
+    return id;
+  }
+
+  public async createTodoTask(sessionId: string, task: TodoTask): Promise<string> {
+    const taskId = this.generateId();
+    const now = new Date().toISOString();
+
+    this.db.prepare(`
+      INSERT INTO todo_tasks (id, session_id, subject, description, status, dependencies, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(taskId, sessionId, task.subject, task.description || '', 'pending',
+      task.dependencies ? JSON.stringify(task.dependencies) : null, now);
+    return taskId;
+  }
+
+  public async updateTodoTask(sessionId: string, taskId: string, updates: Partial<TodoTask>): Promise<void> {
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    if (updates.status !== undefined) {
+      fields.push('status = ?');
+      values.push(updates.status);
+    }
+    if (updates.subject !== undefined) {
+      fields.push('subject = ?');
+      values.push(updates.subject);
+    }
+    if (updates.description !== undefined) {
+      fields.push('description = ?');
+      values.push(updates.description);
+    }
+    if (updates.completedAt !== undefined) {
+      fields.push('completed_at = ?');
+      values.push(updates.completedAt);
+    }
+
+    if (fields.length === 0) return;
+
+    const setClause = fields.join(', ');
+    const placeholders = fields.map(() => '?').join(', ');
+    const sql = `UPDATE todo_tasks SET ${setClause} WHERE id = ?`;
+
+    this.db.prepare(sql).run(...values, taskId);
+  }
+
+  public async getTodoSession(sessionId: string): Promise<TodoSession | null> {
+    const sessionRow = this.db.prepare(`
+      SELECT id, name, metadata, status, created_at, updated_at, parent_session_id
+      FROM todo_sessions
+      WHERE id = ?
+    `).get(sessionId);
+
+    if (!sessionRow) return null;
+
+    const tasks = await this.getTodoTasks(sessionId);
+    return {
+      id: sessionRow.id as string,
+      name: sessionRow.name as string,
+      status: sessionRow.status as TodoSession['status'],
+      tasks,
+      createdAt: sessionRow.created_at as string,
+      updatedAt: sessionRow.updated_at as string,
+      parentSessionId: sessionRow.parent_session_id as string | undefined,
+      metadata: typeof sessionRow.metadata === 'string' ? JSON.parse(sessionRow.metadata) : undefined
+    };
+  }
+
+  public async getTodoTasks(sessionId: string): Promise<TodoTask[]> {
+    const rows = this.db.prepare(`
+      SELECT id, subject, description, status, dependencies,
+             assigned_to, created_at, updated_at, completed_at
+      FROM todo_tasks
+      WHERE session_id = ?
+      ORDER BY created_at ASC
+    `).all(sessionId);
+
+    return rows.map((row: any) => ({
+      id: row.id as string,
+      subject: row.subject as string,
+      description: row.description as string | undefined,
+      status: row.status as TodoTask['status'],
+      dependencies: typeof row.dependencies === 'string' ? JSON.parse(row.dependencies) : undefined,
+      assignedTo: row.assigned_to as string | undefined,
+      createdAt: row.created_at as string,
+      updatedAt: row.updated_at as string,
+      completedAt: row.completed_at as string | undefined
+    }));
+  }
+
+  public async exportMarkdown(sessionId: string): Promise<string> {
+    const todoList = await this.getTodoSession(sessionId);
+    if (!todoList) return '';
+
+    let md = `# Session Todo: ${todoList.name}\n\n`;
+    md += `**Session ID:** ${todoList.id}\n`;
+    md += `**Created:** ${todoList.createdAt}\n`;
+    md += `**Status:** ${todoList.tasks.some(t => t.status === 'in-progress') ? 'In Progress' : 'Active'}\n\n`;
+    md += `## Tasks\n\n`;
+
+    const statusMap: Record<string, string> = {
+      'pending': '[ ]',
+      'in-progress': '[~]',
+      'done': '[x]',
+      'blocked': '[-]',
+      'cancelled': '[-]'
+    };
+
+    for (const task of todoList.tasks) {
+      const status = statusMap[task.status] || '[?]';
+      md += `${status} ${task.id}: ${task.subject}\n`;
+      if (task.description) {
+        md += `  - ${task.description}\n`;
+      }
+    }
+
+    return md;
+  }
+
+  public async importFromMarkdown(content: string): Promise<TodoList> {
+    // Simple markdown parser for todo lists
+    const lines = content.split('\n').filter(line => line.trim());
+
+    const sessionMatch = lines.find(line => line.match(/^#+\s*(.+)/));
+    if (!sessionMatch) {
+      throw new Error('Invalid todo format: missing session header');
+    }
+
+    const sessionName = sessionMatch[1].trim();
+    const sessionId = this.generateId();
+
+    let currentStatus: 'active' | 'completed' | 'archived' = 'active';
+    const tasks: TodoTask[] = [];
+
+    for (const line of lines.slice(1)) {
+      const taskMatch = line.match(/^(\[[ x~\?-]\])\s*(\d+):\s*(.+)/);
+      if (taskMatch) {
+        const statusMap: Record<string, TodoTask['status']> = {
+          '[ ]': 'pending',
+          '[~]': 'in-progress',
+          '[x]': 'done',
+          '[-]': 'cancelled'
+        };
+
+        tasks.push({
+          id: this.generateId(),
+          subject: taskMatch[2].trim(),
+          description: taskMatch[3]?.trim() || undefined,
+          status: statusMap[taskMatch[1]] || 'pending',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      } else if (line.match(/^\*\*Status:/)) {
+        const statusMatch = line.match(/^\*\*Status:\s*(.+)/i);
+        if (statusMatch) {
+          const status = statusMatch[1].trim().toLowerCase();
+          if (status.includes('in-progress') || status.includes('active')) {
+            currentStatus = 'active';
+          } else if (status.includes('complete')) {
+            currentStatus = 'completed';
+          } else if (status.includes('archive')) {
+            currentStatus = 'archived';
+          }
+        }
+      }
+    }
+
+    // Insert session and tasks
+    const metadata = { importedAt: new Date().toISOString() };
+    this.db.prepare(`
+      INSERT INTO todo_sessions (id, name, metadata, status, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(sessionId, sessionName, JSON.stringify(metadata), currentStatus, new Date().toISOString());
+
+    for (const task of tasks) {
+      this.db.prepare(`
+        INSERT INTO todo_tasks (id, session_id, subject, description, status, dependencies, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        task.id,
+        sessionId,
+        task.subject,
+        task.description || null,
+        task.status,
+        task.dependencies ? JSON.stringify(task.dependencies) : null,
+        task.createdAt,
+        task.updatedAt
+      );
+    }
+
+    return { id: sessionId, name: sessionName, status: currentStatus, tasks, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  }
+
+  public async archiveSession(sessionId: string): Promise<void> {
+    const now = new Date().toISOString();
+    this.db.prepare(`UPDATE todo_sessions SET status = 'completed', updated_at = ? WHERE id = ?`)
+      .run(now, sessionId);
+  }
+}

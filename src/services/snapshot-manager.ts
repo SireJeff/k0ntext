@@ -53,6 +53,8 @@ export interface SnapshotCreateOptions {
   includeGitCommit?: boolean;
   /** Compress snapshot (default: true) */
   compress?: boolean;
+  /** Whether snapshot is automatic (default: false) */
+  automatic?: boolean;
 }
 
 /**
@@ -564,8 +566,15 @@ export class SnapshotManager {
    */
   private getAllContextItems(database: DatabaseClient): Array<{ id: string; type: string; name: string }> {
     try {
-      const items = database.prepare('SELECT id, type, name FROM context_items').all();
-      return items || [];
+      const items = database.prepare('SELECT id, type, name FROM context_items').all() as unknown[];
+      return (items || []).map((row: unknown) => {
+        const r = row as Record<string, unknown>;
+        return {
+          id: typeof r.id === 'string' ? r.id : '',
+          type: typeof r.type === 'string' ? r.type : '',
+          name: typeof r.name === 'string' ? r.name : ''
+        };
+      });
     } catch {
       return [];
     }

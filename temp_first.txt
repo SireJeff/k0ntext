@@ -21,6 +21,9 @@ import {
   type AITool
 } from './schema.js';
 
+// Import TodoTask and TodoSession types for todo list management
+import type { TodoTask, TodoSession } from '../agent-system/todolist-manager.js';
+
 /**
  * Context item structure
  */
@@ -771,457 +774,73 @@ export class DatabaseClient {
     }));
   }
 
-  // ==================== Version Tracking ====================
-
+  // ==================== TodoList Management ====================
   /**
-   * Get all version tracking records
+   * Insert a new todo session
    */
-  getAllVersionTracking(): VersionTracking[] {
-    const stmt = this.db.prepare(`
-      SELECT tool, k0ntext_version, user_modified, last_checked, file_path, content_hash
-      FROM sync_state
-      WHERE k0ntext_version IS NOT NULL
-    `);
-    const rows = stmt.all() as Record<string, unknown>[];
-
-    return rows.map(row => ({
-      tool: row.tool as string,
-      k0ntextVersion: row.k0ntext_version as string,
-      userModified: Boolean(row.user_modified as number),
-      lastChecked: row.last_checked as string | undefined,
-      filePath: row.file_path as string | undefined,
-      contentHash: row.content_hash as string | undefined
-    }));
-  }
-
-  /**
-   * Update version tracking for a tool
-   */
-  updateVersionTracking(tracking: VersionTracking): void {
-    // Find the sync state record for this tool (or create a new one)
-    const id = `${tracking.tool}:version-tracking`;
-
-    const stmt = this.db.prepare(`
-      INSERT INTO sync_state (id, tool, k0ntext_version, user_modified, last_checked, file_path, content_hash, last_sync, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), 'synced')
-      ON CONFLICT(id) DO UPDATE SET
-        k0ntext_version = excluded.k0ntext_version,
-        user_modified = excluded.user_modified,
-        last_checked = excluded.last_checked,
-        file_path = excluded.file_path,
-        content_hash = excluded.content_hash,
-        last_sync = datetime('now')
-    `);
-
-    stmt.run(
-      id,
-      tracking.tool,
-      tracking.k0ntextVersion,
-      tracking.userModified ? 1 : 0,
-      tracking.lastChecked || new Date().toISOString(),
-      tracking.filePath || null,
-      tracking.contentHash || null
+  insertTodoSession(id: string, name: string, metadata?: Record<string, unknown>): void {
+    const stmt = this.db.prepare(
+      "INSERT INTO todo_sessions (id, name, created_at, updated_at, parent_session, metadata) VALUES (?, ?, datetime('now'), datetime('now'), ?, ?)"
     );
+    stmt.run(id, name, metadata || null);
   }
 
   /**
-   * Get version tracking for a specific tool
+   * Insert a new todo task
    */
-  getVersionTracking(tool: string): VersionTracking | null {
-    const stmt = this.db.prepare(`
-      SELECT tool, k0ntext_version, user_modified, last_checked, file_path, content_hash
-      FROM sync_state
-      WHERE tool = ? AND k0ntext_version IS NOT NULL
-      LIMIT 1
-    `);
-    const row = stmt.get(tool) as Record<string, unknown> | undefined;
-
-    if (!row) return null;
-
-    return {
-      tool: row.tool as string,
-      k0ntextVersion: row.k0ntext_version as string,
-      userModified: Boolean(row.user_modified as number),
-      lastChecked: row.last_checked as string | undefined,
-      filePath: row.file_path as string | undefined,
-      contentHash: row.content_hash as string | undefined
-    };
-  }
-
-  // ==================== Generated Files Tracking ====================
-
-  /**
-   * Upsert a generated file record
-   */
-  upsertGeneratedFile(record: {
-    tool: string;
-    filePath: string;
-    contentHash: string;
-    backupPath?: string;
-    metadata?: Record<string, unknown>;
-  }): GeneratedFile {
-    const id = `${record.tool}:${record.filePath}`;
-
-    const stmt = this.db.prepare(`
-      INSERT INTO generated_files (id, tool, file_path, content_hash, backup_path, metadata)
-      VALUES (?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        content_hash = excluded.content_hash,
-        backup_path = excluded.backup_path,
-        metadata = excluded.metadata,
-        last_verified_at = datetime('now')
-      RETURNING *
-    `);
-
-    const row = stmt.get(
-      id,
-      record.tool,
-      record.filePath,
-      record.contentHash,
-      record.backupPath || null,
-      record.metadata ? JSON.stringify(record.metadata) : null
-    ) as Record<string, unknown>;
-
-    return {
-      id: row.id as string,
-      tool: row.tool as string,
-      filePath: row.file_path as string,
-      contentHash: row.content_hash as string,
-      backupPath: row.backup_path as string | undefined,
-      generatedAt: row.generated_at as string,
-      lastVerifiedAt: row.last_verified_at as string | undefined,
-      userModified: Boolean(row.user_modified as number),
-      metadata: row.metadata ? JSON.parse(row.metadata as string) : undefined
-    };
+  insertTodoTask(sessionId: string, taskId: string, subject: string, description: string, status: string, dependencies: string | null, assignedTo: string | null): void {
+    const stmt = this.db.prepare(
+      'INSERT INTO todo_tasks (id, session_id, subject, description, status, dependencies, assigned_to, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime(\'now\'))'
+    );
+    stmt.run(taskId, sessionId, subject, description, status, dependencies, assignedTo);
   }
 
   /**
-   * Get generated file info by tool and path
+   * Get a todo session by ID
    */
-  getGeneratedFileInfo(tool: string, filePath: string): GeneratedFile | null {
-    const id = `${tool}:${filePath}`;
-    const stmt = this.db.prepare('SELECT * FROM generated_files WHERE id = ?');
-    const row = stmt.get(id) as Record<string, unknown> | undefined;
-
-    if (!row) return null;
-
-    return {
-      id: row.id as string,
-      tool: row.tool as string,
-      filePath: row.file_path as string,
-      contentHash: row.content_hash as string,
-      backupPath: row.backup_path as string | undefined,
-      generatedAt: row.generated_at as string,
-      lastVerifiedAt: row.last_verified_at as string | undefined,
-      userModified: Boolean(row.user_modified as number),
-      metadata: row.metadata ? JSON.parse(row.metadata as string) : undefined
-    };
+  getTodoSession(sessionId: string): Record<string, unknown> | null {
+    const stmt = this.db.prepare('SELECT * FROM todo_sessions WHERE id = ?');
+    return stmt.get(sessionId) || null;
   }
 
   /**
-   * Mark a generated file as user modified
+   * Get all tasks for a todo session
    */
-  markUserModified(tool: string, filePath: string): void {
-    const id = `${tool}:${filePath}`;
-    const stmt = this.db.prepare(`
-      UPDATE generated_files
-      SET user_modified = 1, last_verified_at = datetime('now')
-      WHERE id = ?
-    `);
-    stmt.run(id);
+  getTodoTasks(sessionId: string): Record<string, unknown>[] {
+    const stmt = this.db.prepare('SELECT * FROM todo_tasks WHERE session_id = ? ORDER BY created_at ASC');
+    return stmt.all(sessionId) || [];
   }
 
   /**
-   * Get all generated files for a tool
+   * Update a todo task
    */
-  getGeneratedFiles(tool: string): GeneratedFile[] {
-    const stmt = this.db.prepare('SELECT * FROM generated_files WHERE tool = ?');
-    const rows = stmt.all(tool) as Record<string, unknown>[];
+  updateTodoTask(taskId: string, updates: { status?: string; subject?: string; description?: string; completedAt?: string }): void {
+    const parts: string[] = [];
+    const values: (string | number)[] = [];
 
-    return rows.map(row => ({
-      id: row.id as string,
-      tool: row.tool as string,
-      filePath: row.file_path as string,
-      contentHash: row.content_hash as string,
-      backupPath: row.backup_path as string | undefined,
-      generatedAt: row.generated_at as string,
-      lastVerifiedAt: row.last_verified_at as string | undefined,
-      userModified: Boolean(row.user_modified as number),
-      metadata: row.metadata ? JSON.parse(row.metadata as string) : undefined
-    }));
-  }
-
-  // ==================== Embeddings ====================
-
-  /**
-   * Store an embedding
-   */
-  storeEmbedding(contextId: string, embedding: number[]): void {
-    // Delete existing embedding first (virtual tables don't support UPSERT)
-    this.deleteEmbedding(contextId);
-
-    const stmt = this.db.prepare(`
-      INSERT INTO embeddings (context_id, embedding)
-      VALUES (?, ?)
-    `);
-
-    // Convert to blob for sqlite-vec
-    const buffer = new Float32Array(embedding);
-    stmt.run(contextId, Buffer.from(buffer.buffer));
-  }
-
-  /**
-   * Search by embedding similarity
-   */
-  searchByEmbedding(queryEmbedding: number[], limit = 10): SearchResult[] {
-    const buffer = new Float32Array(queryEmbedding);
-
-    const stmt = this.db.prepare(`
-      SELECT
-        e.context_id,
-        e.embedding,
-        ci.*,
-        vec_distance_cosine(e.embedding, ?) as distance
-      FROM embeddings e
-      JOIN context_items ci ON e.context_id = ci.id
-      ORDER BY distance
-      LIMIT ?
-    `);
-
-    const rows = stmt.all(Buffer.from(buffer.buffer), limit) as Record<string, unknown>[];
-
-    return rows.map(row => ({
-      item: this.rowToItem(row),
-      similarity: 1 - (row.distance as number || 0) // Convert distance to similarity
-    }));
-  }
-
-  /**
-   * Hybrid search combining vector and text search
-   */
-  hybridSearch(
-    query: string,
-    queryEmbedding: number[] | null,
-    options: {
-      limit?: number;
-      type?: ContextType;
-      vectorWeight?: number; // 0-1, higher = more weight on semantic
-    } = {}
-  ): SearchResult[] {
-    const {
-      limit = 10,
-      type,
-      vectorWeight = 0.7
-    } = options;
-
-    const textResults = this.searchText(query, type);
-    const semanticResults = queryEmbedding ? this.searchByEmbedding(queryEmbedding, limit * 2) : [];
-
-    // Combine and score
-    const combinedScores = new Map<string, number>();
-
-    // Score text results (inverse of position)
-    for (let i = 0; i < textResults.length; i++) {
-      const score = (1 - i / textResults.length) * (1 - vectorWeight);
-      combinedScores.set(textResults[i].id, (combinedScores.get(textResults[i].id) || 0) + score);
+    if (updates.status !== undefined) {
+      parts.push('status = ?');
+      values.push(updates.status);
+    }
+    if (updates.subject !== undefined) {
+      parts.push('subject = ?');
+      values.push(updates.subject);
+    }
+    if (updates.description !== undefined) {
+      parts.push('description = ?');
+      values.push(updates.description);
+    }
+    if (updates.completedAt !== undefined) {
+      parts.push('completed_at = ?');
+      values.push(updates.completedAt);
     }
 
-    // Score semantic results
-    for (const result of semanticResults) {
-      const score = result.similarity * vectorWeight;
-      combinedScores.set(result.item.id, (combinedScores.get(result.item.id) || 0) + score);
-    }
+    if (parts.length === 0) return;
 
-    // Sort by combined score
-    const results = Array.from(combinedScores.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, limit)
-      .map(([id]) => this.getItem(id)!)
-      .filter(item => item !== null);
-
-    return results.map(item => ({
-      item,
-      similarity: combinedScores.get(item.id) || 0
-    }));
-  }
-
-  /**
-   * Delete an embedding
-   */
-  deleteEmbedding(contextId: string): boolean {
-    const stmt = this.db.prepare('DELETE FROM embeddings WHERE context_id = ?');
-    const result = stmt.run(contextId);
-    return result.changes > 0;
-  }
-
-  /**
-   * Insert or update an embedding for a file by path
-   */
-  insertEmbedding(filePath: string, embedding: number[]): void {
-    const itemId = this.getItemIdByPath(filePath);
-
-    if (!itemId) {
-      throw new Error(`Cannot insert embedding: no item found for path ${filePath}`);
-    }
-
-    this.storeEmbedding(itemId, embedding);
-  }
-
-  /**
-   * Get item ID by file path
-   */
-  private getItemIdByPath(filePath: string): string | null {
-    const stmt = this.db.prepare('SELECT id FROM context_items WHERE file_path = ? LIMIT 1');
-    const row = stmt.get(filePath) as { id: string } | undefined;
-    return row?.id || null;
-  }
-
-  // ==================== Analytics ====================
-
-  /**
-   * Log a usage event
-   */
-  logUsage(toolName: string, query?: string, resultCount?: number, latencyMs?: number): void {
     const stmt = this.db.prepare(`
-      INSERT INTO usage_analytics (tool_name, query, result_count, latency_ms)
-      VALUES (?, ?, ?, ?)
+      UPDATE todo_tasks SET ${parts.join(', ')} WHERE id = ?
     `);
-    
-    stmt.run(toolName, query || null, resultCount ?? null, latencyMs ?? null);
+    stmt.run(...values, taskId);
   }
 
-  /**
-   * Get usage statistics
-   */
-  getUsageStats(days = 30): { toolName: string; count: number; avgLatency: number }[] {
-    const stmt = this.db.prepare(`
-      SELECT 
-        tool_name,
-        COUNT(*) as count,
-        AVG(latency_ms) as avg_latency
-      FROM usage_analytics
-      WHERE timestamp > datetime('now', '-' || ? || ' days')
-      GROUP BY tool_name
-      ORDER BY count DESC
-    `);
-    
-    const rows = stmt.all(days) as Record<string, unknown>[];
-    
-    return rows.map(row => ({
-      toolName: row.tool_name as string,
-      count: row.count as number,
-      avgLatency: row.avg_latency as number
-    }));
-  }
-
-  // ==================== Utility ====================
-
-  /**
-   * Get database path
-   */
-  getPath(): string {
-    return this.dbPath;
-  }
-
-  /**
-   * Get database statistics
-   */
-  getStats(): {
-    items: number;
-    relations: number;
-    commits: number;
-    embeddings: number;
-    toolConfigs: number;
-    path: string;
-  } {
-    const itemCount = (this.db.prepare('SELECT COUNT(*) as count FROM context_items').get() as { count: number }).count;
-    const relationCount = (this.db.prepare('SELECT COUNT(*) as count FROM knowledge_graph').get() as { count: number }).count;
-    const commitCount = (this.db.prepare('SELECT COUNT(*) as count FROM git_commits').get() as { count: number }).count;
-    const toolConfigCount = (this.db.prepare('SELECT COUNT(*) as count FROM ai_tool_configs').get() as { count: number }).count;
-
-    let embeddingCount = 0;
-    try {
-      embeddingCount = (this.db.prepare('SELECT COUNT(*) as count FROM embeddings').get() as { count: number }).count;
-    } catch {
-      // Vector table might not exist yet
-    }
-
-    return {
-      items: itemCount,
-      relations: relationCount,
-      commits: commitCount,
-      embeddings: embeddingCount,
-      toolConfigs: toolConfigCount,
-      path: this.dbPath
-    };
-  }
-
-  /**
-   * Get raw database instance (for advanced operations)
-   */
-  getRawDb(): Database.Database {
-    return this.db;
-  }
-
-  /**
-   * Vacuum database to reclaim space
-   */
-  vacuum(): void {
-    this.db.exec('VACUUM');
-  }
-
-  /**
-   * Reindex database for optimization
-   */
-  reindex(): void {
-    this.db.exec('REINDEX');
-  }
-
-  /**
-   * Backup database to specified path
-   */
-  backup(backupPath: string): void {
-    try {
-      // Ensure backup directory exists
-      const backupDir = path.dirname(backupPath);
-      if (!fs.existsSync(backupDir)) {
-        fs.mkdirSync(backupDir, { recursive: true });
-      }
-
-      // Close the database before copying to ensure consistency
-      this.db.close();
-      fs.copyFileSync(this.dbPath, backupPath);
-      // Reopen the database
-      this.db = new Database(this.dbPath);
-      this.db.pragma('foreign_keys = ON');
-      sqliteVec.load(this.db);
-
-      console.log(`Database backed up to: ${backupPath}`);
-    } catch (error) {
-      // Try to reopen database if copy failed
-      try {
-        this.db = new Database(this.dbPath);
-        this.db.pragma('foreign_keys = ON');
-        sqliteVec.load(this.db);
-      } catch {
-        // Ignore reopen errors
-      }
-      throw new Error(`Failed to backup database: ${error instanceof Error ? error.message : error}`);
-    }
-  }
-
-  /**
-   * Prepare a SQL statement
-   * Exposes the underlying Database.prepare() method for external use
-   */
-  prepare(sql: string): Database.Statement {
-    return this.db.prepare(sql);
-  }
-
-  /**
-   * Close database connection
-   */
-  close(): void {
-    this.db.close();
-  }
-}
+  // ==================== TodoList Management ====================

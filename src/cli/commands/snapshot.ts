@@ -87,7 +87,8 @@ export const snapshotCreateCommand = new Command('snapshot')
     try {
       // Load database
       const { DatabaseClient } = await import('../../db/client.js');
-      const { version: K0NTEXT_VERSION } = await import('../../cli/version/comparator.js');
+      const versionModule = await import('../../cli/version/comparator.js');
+      const K0NTEXT_VERSION = versionModule.version;
       const db = new DatabaseClient(projectRoot);
       const manager = new SnapshotManager(db, projectRoot, K0NTEXT_VERSION);
 
@@ -99,7 +100,7 @@ export const snapshotCreateCommand = new Command('snapshot')
       }
 
       // Parse tags
-      const tags = options.tags ? options.tags.split(',').map(t => t.trim()) : undefined;
+      const tags = options.tags ? options.tags.split(',').map((t: string) => t.trim()) : undefined;
 
       spinner.start('Creating snapshot...');
 
