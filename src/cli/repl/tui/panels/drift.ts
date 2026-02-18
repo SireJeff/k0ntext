@@ -6,6 +6,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 import chalk from 'chalk';
 import { K0NTEXT_THEME } from '../theme.js';
 import { DatabaseClient } from '../../../../db/client.js';
@@ -212,7 +213,6 @@ export class DriftDetectionPanel {
 
     try {
       // Use git diff to check for changes
-      const { execSync } = require('child_process');
 
       // Check for modified files
       const modified = execSync('git diff --name-only', {
