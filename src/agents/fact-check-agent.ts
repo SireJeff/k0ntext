@@ -214,10 +214,18 @@ Confidence guidelines:
    * Parse the fact-check response
    */
   private parseFactCheckResponse(response: string): FactCheckClaim[] {
-    const parsed = parseAIResponse<{ claims: any[] }>(response);
+    interface RawClaim {
+      claim?: string;
+      factual?: boolean;
+      correction?: string;
+      confidence?: number;
+      line?: number;
+    }
+
+    const parsed = parseAIResponse<{ claims: RawClaim[] }>(response);
 
     if (parsed && parsed.claims && Array.isArray(parsed.claims)) {
-      return parsed.claims.map((c: any) => ({
+      return parsed.claims.map((c) => ({
         claim: String(c.claim || ''),
         factual: Boolean(c.factual),
         correction: c.correction ? String(c.correction) : undefined,

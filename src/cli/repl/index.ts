@@ -5,6 +5,8 @@
  */
 
 import readline from 'readline';
+import fs from 'fs';
+import path from 'path';
 import { REPLSessionManager, ProjectType } from './core/session.js';
 import { REPLCommandParser } from './core/parser.js';
 import { InitWizard } from './init/wizard.js';
@@ -210,10 +212,10 @@ export class REPLShell {
 
           // Index docs
           for (const doc of docs) {
-            const content = require('fs').readFileSync(doc.path, 'utf-8').slice(0, 50000);
+            const content = fs.readFileSync(doc.path, 'utf-8').slice(0, 50000);
             db.upsertItem({
               type: 'doc',
-              name: require('path').basename(doc.relativePath),
+              name: path.basename(doc.relativePath),
               content,
               filePath: doc.relativePath,
               metadata: { size: doc.size }
@@ -225,13 +227,13 @@ export class REPLShell {
 
           // Index code
           for (const codeFile of code.slice(0, 500)) {
-            const content = require('fs').existsSync(codeFile.path)
-              ? require('fs').readFileSync(codeFile.path, 'utf-8').slice(0, 20000)
+            const content = fs.existsSync(codeFile.path)
+              ? fs.readFileSync(codeFile.path, 'utf-8').slice(0, 20000)
               : '';
             if (content) {
               db.upsertItem({
                 type: 'code',
-                name: require('path').basename(codeFile.relativePath),
+                name: path.basename(codeFile.relativePath),
                 content,
                 filePath: codeFile.relativePath,
                 metadata: { size: codeFile.size }
@@ -244,13 +246,13 @@ export class REPLShell {
 
           // Index tools
           for (const tool of tools) {
-            const content = require('fs').existsSync(tool.path)
-              ? require('fs').readFileSync(tool.path, 'utf-8').slice(0, 50000)
+            const content = fs.existsSync(tool.path)
+              ? fs.readFileSync(tool.path, 'utf-8').slice(0, 50000)
               : '';
             if (content) {
               db.upsertItem({
                 type: 'tool_config',
-                name: `${tool.tool}:${require('path').basename(tool.relativePath)}`,
+                name: `${tool.tool}:${path.basename(tool.relativePath)}`,
                 content,
                 filePath: tool.relativePath,
                 metadata: { tool: tool.tool, size: tool.size }

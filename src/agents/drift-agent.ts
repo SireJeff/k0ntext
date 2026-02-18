@@ -11,7 +11,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { glob } from 'glob';
 import { OpenRouterClient } from '../embeddings/openrouter.js';
-import { K0NTEXT_MODELS, MODEL_CONFIG, getModelFor } from '../config/models.js';
+import { MODEL_CONFIG, getModelFor } from '../config/models.js';
 import { parseAIResponse } from '../utils/ai-parser.js';
 
 /**

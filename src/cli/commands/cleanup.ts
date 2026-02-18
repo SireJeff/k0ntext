@@ -60,7 +60,12 @@ Respond with JSON:
           spinner.stop();
 
           try {
-            const result = parseAIResponse<{ recommendations: any[] }>(analysis);
+            interface AIRecommendation {
+              folder: string;
+              action: 'keep' | 'remove' | 'ask';
+              reason: string;
+            }
+            const result = parseAIResponse<{ recommendations: AIRecommendation[] }>(analysis);
             if (!result) throw new Error('Failed to parse AI response');
 
             console.log(chalk.bold('\n🤖 AI Cleanup Analysis:\n'));

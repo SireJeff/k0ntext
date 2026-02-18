@@ -664,6 +664,7 @@ Return ONLY valid JSON, no markdown formatting.
       path.join(this.projectRoot, 'docs')
     ];
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const watcher = (chokidar as any).watch(watchPaths, {
       ignored: /node_modules|\.git|dist/,
       persistent: true,

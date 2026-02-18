@@ -16,7 +16,6 @@ import { DatabaseClient } from '../../db/client.js';
 import { getModelFor, MODEL_CONFIG } from '../../config/models.js';
 import { createOpenRouterClient, hasOpenRouterKey } from '../../embeddings/openrouter.js';
 import { parseAIResponse } from '../../utils/ai-parser.js';
-import { AI_TOOLS, AI_TOOL_FOLDERS } from '../../db/schema.js';
 
 /**
  * Supported AI tools for cross-sync

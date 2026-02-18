@@ -25,17 +25,6 @@ interface MonorepoModule {
 }
 
 /**
- * Batch index configuration
- */
-interface BatchIndexConfig {
-  batchSize: number;
-  maxFilesPerModule: number;
-  includePatterns: string[];
-  excludePatterns: string[];
-  modules: MonorepoModule[];
-}
-
-/**
  * Batch index command options
  */
 export interface BatchIndexOptions {
@@ -44,22 +33,6 @@ export interface BatchIndexOptions {
   skipEmbeddings?: boolean;
   verbose?: boolean;
 }
-
-/**
- * Default monorepo module detection patterns
- */
-const DEFAULT_MODULES: MonorepoModule[] = [
-  { name: 'root', path: '.', priority: 1, description: 'Root configuration files' },
-  { name: 'docs', path: 'docs', priority: 2, description: 'Documentation' },
-  { name: 'backend', path: 'backend', priority: 3, description: 'Backend services' },
-  { name: 'frontend', path: 'frontend', priority: 4, description: 'Frontend applications' },
-  { name: 'core', path: 'core', priority: 5, description: 'Core libraries' },
-  { name: 'shared', path: 'shared', priority: 6, description: 'Shared utilities' },
-  { name: 'packages', path: 'packages', priority: 7, description: 'Packages (npm/yarn workspaces)' },
-  { name: 'services', path: 'services', priority: 8, description: 'Microservices' },
-  { name: 'apps', path: 'apps', priority: 9, description: 'Applications' },
-  { name: 'devops', path: 'devops', priority: 10, description: 'DevOps/deployment configs' },
-];
 
 /**
  * Detect monorepo structure from current directory
@@ -146,46 +119,6 @@ function splitIntoBatches<T>(items: T[], batchSize: number): T[][] {
     batches.push(items.slice(i, i + batchSize));
   }
   return batches;
-}
-
-/**
- * Index a single batch of files
- */
-async function indexBatch(
-  db: any,
-  files: DiscoveredFile[],
-  itemType: string,
-  projectRoot: string,
-  spinner: Ora
-): Promise<number> {
-  let indexedCount = 0;
-
-  for (const file of files) {
-    try {
-      const content = fs.existsSync(file.path)
-        ? fs.readFileSync(file.path, 'utf-8').slice(0, 20000)
-        : '';
-
-      if (!content) continue;
-
-      db.upsertItem({
-        type: itemType as any,
-        name: path.basename(file.relativePath),
-        content,
-        filePath: file.relativePath,
-        metadata: {
-          size: file.size,
-          module: file.relativePath.split(path.sep)[0]
-        }
-      });
-
-      indexedCount++;
-    } catch (error) {
-      // Skip files that can't be read
-    }
-  }
-
-  return indexedCount;
 }
 
 /**

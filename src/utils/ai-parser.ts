@@ -64,7 +64,7 @@ export function parseAIResponse<T>(response: string): T | null {
 /**
  * Internal helper to try parsing a substring
  */
-function tryParse(text: string, start: number, end: number): any | null {
+function tryParse(text: string, start: number, end: number): unknown | null {
   try {
     const jsonSubstring = text.slice(start, end + 1);
     return JSON.parse(jsonSubstring);
