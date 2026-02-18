@@ -183,16 +183,18 @@ export class AdvancedSearchPanel {
         case 'name':
           comparison = a.item.name.localeCompare(b.item.name);
           break;
-        case 'date':
+        case 'date': {
           const aDate = a.item.updatedAt ? new Date(a.item.updatedAt).getTime() : 0;
           const bDate = b.item.updatedAt ? new Date(b.item.updatedAt).getTime() : 0;
           comparison = bDate - aDate;
           break;
-        case 'size':
+        }
+        case 'size': {
           const aSize = (a.item.metadata as Record<string, unknown>)?.size || 0;
           const bSize = (b.item.metadata as Record<string, unknown>)?.size || 0;
           comparison = Number(bSize) - Number(aSize);
           break;
+        }
       }
 
       return order === 'desc' ? -comparison : comparison;

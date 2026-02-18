@@ -564,7 +564,7 @@ Be specific and actionable in your suggestions.`
    * Hash text for caching
    */
   private hashText(text: string): string {
-    return createHash('md5').update(text).digest('hex');
+    return createHash('sha256').update(text).digest('hex');
   }
 }
 
