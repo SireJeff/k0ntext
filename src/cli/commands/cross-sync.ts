@@ -15,6 +15,7 @@ import { glob } from 'glob';
 import { DatabaseClient } from '../../db/client.js';
 import { getModelFor, MODEL_CONFIG } from '../../config/models.js';
 import { createOpenRouterClient, hasOpenRouterKey } from '../../embeddings/openrouter.js';
+import { parseAIResponse } from '../../utils/ai-parser.js';
 import { AI_TOOLS, AI_TOOL_FOLDERS } from '../../db/schema.js';
 
 /**
@@ -280,28 +281,9 @@ async function getContextFilePaths(projectRoot: string): Promise<string[]> {
  * Parse JSON array of file paths from AI response
  */
 function parseFilePaths(response: string): string[] {
-  try {
-    // Try direct parse
-    const parsed = JSON.parse(response);
-    if (Array.isArray(parsed)) {
-      return parsed.map(String);
-    }
-  } catch {
-    // Try to extract JSON from response
-    const start = response.indexOf('[');
-    const end = response.lastIndexOf(']');
-
-    if (start !== -1 && end !== -1 && end > start) {
-      try {
-        const jsonSubstring = response.slice(start, end + 1);
-        const parsed = JSON.parse(jsonSubstring);
-        if (Array.isArray(parsed)) {
-          return parsed.map(String);
-        }
-      } catch {
-        // Fall through
-      }
-    }
+  const parsed = parseAIResponse<string[]>(response);
+  if (Array.isArray(parsed)) {
+    return parsed.map(String);
   }
 
   return [];
@@ -460,10 +442,10 @@ ${existingContent ? `Existing ${targetTool} content:\n${existingContent.slice(0,
       maxTokens: MODEL_CONFIG.MERGE_MAX_TOKENS
     });
 
-    const parsed = JSON.parse(response);
+    const parsed = parseAIResponse<{ action: 'update' | 'create' | 'skip'; content?: string }>(response);
     return {
-      action: parsed.action || 'skip',
-      content: parsed.content
+      action: parsed?.action || 'skip',
+      content: parsed?.content
     };
 
   } catch (error) {

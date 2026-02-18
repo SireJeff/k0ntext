@@ -12,6 +12,7 @@ import path from 'path';
 import { glob } from 'glob';
 import { OpenRouterClient } from '../embeddings/openrouter.js';
 import { K0NTEXT_MODELS, MODEL_CONFIG, getModelFor } from '../config/models.js';
+import { parseAIResponse } from '../utils/ai-parser.js';
 
 /**
  * A detected drift issue
@@ -312,24 +313,7 @@ Severity guidelines:
     suggestion?: string;
     line?: number;
   } | null {
-    try {
-      // Try direct parse first
-      return JSON.parse(response);
-    } catch {
-      // Try to extract JSON from response
-      const start = response.indexOf('{');
-      const end = response.lastIndexOf('}');
-
-      if (start !== -1 && end !== -1 && end > start) {
-        try {
-          const jsonSubstring = response.slice(start, end + 1);
-          return JSON.parse(jsonSubstring);
-        } catch {
-          // Still failed, return null
-        }
-      }
-    }
-    return null;
+    return parseAIResponse(response);
   }
 
   /**

@@ -4,6 +4,7 @@ import ora from 'ora';
 import { CleanupAgent } from '../../agents/cleanup-agent.js';
 import { hasOpenRouterKey, createOpenRouterClient } from '../../embeddings/openrouter.js';
 import { getModelFor, MODEL_CONFIG } from '../../config/models.js';
+import { parseAIResponse } from '../../utils/ai-parser.js';
 
 export const cleanupCommand = new Command('cleanup')
   .description('Clean up context folders from other AI tools')
@@ -59,7 +60,9 @@ Respond with JSON:
           spinner.stop();
 
           try {
-            const result = JSON.parse(analysis);
+            const result = parseAIResponse<{ recommendations: any[] }>(analysis);
+            if (!result) throw new Error('Failed to parse AI response');
+
             console.log(chalk.bold('\n🤖 AI Cleanup Analysis:\n'));
 
             for (const rec of result.recommendations || []) {
