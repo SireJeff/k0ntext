@@ -9,12 +9,9 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
 import path from 'path';
-import fs from 'fs/promises';
-import { confirm, input, select } from '@inquirer/prompts';
-import type { DatabaseClient } from '../../db/client.js';
+import { confirm } from '@inquirer/prompts';
 import { SnapshotManager } from '../../services/snapshot-manager.js';
-import type { SnapshotMetadata, SnapshotListEntry, SnapshotDiffResult } from '../../services/snapshot-manager.js';
-import { compareVersions, needsUpdate, getUpdateType } from '../version/comparator.js';
+import type { SnapshotMetadata } from '../../services/snapshot-manager.js';
 
 /**
  * Format bytes for display
@@ -88,8 +85,7 @@ export const snapshotCreateCommand = new Command('snapshot')
     try {
       // Load database
       const { DatabaseClient } = await import('../../db/client.js');
-      const versionModule = await import('../../cli/version/comparator.js');
-      const K0NTEXT_VERSION = versionModule.version;
+      const { version: K0NTEXT_VERSION } = await import('../../cli/version/comparator.js');
       const db = new DatabaseClient(projectRoot);
       const manager = new SnapshotManager(db, projectRoot, K0NTEXT_VERSION);
 

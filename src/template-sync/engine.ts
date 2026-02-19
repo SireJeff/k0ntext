@@ -95,7 +95,7 @@ export class TemplateSyncEngine {
       const stats = TemplateMerger.getStatistics(mergeResults);
 
       // Step 4: Handle conflicts
-      let conflictResolutions = new Map<string, 'keep-local' | 'overwrite'>();
+      const conflictResolutions = new Map<string, 'keep-local' | 'overwrite'>();
       let resolvedConflicts: FileComparison[] = [];
 
       if (conflicts.length > 0 && !options.force) {

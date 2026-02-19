@@ -9,7 +9,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { FactCheckAgent, createFactCheckAgent } from '../../agents/fact-check-agent.js';
+import { createFactCheckAgent } from '../../agents/fact-check-agent.js';
 import { createOpenRouterClient, hasOpenRouterKey } from '../../embeddings/openrouter.js';
 
 export const factCheckCommand = new Command('fact-check')
