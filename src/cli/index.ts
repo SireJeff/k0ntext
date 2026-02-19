@@ -74,7 +74,7 @@ async function configureMcpServer(projectRoot: string): Promise<void> {
   const claudeSettingsPath = path.join(projectRoot, '.claude', 'settings.json');
 
   try {
-    let settings: Record<string, unknown> = {};
+    let settings: Record<string, any> = {};
 
     // Read existing settings if they exist
     if (fs.existsSync(claudeSettingsPath)) {
