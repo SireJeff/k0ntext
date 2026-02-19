@@ -288,7 +288,7 @@ export class ConfigPanel {
           default: String(currentValue || key.defaultValue || '')
         });
 
-      case 'number':
+      case 'number': {
         const inputResult = await input({
           message: key.description,
           default: String(currentValue || key.defaultValue || ''),
@@ -298,6 +298,7 @@ export class ConfigPanel {
           }
         });
         return Number(inputResult);
+      }
 
       default:
         return currentValue;
