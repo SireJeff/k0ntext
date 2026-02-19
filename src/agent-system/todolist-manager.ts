@@ -543,6 +543,7 @@ All tasks for "${session.name}" completed at ${session.updatedAt}.
       if (createdMatch) createdAt = createdMatch[1];
 
       // Parse tasks
+      // RESOLVED: Use the regex that matches [x], [~], [ ], etc.
       const taskMatch = line.match(/^\[[ ~x\-✗]\]\s+Task\s+([a-f0-9]+):\s*(.+)$/);
       if (taskMatch) {
         const taskId = taskMatch[1];
