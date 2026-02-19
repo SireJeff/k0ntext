@@ -543,7 +543,7 @@ All tasks for "${session.name}" completed at ${session.updatedAt}.
       if (createdMatch) createdAt = createdMatch[1];
 
       // Parse tasks
-      const taskMatch = line.match(/^[[~x\s\-\]]\s+Task\s+([a-f0-9]+):\s*(.+)$/);
+      const taskMatch = line.match(/^\[[ ~x\-✗]\]\s+Task\s+([a-f0-9]+):\s*(.+)$/);
       if (taskMatch) {
         const taskId = taskMatch[1];
         const subject = taskMatch[2];

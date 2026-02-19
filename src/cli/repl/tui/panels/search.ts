@@ -4,7 +4,6 @@
  * Enhanced search with filtering, sorting, and detailed results
  */
 
-import chalk from 'chalk';
 import { K0NTEXT_THEME } from '../theme.js';
 import type { ContextItem } from '../../../../db/client.js';
 import type { ContextType } from '../../../../db/schema.js';

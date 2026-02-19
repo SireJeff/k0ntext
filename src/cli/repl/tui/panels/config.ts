@@ -6,7 +6,6 @@
 
 import fs from 'fs';
 import path from 'path';
-import chalk from 'chalk';
 import { K0NTEXT_THEME } from '../theme.js';
 import { input, confirm, select, checkbox } from '@inquirer/prompts';
 
@@ -224,7 +223,7 @@ export class ConfigPanel {
       value: id
     }));
 
-    const { configCategory } = this.sessionConfig as any;
+    const { configCategory } = this.sessionConfig as Record<string, any>;
 
     const result = await select({
       message: 'Select configuration category:',

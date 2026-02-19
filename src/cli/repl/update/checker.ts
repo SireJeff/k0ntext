@@ -5,7 +5,6 @@
  */
 
 import https from 'https';
-import chalk from 'chalk';
 import { K0NTEXT_THEME } from '../tui/theme.js';
 
 /**

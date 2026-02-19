@@ -11,6 +11,7 @@ import { glob } from 'glob';
 import { OpenRouterClient, createOpenRouterClient, hasOpenRouterKey } from '../embeddings/openrouter.js';
 import { AI_TOOLS, AI_TOOL_FOLDERS, type AITool } from '../db/schema.js';
 import { estimateTokens, chunkForEmbedding } from '../utils/chunking.js';
+import { parseAIResponse } from '../utils/ai-parser.js';
 
 /**
  * Discovery result for a file
@@ -485,21 +486,9 @@ Return ONLY valid JSON, no markdown formatting.
         { role: 'user', content: analysisPrompt }
       ], { temperature: 0.2, maxTokens: 4096 });
 
-      // First, try to parse the whole response as JSON.
-      try {
-        return JSON.parse(response);
-      } catch {
-        // If that fails, attempt to extract the JSON substring between the
-        // first '{' and the last '}' and parse that.
-        if (typeof response === 'string') {
-          const start = response.indexOf('{');
-          const end = response.lastIndexOf('}');
-
-          if (start !== -1 && end !== -1 && end > start) {
-            const jsonSubstring = response.slice(start, end + 1);
-            return JSON.parse(jsonSubstring);
-          }
-        }
+      const parsed = parseAIResponse<Partial<AnalysisResult>>(response);
+      if (parsed) {
+        return parsed;
       }
     } catch (error) {
       console.warn('Failed to parse intelligent analysis response.');
@@ -675,6 +664,7 @@ Return ONLY valid JSON, no markdown formatting.
       path.join(this.projectRoot, 'docs')
     ];
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const watcher = (chokidar as any).watch(watchPaths, {
       ignored: /node_modules|\.git|dist/,
       persistent: true,

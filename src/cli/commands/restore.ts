@@ -12,8 +12,6 @@ import path from 'path';
 import fs from 'fs/promises';
 import { select, confirm } from '@inquirer/prompts';
 import type { DatabaseClient } from '../../db/client.js';
-import { BackupManager } from '../utils/backup-manager.js';
-import type { BackupResult } from '../utils/backup-manager.js';
 
 /**
  * Parse git stash reference from backup path
@@ -104,7 +102,6 @@ export const restoreCommand = new Command('restore')
       // Load database
       const { DatabaseClient } = await import('../../db/client.js');
       const db = new DatabaseClient(projectRoot);
-      const backupManager = new BackupManager(db, projectRoot);
 
       // List mode
       if (options.list) {

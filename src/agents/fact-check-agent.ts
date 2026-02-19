@@ -13,6 +13,7 @@ import path from 'path';
 import { glob } from 'glob';
 import { OpenRouterClient } from '../embeddings/openrouter.js';
 import { getModelFor, MODEL_CONFIG } from '../config/models.js';
+import { parseAIResponse } from '../utils/ai-parser.js';
 
 /**
  * A fact-check result for a single claim
@@ -213,40 +214,24 @@ Confidence guidelines:
    * Parse the fact-check response
    */
   private parseFactCheckResponse(response: string): FactCheckClaim[] {
-    try {
-      // Try direct parse first
-      const parsed = JSON.parse(response);
-      if (parsed.claims && Array.isArray(parsed.claims)) {
-        return parsed.claims.map((c: any) => ({
-          claim: String(c.claim || ''),
-          factual: Boolean(c.factual),
-          correction: c.correction ? String(c.correction) : undefined,
-          confidence: Number(c.confidence || 0.5),
-          line: c.line ? Number(c.line) : undefined
-        }));
-      }
-    } catch {
-      // Try to extract JSON from response
-      const start = response.indexOf('{');
-      const end = response.lastIndexOf('}');
+    interface RawClaim {
+      claim?: string;
+      factual?: boolean;
+      correction?: string;
+      confidence?: number;
+      line?: number;
+    }
 
-      if (start !== -1 && end !== -1 && end > start) {
-        try {
-          const jsonSubstring = response.slice(start, end + 1);
-          const parsed = JSON.parse(jsonSubstring);
-          if (parsed.claims && Array.isArray(parsed.claims)) {
-            return parsed.claims.map((c: any) => ({
-              claim: String(c.claim || ''),
-              factual: Boolean(c.factual),
-              correction: c.correction ? String(c.correction) : undefined,
-              confidence: Number(c.confidence || 0.5),
-              line: c.line ? Number(c.line) : undefined
-            }));
-          }
-        } catch {
-          // Fall through
-        }
-      }
+    const parsed = parseAIResponse<{ claims: RawClaim[] }>(response);
+
+    if (parsed && parsed.claims && Array.isArray(parsed.claims)) {
+      return parsed.claims.map((c) => ({
+        claim: String(c.claim || ''),
+        factual: Boolean(c.factual),
+        correction: c.correction ? String(c.correction) : undefined,
+        confidence: Number(c.confidence || 0.5),
+        line: c.line ? Number(c.line) : undefined
+      }));
     }
 
     return [];

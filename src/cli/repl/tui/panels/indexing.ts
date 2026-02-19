@@ -4,7 +4,6 @@
  * Real-time progress display for indexing operations
  */
 
-import chalk from 'chalk';
 import { K0NTEXT_THEME } from '../theme.js';
 import ora, { Ora } from 'ora';
 

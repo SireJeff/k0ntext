@@ -4,17 +4,16 @@
  * Interactive shell for managing k0ntext context
  */
 
+import readline from 'readline';
 import fs from 'fs';
 import path from 'path';
-import readline from 'readline';
-import { REPLSessionManager, ProjectType } from './core/session.js';
+import { REPLSessionManager } from './core/session.js';
 import { REPLCommandParser } from './core/parser.js';
 import { InitWizard } from './init/wizard.js';
 import { UpdateChecker } from './update/checker.js';
-import { K0NTEXT_THEME, terminal } from './tui/theme.js';
+import { K0NTEXT_THEME } from './tui/theme.js';
 import { createIntelligentAnalyzer } from '../../analyzer/intelligent-analyzer.js';
 import { DatabaseClient } from '../../db/client.js';
-import { hasOpenRouterKey } from '../../embeddings/openrouter.js';
 import { AdvancedSearchPanel, EnhancedSearchResult } from './tui/panels/search.js';
 import { ConfigPanel } from './tui/panels/config.js';
 import { IndexingProgressVisualizer } from './tui/panels/indexing.js';
@@ -186,7 +185,7 @@ export class REPLShell {
       description: 'Index codebase into database',
       usage: 'index [options]',
       examples: ['index', 'index --code', 'index --all'],
-      handler: async (args, flags) => {
+      handler: async (_args, _flags) => {
         const analyzer = createIntelligentAnalyzer(this.projectRoot);
         const db = new DatabaseClient(this.projectRoot);
         const visualizer = new IndexingProgressVisualizer();
