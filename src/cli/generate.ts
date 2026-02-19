@@ -170,7 +170,7 @@ export async function generateForTool(
 
 async function generateContent(
   tool: string,
-  contextItems: Array<any>,
+  contextItems: Array<Record<string, any>>,
   useMapFormat: boolean,
   db: DatabaseClient,
   projectRoot: string
@@ -207,7 +207,7 @@ async function generateContent(
   return generateContentInline(tool, contextItems, useMapFormat);
 }
 
-function generateContentInline(tool: string, contextItems: Array<any>, useMapFormat: boolean): string {
+function generateContentInline(tool: string, contextItems: Array<Record<string, any>>, useMapFormat: boolean): string {
   // Basic content generation - fallback when templates are unavailable
   const projectName = contextItems.find(i => i.type === 'config' && i.name === 'project')?.content?.name || 'Project';
   const description = contextItems.find(i => i.type === 'config' && i.name === 'project')?.content?.description || '';
@@ -243,7 +243,7 @@ function generateContentInline(tool: string, contextItems: Array<any>, useMapFor
 /**
  * Generate map-based context for Claude (concise, structured)
  */
-function generateClaudeMapContext(projectName: string, description: string, items: Array<any>): string {
+function generateClaudeMapContext(projectName: string, description: string, items: Array<Record<string, any>>): string {
   const workflows = items.filter(i => i.type === 'workflow');
   const codeItems = items.filter(i => i.type === 'code');
 
@@ -305,7 +305,7 @@ ${codeItems.slice(0, 10).map(i => `${i.filePath || i.name}  # ${i.type}`).join('
 /**
  * Generate map-based context for Copilot
  */
-function generateCopilotMapContext(projectName: string, description: string, items: Array<any>): string {
+function generateCopilotMapContext(projectName: string, description: string, items: Array<Record<string, any>>): string {
   const codeItems = items.filter(i => i.type === 'code').slice(0, 20);
 
   return `# ${projectName} - GitHub Copilot Instructions
@@ -343,7 +343,7 @@ ${codeItems.map(item => {
 /**
  * Generate map-based context for Cline
  */
-function generateClineMapContext(projectName: string, description: string, items: Array<any>): string {
+function generateClineMapContext(projectName: string, _description: string, _items: Array<Record<string, any>>): string {
   return `# ${projectName} Rules
 
 You are an AI coding assistant working on **${projectName}**.
@@ -392,7 +392,7 @@ npm run test:run    # Run tests once
 /**
  * Generate map-based context for Cursor
  */
-function generateCursorMapContext(projectName: string, description: string, items: Array<any>): string {
+function generateCursorMapContext(projectName: string, description: string, _items: Array<Record<string, any>>): string {
   return `# ${projectName}
 
 ${description || ''}
@@ -440,7 +440,7 @@ npm test
 /**
  * Generate map-based context for Gemini
  */
-function generateGeminiMapContext(projectName: string, description: string, items: Array<any>): string {
+function generateGeminiMapContext(projectName: string, _description: string, _items: Array<Record<string, any>>): string {
   return `# ${projectName} - Gemini Context
 
 ## Quick Reference

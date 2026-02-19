@@ -5,20 +5,19 @@
  * Coordinates comparison, merging, conflict resolution, and manifest updates.
  */
 
-import ora, { Ora } from 'ora';
+import ora from 'ora';
 import chalk from 'chalk';
 import path from 'path';
 import { promises as fs, readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import type { DatabaseClient } from '../db/client.js';
 import { BackupManager } from '../cli/utils/backup-manager.js';
-import { TemplateScanner } from './scanner.js';
 import { TemplateComparator } from './comparator.js';
 import { TemplateMerger } from './merger.js';
 import { ConflictResolver } from './conflict-resolver.js';
 import { TemplateManifestManager } from './manifest.js';
 import { TemplateHasher } from './hasher.js';
-import type { SyncResult, SyncOptions, TemplateSubdir, FileComparison, ArchiveResult } from './types.js';
+import type { SyncResult, SyncOptions, FileComparison } from './types.js';
 
 // ES module __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
@@ -96,7 +95,6 @@ export class TemplateSyncEngine {
 
       // Step 4: Handle conflicts
       const conflictResolutions = new Map<string, 'keep-local' | 'overwrite'>();
-      let resolvedConflicts: FileComparison[] = [];
 
       if (conflicts.length > 0 && !options.force) {
         spinner.stop();
@@ -116,10 +114,6 @@ export class TemplateSyncEngine {
             resolutions.map(r => ({ path: r.path, choice: r.choice })),
             conflicts
           );
-
-          resolvedConflicts = Array.from(conflictResolutions.keys())
-            .map(path => conflicts.find(c => c.path === path)!)
-            .filter(Boolean);
 
           spinner.succeed(`Applied ${applied.applied} resolution(s)`);
         } else {
@@ -145,16 +139,14 @@ export class TemplateSyncEngine {
         spinner.start('Applying forced overwrites...');
         const applied = await resolver.applyResolutions(resolutions, conflicts);
 
-        resolvedConflicts = conflicts;
         spinner.succeed(`Applied ${applied.applied} forced overwrite(s)`);
         spinner.start('Continuing sync...');
       }
 
       // Step 5: Archive removed files if enabled
-      let archived: string[] = [];
       if (options.archiveRemoved && userOnly.length > 0) {
         spinner.text = 'Archiving removed files...';
-        archived = await this.archiveRemovedFiles(userOnly.map(f => f.path));
+        await this.archiveRemovedFiles(userOnly.map(f => f.path));
       }
 
       // Step 6: Update manifest

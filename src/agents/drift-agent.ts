@@ -152,43 +152,33 @@ export class DriftAgent {
     // Discover relevant source code for comparison
     const sourceFiles = await this.discoverSourceFiles();
 
-    // Analyze files for drift in parallel with concurrency limit
-    const CONCURRENCY_LIMIT = 5;
-    const queue = [...filesToProcess];
+    // Analyze each file for drift
+    for (const relativePath of filesToProcess) {
+      try {
+        const drift = await this.checkFileForDrift(relativePath, sourceFiles);
+        if (drift) {
+          drifts.push(drift);
 
-    const workers = Array(Math.min(CONCURRENCY_LIMIT, queue.length)).fill(null).map(async () => {
-      while (queue.length > 0) {
-        const relativePath = queue.shift();
-        if (!relativePath) break;
-
-        try {
-          const drift = await this.checkFileForDrift(relativePath, sourceFiles);
-          if (drift) {
-            drifts.push(drift);
-
-            if (options.autoFix && drift.suggestion) {
-              const didFix = await this.fixDrift(relativePath, drift);
-              if (didFix) fixed++;
-            }
+          if (options.autoFix && drift.suggestion) {
+            const didFix = await this.fixDrift(relativePath, drift);
+            if (didFix) fixed++;
           }
-        } catch (error) {
-          // Check for authentication errors
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          if (errorMessage.includes('401') ||
-              errorMessage.includes('Authentication') ||
-              errorMessage.includes('Unauthorized') ||
-              errorMessage.includes('API key')) {
-            authFailures.push(relativePath);
-          } else {
-            errors.push({ file: relativePath, error: errorMessage });
-          }
-          // Log error but continue
-          console.error(`Failed to analyze ${relativePath}: ${errorMessage}`);
         }
+      } catch (error) {
+        // Check for authentication errors
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes('401') ||
+            errorMessage.includes('Authentication') ||
+            errorMessage.includes('Unauthorized') ||
+            errorMessage.includes('API key')) {
+          authFailures.push(relativePath);
+        } else {
+          errors.push({ file: relativePath, error: errorMessage });
+        }
+        // Log error but continue
+        console.error(`Failed to analyze ${relativePath}: ${errorMessage}`);
       }
-    });
-
-    await Promise.all(workers);
+    }
 
     return {
       drifts,
@@ -383,25 +373,37 @@ Severity guidelines:
       '**/*.java'
     ];
 
-    return await glob(patterns, {
-      cwd: this.projectRoot,
-      ignore: DEFAULT_IGNORE,
-      absolute: false
-    });
+    const allFiles: string[] = [];
+
+    for (const pattern of patterns) {
+      const files = await glob(pattern, {
+        cwd: this.projectRoot,
+        ignore: DEFAULT_IGNORE,
+        absolute: false
+      });
+      allFiles.push(...files);
+    }
+
+    return allFiles;
   }
 
   /**
    * Get all context files to check
    */
   private async getContextFiles(): Promise<string[]> {
-    const matched = await glob(DEFAULT_CONTEXT_FILES, {
-      cwd: this.projectRoot,
-      ignore: DEFAULT_IGNORE,
-      absolute: false
-    });
+    const files: string[] = [];
+
+    for (const pattern of DEFAULT_CONTEXT_FILES) {
+      const matched = await glob(pattern, {
+        cwd: this.projectRoot,
+        ignore: DEFAULT_IGNORE,
+        absolute: false
+      });
+      files.push(...matched);
+    }
 
     // Deduplicate
-    return Array.from(new Set(matched));
+    return Array.from(new Set(files));
   }
 
   /**

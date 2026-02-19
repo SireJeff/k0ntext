@@ -35,7 +35,7 @@ export const syncTemplatesCommand = new Command('sync-templates')
       let subdirectories;
       if (options.subdirs) {
         const requestedDirs = options.subdirs.split(',').map((s: string) => s.trim().toLowerCase());
-        subdirectories = requestedDirs.filter((d: string) => TEMPLATE_SUBDIRS.includes(d as any));
+        subdirectories = requestedDirs.filter((d: string) => (TEMPLATE_SUBDIRS as readonly string[]).includes(d));
 
         if (subdirectories.length === 0) {
           spinner.stop();
@@ -45,7 +45,7 @@ export const syncTemplatesCommand = new Command('sync-templates')
         }
 
         if (subdirectories.length !== requestedDirs.length) {
-          const invalid = requestedDirs.filter((d: string) => !TEMPLATE_SUBDIRS.includes(d as any));
+          const invalid = requestedDirs.filter((d: string) => !(TEMPLATE_SUBDIRS as readonly string[]).includes(d));
           console.warn(chalk.yellow(`\n⚠ Warning: Invalid subdirectories ignored: ${invalid.join(', ')}`));
         }
       }
@@ -106,7 +106,7 @@ export const syncTemplatesCommand = new Command('sync-templates')
       const syncOptions = {
         dryRun: options.dryRun ?? false,
         force: options.force ?? false,
-        subdirectories: subdirectories as any,
+        subdirectories: subdirectories as any[],
         verbose: options.verbose ?? false,
         archiveRemoved: options.archive !== false
       };

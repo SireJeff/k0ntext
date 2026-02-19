@@ -9,7 +9,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { DriftAgent, createDriftAgent } from '../../agents/drift-agent.js';
+import { createDriftAgent } from '../../agents/drift-agent.js';
 import { createOpenRouterClient, hasOpenRouterKey } from '../../embeddings/openrouter.js';
 
 export const driftDetectCommand = new Command('drift-detect')

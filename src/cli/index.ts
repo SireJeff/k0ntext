@@ -58,22 +58,6 @@ ${chalk.cyan('╚═════════════════════
 `);
 }
 
-/**
- * Parse AI tools from comma-separated string
- */
-function _parseAiTools(toolsString: string): string[] {
-  const tools = toolsString.split(',').map(t => t.trim().toLowerCase());
-  const invalid = tools.filter(t => !AI_TOOLS.includes(t));
-
-  if (invalid.length > 0) {
-    console.error(chalk.red(`\n✖ Error: Invalid AI tools: ${invalid.join(', ')}`));
-    console.error(chalk.gray(`  Valid options: ${AI_TOOLS.join(', ')}`));
-    process.exit(1);
-  }
-
-  const allTools = AI_TOOLS.filter(t => t !== 'all');
-  return tools.includes('all') ? allTools : tools;
-}
 
 /**
  * Configure MCP server for AI tools that support it
@@ -90,7 +74,7 @@ async function configureMcpServer(projectRoot: string): Promise<void> {
   const claudeSettingsPath = path.join(projectRoot, '.claude', 'settings.json');
 
   try {
-    let settings: Record<string, any> = {};
+    let settings: Record<string, unknown> = {};
 
     // Read existing settings if they exist
     if (fs.existsSync(claudeSettingsPath)) {
@@ -505,7 +489,7 @@ function createProgram(): Command {
 
       const spinner = ora();
       const verbose = options.verbose || false;
-      let db: any;
+      let db: DatabaseClient | undefined;
       
       try {
         spinner.start('Discovering content...');
@@ -730,7 +714,7 @@ function createProgram(): Command {
     .option('-m, --mode <mode>', 'Search mode: text, semantic, hybrid (default: hybrid)', 'hybrid')
     .action(async (query, options) => {
       const spinner = ora();
-      let db: any;
+      let db: DatabaseClient | undefined;
 
       try {
         const limit =

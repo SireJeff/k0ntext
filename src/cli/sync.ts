@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import { DatabaseClient } from '../db/client.js';
+import type { AITool } from '../db/schema.js';
 import ora from 'ora';
 import chalk from 'chalk';
 import crypto from 'crypto';
@@ -86,7 +87,7 @@ export class SyncManager {
   }
 
   async syncFrom(tool: string): Promise<void> {
-    const configs = this.db.getToolConfigs(tool as any);
+    const configs = this.db.getToolConfigs(tool as AITool);
     if (!configs || configs.length === 0) {
       throw new Error(`Tool ${tool} not found in database`);
     }

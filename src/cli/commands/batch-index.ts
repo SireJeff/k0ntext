@@ -125,9 +125,9 @@ function splitIntoBatches<T>(items: T[], batchSize: number): T[][] {
  * Generate embeddings for indexed items
  */
 async function generateEmbeddingsBatch(
-  db: any,
+  db: DatabaseClient,
   filePaths: string[],
-  analyzer: any,
+  analyzer: ReturnType<typeof createIntelligentAnalyzer>,
   spinner: Ora
 ): Promise<number> {
   let embeddingsCount = 0;
@@ -147,7 +147,7 @@ async function generateEmbeddingsBatch(
 
       for (const filePath of batch) {
         try {
-          const item = db.getAllItems().find((item: any) => item.filePath === filePath);
+          const item = db.getAllItems().find((item) => item.filePath === filePath);
           if (item && item.content) {
             const embedding = await analyzer.embedText(item.content.slice(0, 2000));
             embeddings.set(filePath, embedding);
@@ -163,7 +163,7 @@ async function generateEmbeddingsBatch(
 
       for (const [filePath, embedding] of embeddings.entries()) {
         try {
-          const item = db.getAllItems().find((item: any) => item.filePath === filePath);
+          const item = db.getAllItems().find((item) => item.filePath === filePath);
           if (item && item.id) {
             db.storeEmbedding(item.id, embedding);
             embeddingsCount++;
@@ -198,7 +198,7 @@ ${chalk.cyan('╚═════════════════════
   const verbose = options.verbose || false;
 
   const spinner = ora();
-  let db: any;
+  let db: DatabaseClient | undefined;
 
   try {
     spinner.start('Analyzing monorepo structure...');
@@ -350,7 +350,7 @@ ${chalk.cyan('╚═════════════════════
               : '';
 
             if (content) {
-              const item = db.upsertItem({
+              db.upsertItem({
                 type: 'code',
                 name: path.basename(codeFile.relativePath),
                 content,

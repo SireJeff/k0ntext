@@ -103,7 +103,7 @@ hooksCommand
       console.log(chalk.bold('\n📦 Installing k0ntext git hooks...\n'));
 
       // Install pre-commit hook
-      const preCommitInstalled = await installHook(
+      await installHook(
         preCommitSource,
         preCommitTarget,
         'pre-commit'

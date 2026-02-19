@@ -7,7 +7,6 @@
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
-import chalk from 'chalk';
 import { K0NTEXT_THEME } from '../theme.js';
 import { DatabaseClient } from '../../../../db/client.js';
 

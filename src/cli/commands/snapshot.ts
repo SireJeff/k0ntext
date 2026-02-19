@@ -9,12 +9,9 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
 import path from 'path';
-import fs from 'fs/promises';
-import { confirm, input, select } from '@inquirer/prompts';
-import type { DatabaseClient } from '../../db/client.js';
+import { confirm } from '@inquirer/prompts';
 import { SnapshotManager } from '../../services/snapshot-manager.js';
-import type { SnapshotMetadata, SnapshotListEntry, SnapshotDiffResult } from '../../services/snapshot-manager.js';
-import { compareVersions, needsUpdate, getUpdateType } from '../version/comparator.js';
+import type { SnapshotMetadata } from '../../services/snapshot-manager.js';
 
 /**
  * Format bytes for display
