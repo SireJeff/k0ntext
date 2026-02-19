@@ -85,8 +85,7 @@ export const snapshotCreateCommand = new Command('snapshot')
     try {
       // Load database
       const { DatabaseClient } = await import('../../db/client.js');
-      const versionModule = await import('../../cli/version/comparator.js');
-      const K0NTEXT_VERSION = versionModule.version;
+      const { version: K0NTEXT_VERSION } = await import('../../cli/version/comparator.js');
       const db = new DatabaseClient(projectRoot);
       const manager = new SnapshotManager(db, projectRoot, K0NTEXT_VERSION);
 
