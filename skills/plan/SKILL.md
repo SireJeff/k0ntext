@@ -1,143 +1,102 @@
 ---
-description: RPI Plan Phase - Create chunk-based todolists from research chunks for rpi-implement consumption
+name: rpi-plan
+version: "3.0.0"
+description: "RPI Plan Phase: Manifest-Driven Implementation Planning from Research Manifest"
+category: "rpi-orchestration"
+rpi_phase: "plan"
+context_budget_estimate: "35K tokens"
+typical_context_usage: "17%"
+chunk_input: true
+chunk_output: true
+inter_phase_aware: true
+prerequisites:
+  - "Research Manifest exists in .ai-context/research/active/"
+  - "/rpi-research phase completed"
+outputs:
+  - "Plan Manifest (linked to Research Chunks)"
+  - "Plan document in .ai-context/plans/active/[name]_plan.md"
+  - "Chunk-based todolists with atomic actions"
+  - "Inter-phase contract for rpi-implement"
+next_commands: ["/rpi-implement"]
+related_agents: ["core-architect", "database-ops", "api-developer"]
+examples:
+  - command: "/rpi-plan user-authentication"
+    description: "Read Research Manifest, spawn sub-agents to create Plan Chunks"
+exit_criteria:
+  - "Plan Manifest created linking all Research Chunks"
+  - "Detailed todolists for each Plan Chunk"
+  - "Research Chunks marked as PLANNED"
+  - "Human approval obtained"
 ---
 
-# Context Engineering: Plan Phase (Enhanced)
+# RPI Plan Phase (Manifest-Driven Planning)
 
-When invoked, create a detailed implementation plan with chunk-based todolists:
+**Purpose:** Transform the Research Manifest into an actionable Plan Manifest with atomic todolists.
 
-## Key Innovation: Inter-Phase Awareness
+**Syntax:** `/rpi-plan [feature-name]`
 
-This plan phase **KNOWS**:
-- RPI-Research structured chunks specifically for sequential processing
-- RPI-Implement will read each CHUNK-Pn as an atomic implementation unit
-- Each CHUNK-Pn todolist must be independently executable
-- Chunk dependencies must be explicit for proper execution ordering
+---
 
-## Prerequisites
-- Research document exists at `.claude/research/active/[feature]_research.md`
-- Research document contains chunk manifest
-- If not found, run `/context-eng:research $ARGUMENTS` first
+## Key Innovation: Manifest-Driven Execution
 
-## Chunk Processing Loop
+1.  **Read Research Manifest:** Load the output from RPI-Research.
+2.  **Sequential Planning:** Spawn sub-agents to process each Research Chunk.
+3.  **Create Plan Manifest:** Output the structured plan for RPI-Implement.
 
-```
-FOR each CHUNK-Rn in research_chunks:
-  1. Read CHUNK-Rn content
-  2. Create CHUNK-Pn todolist:
-     - Define atomic action items
-     - Specify file:line for each action
-     - Assign test for each action
-     - Document chunk-specific rollback
-  3. Mark CHUNK-Rn status as PLANNED
-  4. Define CHUNK-Pn dependencies
-  5. Proceed to next CHUNK-R(n+1)
-END LOOP
+---
+
+## Execution Steps
+
+### Step 1: Load Research Manifest
+Read `.ai-context/research/active/[feature]_research.md`.
+
+### Step 2: Create Plan Manifest
+Aggregate Plan Chunks:
+```markdown
+| Chunk ID | Research ID | Status | Todos | Dependencies | Ready |
+|----------|-------------|--------|-------|--------------|-------|
+| CHUNK-P1 | CHUNK-R1    | READY  | 4     | None         | ✅    |
 ```
 
-## Process
+### Step 3: Sequential Planning (Sub-Agents)
+**For each CHUNK-Rn in Research Manifest:**
+-   Spawn a sub-agent to analyze details.
+-   Create a corresponding **Plan Chunk (CHUNK-Pn)**.
+-   Define atomic todos (Change -> Test -> Commit).
+-   Mark Research Chunk as `PLANNED`.
 
-1. **Load Research Document**
-   - Read the research document for $ARGUMENTS
-   - Extract chunk manifest
-   - Extract per-chunk files and line numbers
+### Step 4: Finalize Output
+Ensure format matches `rpi-implement` expectations.
 
-2. **For Each Research Chunk (CHUNK-Rn):**
-   
-   a. **Analyze chunk content:**
-      - Files explored with line numbers
-      - Code flow analysis
-      - Dependencies identified
-   
-   b. **Create CHUNK-Pn todolist:**
-      ```markdown
-      | # | Action | File | Lines | Risk | Test | Status |
-      |---|--------|------|-------|------|------|--------|
-      | 1 | [Action] | file.ext | XXX | LOW | test_x | ⏳ |
-      ```
-   
-   c. **Define per-todo details:**
-      - Current code snippet
-      - Proposed change
-      - Test to run after
-   
-   d. **Mark research chunk as PLANNED**
-   
-   e. **Document chunk dependencies**
+---
 
-3. **Create Chunk Dependency Graph**
-   ```
-   CHUNK-P1 → CHUNK-P2 → CHUNK-P3
-              ↓
-   CHUNK-P4  CHUNK-P5
-   ```
-
-4. **Generate Inter-Phase Contract**
-   ```
-   EXPECTED_CONSUMER: rpi-implement
-   CHUNK_PROCESSING_ORDER: dependency-ordered
-   MARK_AS_IMPLEMENTED_WHEN: all chunk todos complete
-   UPDATE_RESEARCH_STATUS: true
-   ```
-
-5. **Create Plan Document**
-   - Save to `.claude/plans/active/[feature]_plan.md`
-   - Include chunk manifest
-   - Include per-chunk todolists
-   - Include verification checklist
-
-## Plan Format (Chunk-Based)
+## Output Format (Manifest)
 
 ```markdown
-# Implementation Plan: [Feature]
-
-## Chunk Manifest
-| Chunk ID | From Research | Status | Todos | Dependencies | Ready |
-|----------|---------------|--------|-------|--------------|-------|
+| Chunk ID | Research ID | Status | Todos | Dependencies | Ready |
+|----------|-------------|--------|-------|--------------|-------|
 | CHUNK-P1 | CHUNK-R1 | READY | 4 | None | ✅ |
-| CHUNK-P2 | CHUNK-R2 | READY | 5 | CHUNK-P1 | ⏳ |
+...
+```
 
-## CHUNK-P1: [Domain] (from CHUNK-R1)
+## Detailed Output (Chunk)
 
-**Status:** READY
-**Dependencies:** None
-**Update Research When Complete:** Mark CHUNK-R1 as IMPLEMENTED
-
+```markdown
+## CHUNK-P1: [Domain]
 ### Todolist
 | # | Action | File | Lines | Risk | Test | Status |
 |---|--------|------|-------|------|------|--------|
-| 1 | [Action] | file.ext | XXX | LOW | test_x | ⏳ |
-
-### Todo 1: [Action Name]
-**File:** path/to/file.ext
-**Lines:** X-Y
-**Current:** [code block]
-**Proposed:** [code block]
-**Test:** [command]
-
-### Chunk Completion Criteria
-- [ ] All todos complete
-- [ ] Update CHUNK-R1 status
-- [ ] Proceed to dependent chunks
-
-## Inter-Phase Contract
-[contract for rpi-implement]
-
-## Rollback (Per Chunk)
-- CHUNK-P1: git revert [hash]
+| 1 | [Action] | file.ext | 10-15 | LOW | test_x | ⏳ |
 ```
 
+---
+
 ## Context Budget
-- Research doc: 20k tokens
-- Plan creation: 15k tokens
-- Total: 35k tokens (17.5%)
+-   Research doc: 20k tokens.
+-   Plan creation: 15k tokens.
+-   Total: 35k tokens.
+
+---
 
 ## Next Step
-After approval, run `/context-eng:implement $ARGUMENTS`
-
-RPI-Implement will:
-1. Load chunk manifest
-2. Process chunks in dependency order
-3. Execute todos atomically per chunk
-4. Mark chunks as IMPLEMENTED
-5. Update research document status
+After approval: `/rpi-implement [feature-name]`

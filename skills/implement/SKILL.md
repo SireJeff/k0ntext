@@ -1,150 +1,100 @@
 ---
-description: RPI Implement Phase - Execute chunk-based todolists with atomic changes and continuous testing
+name: rpi-implement
+version: "3.0.0"
+description: "RPI Implement Phase: Manifest-Driven Execution of Plan Chunks"
+category: "rpi-orchestration"
+rpi_phase: "implement"
+context_budget_estimate: "60K tokens"
+typical_context_usage: "30%"
+chunk_input: true
+loop_based: true
+inter_phase_aware: true
+prerequisites:
+  - "Plan Manifest exists in .ai-context/plans/active/"
+  - "Plan has been approved by human"
+  - "Git branch is clean"
+  - "All tests currently passing"
+outputs:
+  - "Implemented feature/fix (manifest-based)"
+  - "Updated Plan Manifest (statuses to IMPLEMENTED)"
+  - "Updated Research Manifest (statuses to IMPLEMENTED)"
+  - "Archived documents"
+next_commands: ["/verify-docs-current", "/validate-all"]
+related_agents: ["core-architect", "database-ops", "api-developer", "deployment-ops"]
+examples:
+  - command: "/rpi-implement user-authentication"
+    description: "Read Plan Manifest, execute chunks sequentially, update statuses"
+exit_criteria:
+  - "All Plan Chunks marked as IMPLEMENTED"
+  - "All Research Chunks marked as IMPLEMENTED"
+  - "All tests passing"
+  - "Documentation updated"
+  - "Documents archived"
 ---
 
-# Context Engineering: Implement Phase (Enhanced)
+# RPI Implement Phase (Manifest-Driven Execution)
 
-When invoked, execute the approved implementation plan chunk by chunk:
+**Purpose:** Execute the Plan Manifest chunk-by-chunk with atomic precision.
 
-## Key Innovation: Inter-Phase Awareness
+**Syntax:** `/rpi-implement [feature-name]`
 
-This implement phase **KNOWS**:
-- RPI-Plan structured chunks for atomic implementation
-- Each CHUNK-Pn contains a complete, ordered todolist
-- Chunk dependencies dictate execution order
-- Marking chunks complete updates both plan AND research documents
-- Context reset is needed after every 3 chunks or 35% utilization
+---
 
-## Prerequisites
-- Approved plan at `.claude/plans/active/[feature]_plan.md`
-- Plan contains chunk manifest with chunk-todolists
-- If not found, run `/context-eng:plan $ARGUMENTS` first
+## Key Innovation: Manifest-Driven Execution
 
-## Golden Rules
+1.  **Read Plan Manifest:** Load the approved plan structure.
+2.  **Sequential Execution:** Follow dependency order defined in the manifest.
+3.  **Bidirectional Status Updates:** Update both Plan and Research documents as work completes.
 
-```
-ONE CHUNK → COMPLETE TODOLIST → MARK DONE → NEXT CHUNK
-ONE TODO → ONE CHANGE → ONE TEST → ONE COMMIT
-```
+---
 
-## Chunk-Based Implementation Loop
+## Execution Steps
 
-```
-FOR each CHUNK-Pn in dependency_order:
-  IF dependencies_complete:
-    1. Load CHUNK-Pn todolist
-    
-    FOR each TODO in todolist:
-      a. Make atomic change
-      b. Run todo-specific test
-      c. If PASS: commit, mark TODO ✅
-      d. If FAIL: STOP, investigate, fix
-    END TODO LOOP
-    
-    2. Update chunk documentation
-    3. Mark CHUNK-Pn as IMPLEMENTED
-    4. Update research CHUNK-Rn to IMPLEMENTED
-    
-    IF chunks_processed % 3 == 0 OR context > 35%:
-      Context reset (save progress, reload plan)
-    END IF
-    
-    5. Proceed to next ready chunk
-  END IF
-END CHUNK LOOP
-```
+### Step 1: Load Plan Manifest
+Read `.ai-context/plans/active/[feature]_plan.md`.
 
-## Process
+### Step 2: Sequential Execution Loop
+**For each ready CHUNK-Pn in Manifest:**
+-   **Execute Todos:**
+    -   1. Make atomic change.
+    -   2. Run specific test.
+    -   3. Commit (if pass).
+-   **Update Status:**
+    -   Mark `CHUNK-Pn` as `IMPLEMENTED` in Plan.
+    -   Mark linked `CHUNK-Rn` as `IMPLEMENTED` in Research.
 
-1. **Load Plan Document**
-   - Read `.claude/plans/active/[feature]_plan.md`
-   - Extract chunk manifest and dependency graph
-   - Verify plan status is APPROVED
+### Step 3: Context Management
+Reset context after every 3 chunks.
 
-2. **Determine Execution Order**
-   Based on chunk dependency graph:
-   - Independent chunks first (parallel capable)
-   - Dependent chunks in order
-   - Final chunks (e.g., test additions)
+### Step 4: Finalize
+Run full test suite. Update documentation.
 
-3. **For Each Chunk (in dependency order):**
-   
-   a. **Check dependencies complete**
-   
-   b. **Execute each todo atomically:**
-      - Make single change
-      - Run specified test
-      - If pass: commit with message
-      - If fail: STOP, investigate, fix
-   
-   c. **After all todos complete:**
-      - Mark CHUNK-Pn as IMPLEMENTED
-      - Update CHUNK-Rn in research to IMPLEMENTED
-      - Commit chunk documentation updates
-   
-   d. **Context management:**
-      - After every 3 chunks: reload plan
-      - If >35% utilization: save, compact, continue
+---
 
-4. **Run Full Test Suite**
-   After all chunks complete
+## Output Format (Manifest Updates)
 
-5. **Documentation Updates (MANDATORY)**
-   - Check `CODE_TO_WORKFLOW_MAP.md` for affected workflows
-   - Update workflow files with new line numbers
-   - Update function signatures if changed
-
-6. **Context Reset (Every 3 Chunks)**
-   - Update chunk progress in plan
-   - Re-read plan document
-   - Verify scope alignment
-   - Compact if >35% utilization
-
-7. **Finalize**
-   - Move plan to `.claude/plans/completed/`
-   - Move research to `.claude/research/completed/`
-   - Run `/context-eng:validate` to verify
-
-## Chunk Status Updates
-
-### Update Plan Document
+**Plan Manifest:**
 ```markdown
-| Chunk | Status | Todos Done | Commit | Research Updated |
-|-------|--------|------------|--------|------------------|
-| P1 | ✅ IMPLEMENTED | 4/4 | abc123 | ✅ R1 |
-| P2 | ▶️ IMPLEMENTING | 2/5 | - | - |
+| Chunk ID | Research ID | Status | Todos | Dependencies |
+|----------|-------------|--------|-------|--------------|
+| CHUNK-P1 | CHUNK-R1    | DONE   | 4     | None         |
 ```
 
-### Update Research Document
-Mark each CHUNK-Rn status:
-- FOUND → COMPLETE → PLANNED → **IMPLEMENTED**
-
-## Error Handling
-
-| Error Type | Response |
-|------------|----------|
-| Syntax Error | STOP. Fix immediately in same todo. |
-| Import Error | Check file paths, verify imports. |
-| Test Failure | Do NOT add more code. Investigate first. |
-| 3+ Failures in chunk | Mark chunk BLOCKED, try next independent chunk. |
-| 3+ Chunks blocked | STOP. Start new session. |
-
-## Commit Format
-
-Per-todo:
-```
-feat(chunk-Pn): Todo N - description
-Implements: [feature] chunk N
+**Research Manifest:**
+```markdown
+| Chunk ID | Domain | Status | Files Found | Ready for Deep Dive |
+|----------|--------|--------|-------------|---------------------|
+| CHUNK-R1 | API    | IMPLEMENTED | 3 | ✅ |
 ```
 
-Per-chunk completion:
-```
-feat(chunk-Pn): Complete chunk - [domain]
-Completes: CHUNK-Pn, Updates: CHUNK-Rn
-```
+---
 
 ## Context Budget
-- Plan: 15k tokens
-- Active code (per chunk): ~10k tokens
-- Test results (per chunk): ~5k tokens
-- Max active (3 chunks): ~45k tokens (22.5%)
+-   Active code: ~10k tokens.
+-   Test results: ~5k tokens.
+-   Total active: ~25k tokens.
+
+---
+
+## Next Step
+After completion: `/context-eng:validate`

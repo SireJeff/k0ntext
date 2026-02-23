@@ -1,7 +1,7 @@
 # RPI (Research, Plan, Implement) Workflow
 
 **Created:** {{DATE}}
-**Platform:** Claude Code
+**Platform:** Claude Code / AI Agents
 **Context Budget:** 200k tokens max, target <40%
 **Output Budget:** 30k tokens max per response
 
@@ -16,310 +16,173 @@ The RPI workflow prevents the "slop" and "dumb zone" problems in AI-assisted dev
 - **5× faster issue resolution**
 - **Self-documenting changes**
 
-**Key Innovation: Parallel Agents with Chunked Todolists**
+**Key Innovation: Parallel Agents with Manifest-Driven Execution**
 
-Each RPI phase inherently utilizes parallel agents and produces chunk-based outputs designed for consumption by the next phase. This creates a self-aware pipeline where:
-- RPI-Research outputs chunks knowing RPI-Plan will consume them
-- RPI-Plan creates chunk-todolists knowing RPI-Implement will process them
-- Each phase loops through chunks, marking completion as it progresses
+Each RPI phase utilizes parallel agents and produces **manifest-based outputs** designed for consumption by the next phase. This creates a self-aware pipeline where:
+- **RPI-Research** spawns 5 parallel agents to create a **Research Manifest**, then sequentially deep-dives into each chunk.
+- **RPI-Plan** reads the Research Manifest to create a **Plan Manifest** with specific todolists.
+- **RPI-Implement** executes the Plan Manifest atomically, updating statuses across documents.
 
 ---
 
 ## Phase 1: RESEARCH
 
 ### Purpose
-Understand the system, locate relevant components, prevent context pollution
+Understand the system, locate relevant components, prevent context pollution using parallel domain experts.
 
 ### Artifacts
 - Research document in `.ai-context/research/active/[feature]_research.md`
-- **Chunked Research Sections** (3-7 chunks based on complexity)
-- 150-word summary for parent context
+- **Research Manifest** (Table of chunks with status)
+- **Detailed Research Chunks** (One per manifest item)
+- Inter-phase contract for RPI-Plan
 
 ### Process
-1. Load WORKFLOW_INDEX.md first (saves 100k+ tokens)
-2. **Spawn 3-5 parallel Explore agents** (one per research domain)
-3. Each agent produces a **Research Chunk** with:
-   - Chunk ID (e.g., `CHUNK-R1`, `CHUNK-R2`)
-   - Explored files with line numbers
-   - Call chains traced
-   - Dependencies found
-   - Chunk status: `COMPLETE` | `IN_PROGRESS` | `BLOCKED`
-4. Aggregate chunks into unified research document
-5. Format output specifically for RPI-Plan consumption
+1. **Initialize Research Document**
+   - Create document from template.
+2. **Spawn 5 Parallel Search Agents**
+   - **Agent 1 (API/Routes):** Locate entry points, controllers, routes.
+   - **Agent 2 (Business Logic):** Analyze models, services, core logic.
+   - **Agent 3 (Database/Storage):** Map schemas, migrations, queries.
+   - **Agent 4 (External Integrations):** Identify third-party APIs, webhooks.
+   - **Agent 5 (Tests):** Assess current coverage, required tests.
+3. **Create Research Manifest**
+   - Aggregate initial findings into a master table:
+     `| Chunk ID | Domain | Status | Files | Ready for Deep Dive |`
+4. **Sequential Deep Dive (Sub-Agents)**
+   - **For each item in the Manifest:**
+     - Start a sub-agent to "explore and append" deep details.
+     - Trace call chains, verify dependencies.
+     - Mark chunk as `COMPLETE` in manifest.
+5. **Finalize Output**
+   - Ensure format matches RPI-Plan's expected input.
 
-### Parallel Agent Strategy
-```
-┌─────────────────────────────────────────────────────────┐
-│ RPI-RESEARCH PARALLEL EXECUTION                         │
-├─────────────────────────────────────────────────────────┤
-│ Agent 1: API/Route Entry Points        → CHUNK-R1      │
-│ Agent 2: Business Logic & Models       → CHUNK-R2      │
-│ Agent 3: Database/Storage Layer        → CHUNK-R3      │
-│ Agent 4: External Integrations         → CHUNK-R4      │
-│ Agent 5: Test Coverage Analysis        → CHUNK-R5      │
-└─────────────────────────────────────────────────────────┘
+### Research Manifest Format
+```markdown
+| Chunk ID | Domain | Status | Files | Ready for Planning |
+|----------|--------|--------|-------|-------------------|
+| CHUNK-R1 | API/Routes | COMPLETE | 3 | ✅ |
+| CHUNK-R2 | Business Logic | COMPLETE | 4 | ✅ |
+| ...      | ...            | ...      | ...   | ...               |
 ```
 
 ### Inter-Phase Awareness
 **RPI-Research KNOWS that RPI-Plan will:**
-- Read each chunk sequentially
-- Generate a planning todolist per chunk
-- Mark chunks as `PLANNED` when processed
-- Require: chunk IDs, file:line refs, dependency list
-
-### Context Budget
-- Starting: Up to 50k tokens for exploration
-- Ending: 20k tokens (research doc only)
-- Compaction: After each phase
+- Read the manifest row-by-row.
+- Expect specific "Files Explored" and "Key Findings" sections for each chunk.
+- Require chunk IDs to link plans back to research.
 
 ### Exit Criteria
-- [ ] Research document created with chunked structure
-- [ ] 3-20 relevant files identified per chunk
-- [ ] Call chains traced with line numbers
-- [ ] Dependencies mapped per chunk
-- [ ] 150-word summary generated
-- [ ] **Chunk manifest created for RPI-Plan**
+- [ ] Research Manifest created with 5 domains.
+- [ ] All chunks marked `COMPLETE`.
+- [ ] Deep-dive details appended for each chunk.
+- [ ] Inter-phase contract documented.
 
 ---
 
 ## Phase 2: PLAN
 
 ### Purpose
-Design implementation with file:line precision, get human alignment
+Design implementation with file:line precision using the Research Manifest as the source of truth.
 
 ### Artifacts
 - Plan document in `.ai-context/plans/active/[feature]_plan.md`
-- **Chunk-Based Todolists** (one per research chunk)
-- Step-by-step implementation roadmap
+- **Plan Manifest** (Linking Plan Chunks to Research Chunks)
+- **Chunk-Based Todolists** (Atomic actions per chunk)
 
 ### Process
-1. Load research document with chunks
-2. **For each Research Chunk (CHUNK-Rn):**
-   a. Create corresponding Plan Chunk (CHUNK-Pn)
-   b. Generate specific todolist for that chunk
-   c. Mark research chunk as `PLANNED`
-   d. Record dependencies between plan chunks
-3. Reference workflow gotchas
-4. Create modification list with exact line numbers
-5. Plan testing strategy per chunk
-6. Define rollback plan
-7. **Loop until all research chunks are processed**
+1. **Load Research Manifest**
+   - Read `.ai-context/research/active/[feature]_research.md`.
+2. **Create Plan Manifest**
+   - For each `CHUNK-Rn` in Research Manifest:
+     - Create a corresponding `CHUNK-Pn`.
+     - Define the implementation strategy.
+3. **Sequential Planning (Sub-Agents)**
+   - **For each Plan Chunk:**
+     - Start a sub-agent to generate the detailed todolist.
+     - Define atomic actions (Change -> Test -> Commit).
+     - Specify file:line numbers.
+     - Mark linked Research Chunk as `PLANNED`.
+4. **Finalize Output**
+   - Ensure format matches RPI-Implement's expected input.
 
-### Chunk-Based Todolist Generation
-```
-┌─────────────────────────────────────────────────────────┐
-│ RPI-PLAN CHUNK PROCESSING LOOP                          │
-├─────────────────────────────────────────────────────────┤
-│ FOR each CHUNK-Rn in research_chunks:                   │
-│   1. Read CHUNK-Rn content                              │
-│   2. Create CHUNK-Pn todolist:                          │
-│      - [ ] Analyze files from CHUNK-Rn                  │
-│      - [ ] Define modifications with line numbers       │
-│      - [ ] Specify tests for this chunk                 │
-│      - [ ] Document rollback for this chunk             │
-│   3. Mark CHUNK-Rn as PLANNED                           │
-│   4. Link CHUNK-Pn dependencies                         │
-│   5. Proceed to next CHUNK-R(n+1)                       │
-│ END LOOP                                                │
-│ Generate unified plan document                          │
-└─────────────────────────────────────────────────────────┘
+### Plan Manifest Format
+```markdown
+| Chunk ID | Linked Research | Status | Todos | Dependencies |
+|----------|-----------------|--------|-------|--------------|
+| CHUNK-P1 | CHUNK-R1        | READY  | 4     | None         |
+| CHUNK-P2 | CHUNK-R2        | DRAFT  | -     | CHUNK-P1     |
 ```
 
 ### Inter-Phase Awareness
-**RPI-Plan KNOWS that:**
-- RPI-Research structured chunks for sequential processing
-- RPI-Implement will read each CHUNK-Pn as an atomic unit
-- Each CHUNK-Pn must be independently implementable
-- Chunk dependencies must be explicit for proper ordering
-
-### Context Budget
-- Research doc: 20k tokens
-- Plan creation: 15k tokens
-- Total: 35k tokens (17.5%)
+**RPI-Plan KNOWS that RPI-Implement will:**
+- Execute `CHUNK-P1`, then `CHUNK-P2`, etc.
+- Expect a "Todolist" table in each chunk section.
+- Need exact file paths and line numbers to avoid searching.
 
 ### Exit Criteria
-- [ ] Plan document created with file:line references
-- [ ] **All research chunks marked as PLANNED**
-- [ ] **Chunk-todolists created for each chunk**
-- [ ] All modifications listed with risk level
-- [ ] Test strategy defined per chunk
-- [ ] Rollback plan documented
-- [ ] Human review completed
-- [ ] **Chunk manifest created for RPI-Implement**
+- [ ] Plan Manifest created linking all Research Chunks.
+- [ ] All Research Chunks marked `PLANNED`.
+- [ ] Detailed todolists for each Plan Chunk.
+- [ ] Human approval obtained.
 
 ---
 
 ## Phase 3: IMPLEMENT
 
 ### Purpose
-Execute atomically with continuous testing
+Execute atomically with continuous testing, strictly following the Plan Manifest.
 
 ### Golden Rule
 ```
-ONE CHUNK → COMPLETE TODOLIST → MARK DONE → NEXT CHUNK
+READ MANIFEST -> SELECT CHUNK -> EXECUTE TODOS -> UPDATE STATUS -> NEXT CHUNK
 ```
 
 ### Process
-1. Load plan document with chunk-todolists
-2. **For each Plan Chunk (CHUNK-Pn):**
-   a. Load chunk-specific todolist
-   b. Execute each todo item atomically:
-      - Make single change
-      - Run chunk-specific test
-      - Commit if pass, stop if fail
-   c. Update documentation for this chunk
-   d. Mark CHUNK-Pn as `IMPLEMENTED`
-   e. Mark corresponding CHUNK-Rn in research as `IMPLEMENTED`
-   f. Proceed to next CHUNK-P(n+1)
-3. **Loop until all plan chunks are processed**
-4. Run full test suite after all chunks complete
-
-### Chunk-Based Implementation Loop
-```
-┌─────────────────────────────────────────────────────────┐
-│ RPI-IMPLEMENT CHUNK PROCESSING LOOP                     │
-├─────────────────────────────────────────────────────────┤
-│ FOR each CHUNK-Pn in plan_chunks:                       │
-│   1. Load CHUNK-Pn todolist                             │
-│   2. FOR each TODO item in CHUNK-Pn:                    │
-│      a. Make atomic change                              │
-│      b. Run specified test                              │
-│      c. If PASS: commit, mark TODO complete             │
-│      d. If FAIL: stop, investigate, fix                 │
-│   3. Update chunk documentation                         │
-│   4. Mark CHUNK-Pn as IMPLEMENTED                       │
-│   5. Update research CHUNK-Rn status to COMPLETE        │
-│   6. Context reset if >35% utilization                  │
-│   7. Proceed to CHUNK-P(n+1)                            │
-│ END LOOP                                                │
-│ Run full test suite                                     │
-│ Archive plan and research documents                     │
-└─────────────────────────────────────────────────────────┘
-```
+1. **Load Plan Manifest**
+   - Read `.ai-context/plans/active/[feature]_plan.md`.
+2. **Sequential Execution (Loop)**
+   - **For each ready CHUNK-Pn in Manifest:**
+     - **Sub-Loop (Todos):**
+       - 1. Make atomic change (from plan).
+       - 2. Run specific test (from plan).
+       - 3. Commit (if pass).
+     - **Update Status:**
+       - Mark `CHUNK-Pn` as `IMPLEMENTED` in Plan.
+       - Mark linked `CHUNK-Rn` as `IMPLEMENTED` in Research.
+3. **Context Management**
+   - Reset context after every 3 chunks to maintain precision.
 
 ### Inter-Phase Awareness
 **RPI-Implement KNOWS that:**
-- RPI-Plan structured chunks for atomic implementation
-- Each CHUNK-Pn contains a complete, ordered todolist
-- Chunk dependencies dictate execution order
-- Marking chunks updates both plan and research documents
-
-### Context Budget
-- Plan: 15k tokens
-- Active code: 30k tokens
-- Test results: 15k tokens
-- Total: 60k tokens (30%)
-
-### Context Reset (Every 3 Chunks or 35% Utilization)
-1. Update progress checklist
-2. Re-read plan document
-3. Verify scope alignment
-4. Compact if >35% utilization
+- It is the final consumer.
+- It must update the *state* of previous documents (Research/Plan) to reflect reality.
 
 ### Exit Criteria
-- [ ] **All plan chunks marked as IMPLEMENTED**
-- [ ] **All research chunks marked as COMPLETE**
-- [ ] All tests passing
-- [ ] Documentation updated per chunk
-- [ ] Changes committed
+- [ ] All Plan Chunks marked `IMPLEMENTED`.
+- [ ] All Research Chunks marked `IMPLEMENTED`.
+- [ ] All tests passing.
+- [ ] Documents archived.
 
 ---
 
 ## Inter-Phase Communication Protocol
 
-The key innovation of the enhanced RPI workflow is **inter-phase awareness**. Each phase produces output specifically formatted for the next phase's consumption.
+### Research → Plan
+**Input:** 5 Parallel Search Agents results.
+**Output:** Research Manifest + Detailed Chunks.
+**Contract:** "I have found X, Y, Z. Here is the map (manifest) and the details."
 
-### Research → Plan Communication
-```
-CHUNK_MANIFEST:
-├── CHUNK-R1: (status, files, dependencies, ready_for_planning)
-├── CHUNK-R2: (status, files, dependencies, ready_for_planning)
-└── CHUNK-Rn: ...
+### Plan → Implement
+**Input:** Research Manifest.
+**Output:** Plan Manifest + Todolists.
+**Contract:** "To build X, do steps 1-4. To build Y, do steps 5-9. Here is the order."
 
-INTER_PHASE_CONTRACT:
-├── expected_consumer: "rpi-plan"
-├── chunk_processing_order: "sequential"
-├── mark_as_planned_when: "chunk_todolist_created"
-└── required_output: "CHUNK-Pn per CHUNK-Rn"
-```
-
-### Plan → Implement Communication
-```
-CHUNK_MANIFEST:
-├── CHUNK-P1: (todolist, tests, rollback, dependencies)
-├── CHUNK-P2: (todolist, tests, rollback, dependencies)
-└── CHUNK-Pn: ...
-
-INTER_PHASE_CONTRACT:
-├── expected_consumer: "rpi-implement"
-├── chunk_processing_order: "dependency-ordered"
-├── mark_as_implemented_when: "all_todos_complete"
-└── update_research_status: true
-```
+### Implement → Status
+**Input:** Plan Manifest.
+**Output:** Code + Updated Statuses.
+**Contract:** "I have built X. Plan P1 is done. Research R1 is done."
 
 ---
 
-## Error Recovery Protocol
-
-| Error Type | Response |
-|------------|----------|
-| Syntax Error | STOP. Fix immediately in same session. |
-| Import Error | Check file paths, verify imports. |
-| Runtime Error | Create research subtask before fixing. |
-| Test Failure | Do NOT add more code. Investigate first. |
-| 3+ Failures | STOP. Compact context. Start new session. |
-| **Chunk Failure** | Mark chunk as BLOCKED, proceed to independent chunks, revisit later. |
-
----
-
-## Context Management
-
-### Compaction Triggers
-- After 5+ file reads without tool use
-- Error loop (3+ failed attempts)
-- Session > 1 hour
-- Context > 35% utilization
-- **After every 3 chunks processed**
-
-### Compaction Actions
-1. Save progress to SESSION_HANDOFF.md
-2. Archive tool results
-3. Keep only essential context
-4. Continue or start fresh session
-5. **Preserve chunk manifest with current status**
-
----
-
-## Key Principles
-
-1. **<40% Context Rule:** Performance degrades beyond 40% context utilization
-2. **Parallel Sub-Agents:** Use 3-5 parallel Explore agents for context isolation
-3. **Chunk-Based Processing:** All phases produce and consume chunk-structured data
-4. **Inter-Phase Awareness:** Each phase knows how the next phase reads its output
-5. **Atomic Changes:** Small, testable, reversible modifications per todo item
-6. **Loop-Based Completion:** Process chunks in loops, marking progress explicitly
-7. **Bidirectional Status Updates:** Implement updates plan AND research status
-
----
-
-## Quick Reference: Chunk Status Flow
-
-```
-RESEARCH CHUNKS                 PLAN CHUNKS
-┌─────────────────┐            ┌─────────────────┐
-│ CHUNK-R1        │            │ CHUNK-P1        │
-│ Status: FOUND   │────────────│ Status: READY   │
-│ → COMPLETE      │            │ → IMPLEMENTING  │
-│ → PLANNED       │←───────────│ → IMPLEMENTED   │
-│ → IMPLEMENTED   │←───────────│ → COMPLETE      │
-└─────────────────┘            └─────────────────┘
-```
-
-**Status Transitions:**
-- Research: `FOUND` → `COMPLETE` → `PLANNED` → `IMPLEMENTED`
-- Plan: `DRAFT` → `READY` → `IMPLEMENTING` → `IMPLEMENTED` → `COMPLETE`
-
----
-
-**Version:** 2.0 (Enhanced with Parallel Agents & Chunked Todolists)
-**Status:** TEMPLATE
+**Version:** 3.0 (Manifest-Driven Parallel RPI)
+**Status:** ACTIVE
