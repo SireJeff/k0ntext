@@ -1,80 +1,179 @@
 ---
-description: RPI Plan Phase - Create chunk-based implementation blueprint from Research Manifest
+name: rpi-plan
+version: "2.0.0"
+description: "RPI Plan Phase: Create chunk-based implementation blueprint with todolists for rpi-implement consumption"
+category: "rpi-orchestration"
+rpi_phase: "plan"
+context_budget_estimate: "35K tokens"
+typical_context_usage: "17%"
+chunk_input: true
+chunk_output: true
+inter_phase_aware: true
+prerequisites:
+  - "Research document exists in .ai-context/research/active/"
+  - "/rpi-research phase completed with chunk manifest"
+outputs:
+  - "Plan document in .ai-context/plans/active/[name]_plan.md"
+  - "Chunk-based todolists (CHUNK-Pn per CHUNK-Rn)"
+  - "Modification table with file:line references per chunk"
+  - "Step-by-step implementation guide per chunk"
+  - "Test strategy per chunk"
+  - "Rollback plan per chunk"
+  - "Inter-phase contract for rpi-implement"
+next_commands: ["/rpi-implement"]
+related_agents: ["core-architect", "database-ops", "api-developer"]
+examples:
+  - command: "/rpi-plan user-authentication"
+    description: "Create chunk-based implementation plan for auth feature"
+  - command: "/rpi-plan payment-bug-fix"
+    description: "Plan the fix with chunk-todolists for payment issue"
+exit_criteria:
+  - "Plan document created in .ai-context/plans/active/"
+  - "Chunk manifest created with CHUNK-Pn per CHUNK-Rn"
+  - "All research chunks marked as PLANNED"
+  - "All file modifications listed with line numbers per chunk"
+  - "Chunk-todolists defined with atomic actions"
+  - "Test strategy documented per chunk"
+  - "Human approval obtained"
+  - "Inter-phase contract documented for rpi-implement"
 ---
 
-# Context Engineering: Plan Phase (Manifest-Driven)
+# RPI Plan Phase (Enhanced with Chunk-Based Todolists)
 
-When invoked, create a detailed implementation plan by processing the Research Manifest:
+**Purpose:** Create detailed implementation blueprint using chunk-based todolists that RPI-Implement will process
 
-## Key Innovation: Manifest-Driven Planning
+**Syntax:** `/rpi-plan [feature-name]`
 
-This plan phase is **Manifest-Driven**:
-1.  **Read Research Manifest:** Load the output from RPI-Research.
-2.  **Sequential Planning:** For each Research Chunk, spawn a sub-agent to generate a Plan Chunk.
-3.  **Create Plan Manifest:** Aggregate Plan Chunks into a master table for RPI-Implement.
+**Prerequisites:** Research document must exist in `.ai-context/research/active/` with chunk manifest
 
-## Process
+---
 
-1.  **Load Research Manifest**
-    -   Read `.claude/research/active/[feature]_research.md`.
-    -   Extract the table of Research Chunks (`CHUNK-Rn`).
+## Key Innovation: Inter-Phase Awareness
 
-2.  **Sequential Planning (Sub-Agents Loop)**
-    -   **For each CHUNK-Rn in Research Manifest:**
-        -   Spawn a sub-agent to analyze the research details.
-        -   Create a corresponding **Plan Chunk (CHUNK-Pn)**.
-        -   Define atomic todolist (Change -> Test -> Commit).
-        -   Specify precise file paths and line numbers.
-        -   Mark Research Chunk as `PLANNED`.
+RPI-Plan **KNOWS**:
+- RPI-Research structured chunks specifically for sequential processing
+- RPI-Implement will read each CHUNK-Pn as an atomic implementation unit
+- Each CHUNK-Pn todolist must be independently executable
+- Chunk dependencies must be explicit for proper execution ordering
 
-3.  **Create Plan Manifest**
-    -   Aggregate all Plan Chunks into a master table:
-        ```markdown
-        | Chunk ID | Research ID | Status | Todos | Dependencies | Ready |
-        |----------|-------------|--------|-------|--------------|-------|
-        | CHUNK-P1 | CHUNK-R1    | READY  | 4     | None         | ✅    |
-        | CHUNK-P2 | CHUNK-R2    | DRAFT  | -     | CHUNK-P1     | ⏳    |
-        ```
+---
 
-4.  **Generate Inter-Phase Contract**
-    -   Format output for `rpi-implement`.
+## Chunk Processing Loop
 
-## Plan Manifest Format (Required)
-
-```markdown
-| Chunk ID | Research ID | Status | Todos | Dependencies | Ready |
-|----------|-------------|--------|-------|--------------|-------|
-| CHUNK-P1 | CHUNK-R1 | READY | 4 | None | ✅ |
-...
+```
+┌─────────────────────────────────────────────────────────┐
+│ RPI-PLAN CHUNK PROCESSING LOOP                          │
+├─────────────────────────────────────────────────────────┤
+│ FOR each research_chunk (CHUNK-R1 to CHUNK-RN):         │
+│   1. Read research_chunk content (Sequential Sub-Agent)                        │
+│   2. Create corresponding CHUNK-Pn todolist:            │
+│      - Define atomic action items                       │
+│      - Specify file:line for each action                │
+│      - Assign test for each action                      │
+│      - Document chunk-specific rollback                 │
+│   3. Mark research_chunk status as PLANNED              │
+│   4. Define CHUNK-Pn dependencies                       │
+│   5. Proceed to next research chunk                     │
+│ END LOOP                                                │
+└─────────────────────────────────────────────────────────┘
 ```
 
-## Detailed Plan Chunk Format
+---
 
-```markdown
-## CHUNK-P1: [Domain] (from CHUNK-R1)
+## Execution Steps
 
-**Status:** READY
-**Dependencies:** None
+### Step 1: Load Research Document
+Read `.ai-context/research/active/[feature]_research.md` and extract chunk manifest
 
-### Todolist
-| # | Action | File | Lines | Risk | Test | Status |
-|---|--------|------|-------|------|------|--------|
-| 1 | [Action] | file.ext | 10-15 | LOW | test_x | ⏳ |
+### Step 2: Process Each Research Chunk
 
-### Todo 1: [Action Name]
-**File:** path/to/file.ext
-**Lines:** 10-15
-**Current:** [code]
-**Proposed:** [code]
-**Test:** [command]
+For each CHUNK-Rn:
+1. Analyze chunk content (files, deps, call chains)
+2. Create CHUNK-Pn todolist with atomic actions
+3. Mark CHUNK-Rn status as PLANNED
+4. Document chunk dependencies
+
+### Step 3: Define Scope
+- In scope (explicit list per chunk)
+- Out of scope (what we're NOT touching)
+
+### Step 4: Create Chunk Dependency Graph
 ```
+CHUNK-P1 ───→ CHUNK-P2 ───→ CHUNK-P3
+```
+
+### Step 5: Plan Testing Strategy (Per Chunk)
+- Tests to run after each todo
+- Tests to run after chunk completion
+
+### Step 6: Document Rollback Plan (Per Chunk)
+- Per-chunk rollback commands
+- Safe commits per chunk
+
+### Step 7: Finalize Inter-Phase Contract
+```
+EXPECTED_CONSUMER: rpi-implement
+CHUNK_PROCESSING_ORDER: dependency-ordered
+MARK_AS_IMPLEMENTED_WHEN: all chunk todos complete
+UPDATE_RESEARCH_STATUS: true
+```
+
+### Step 8: Request Human Approval
+Plan requires human review before implementation
+
+---
+
+## Output
+
+Plan document in `.ai-context/plans/active/[feature]_plan.md` with:
+- Chunk manifest
+- Per-chunk todolists
+- Inter-phase contract for RPI-Implement
+
+---
 
 ## Context Budget
--   Research doc: 20k tokens.
--   Plan creation: 15k tokens.
--   Total: 35k tokens.
+
+- Research doc: 20k tokens
+- Plan creation: 15k tokens
+- Total: 35k tokens (17%)
+
+---
 
 ## Next Step
-After approval, run `/context-eng:implement `
 
-RPI-Implement will read the **Plan Manifest** to execute chunks.
+After human approval: `/rpi-implement [feature-name]`
+
+RPI-Implement will process chunks in dependency order, executing todos atomically
+
+---
+
+## k0ntext CLI Commands
+
+This command integrates with the following k0ntext CLI commands:
+
+| Command | When to Use |
+|---------|-------------|
+| `k0ntext search <query>` | Search for related code patterns during planning |
+| `k0ntext drift-detect` | Check for documentation drift before planning changes |
+
+### Command Examples
+
+```bash
+# Search for similar implementations
+k0ntext search "authentication flow"
+
+# Detect documentation drift
+k0ntext drift-detect
+
+# Search for API patterns
+k0ntext search "endpoint"
+```
+
+### Workflow Integration
+
+When creating implementation plans:
+1. **Before planning:** Use `k0ntext drift-detect` to identify documentation issues
+2. **During planning:** Search for related patterns and implementations
+3. **For reference:** Use semantic search to find similar code structures
+4. **After planning:** Document search results for implementation phase
