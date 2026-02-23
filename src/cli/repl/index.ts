@@ -4,8 +4,6 @@
  * Interactive shell for managing k0ntext context
  */
 
-import fs from 'fs';
-import path from 'path';
 import readline from 'readline';
 import fs from 'fs';
 import path from 'path';
